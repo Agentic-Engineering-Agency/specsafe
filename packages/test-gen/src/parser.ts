@@ -34,8 +34,11 @@ export class ScenarioParser {
   private parseScenarios(text: string, startIndex: number): Scenario[] {
     const scenarios: Scenario[] = [];
     
-    // Find scenario table after requirement
-    const section = text.slice(startIndex, startIndex + 2000);
+    // Find scenario table after requirement, bounded by next requirement or end of text
+    const nextReqMatch = text.slice(startIndex + 1).search(/###\s+Requirement:/);
+    const endIndex = nextReqMatch !== -1 ? startIndex + 1 + nextReqMatch : text.length;
+    const section = text.slice(startIndex, endIndex);
+    
     const scenarioMatches = section.matchAll(/\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|/g);
     
     let index = 0;

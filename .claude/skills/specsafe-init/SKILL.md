@@ -39,7 +39,7 @@ Initialize a new SpecSafe project with directory structure and configuration.
 3. **Show next steps**
 
    Guide user to:
-   - Create first spec with `/specsafe-new`
+   - Create first spec with `/specsafe:new`
    - Review the spec template
    - Understand the workflow
 
@@ -49,7 +49,7 @@ After initialization:
 - Confirmation of created structure
 - Location of key files
 - Next steps guidance
-- Prompt: "Ready to create your first spec? Run `/specsafe-new <name>`"
+- Prompt: "Ready to create your first spec? Run `/specsafe:new <name>`"
 
 **Guardrails**
 - Check if already initialized (prevent double-init)

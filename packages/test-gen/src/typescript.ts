@@ -46,11 +46,11 @@ export class TypeScriptTestGenerator {
       .map(s => this.generateTest(s))
       .join('\n\n');
 
-    return `describe('${spec.name}', () => {\n${tests}\n});`;
+    return `describe('${this.escapeString(spec.name)}', () => {\n${tests}\n});`;
   }
 
   private generateTest(scenario: Scenario): string {
-    const testName = this.scenarioToTestName(scenario);
+    const testName = this.escapeString(this.scenarioToTestName(scenario));
     const comments = this.options.includeComments
       ? `  // GIVEN: ${scenario.given}\n  // WHEN: ${scenario.when}\n  // THEN: ${scenario.then}\n`
       : '';
@@ -68,5 +68,37 @@ export class TypeScriptTestGenerator {
       .replace(/^then\s+/i, '')
       .replace(/\.$/, '')
       .toLowerCase();
+  }
+
+  /**
+   * Escape special characters in a string for use in single-quoted JS strings
+   */
+  private escapeString(str: string): string {
+    return str
+      .replace(/\\/g, '\\\\')
+      .replace(/'/g, "\\'")
+      .replace(/\n/g, '\\n');
+  }
+  
+  /**
+   * Parse scenarios from spec markdown content
+   */
+  parseScenarios(content: string): Scenario[] {
+    const scenarios: Scenario[] = [];
+    
+    // Match GIVEN/WHEN/THEN patterns in the content
+    const scenarioRegex = /(?:GIVEN|Given)\s*:\s*(.+?)(?:\n|\r)(?:WHEN|When)\s*:\s*(.+?)(?:\n|\r)(?:THEN|Then)\s*:\s*(.+?)(?:\n|\r|$)/gi;
+    
+    let match;
+    while ((match = scenarioRegex.exec(content)) !== null) {
+      scenarios.push({
+        id: `SC-${scenarios.length + 1}`,
+        given: match[1].trim(),
+        when: match[2].trim(),
+        then: match[3].trim()
+      });
+    }
+    
+    return scenarios;
   }
 }

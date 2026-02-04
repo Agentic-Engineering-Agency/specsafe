@@ -2,7 +2,7 @@
 
 **Test-Driven Development framework for AI-assisted software engineering**
 
-```
+```text
 SPEC → TEST → CODE → QA → COMPLETE
   │       │       │      │       │
   │       │       │      │       └─→ Production ready
@@ -70,7 +70,7 @@ specsafe complete SPEC-YYYYMMDD-001
 
 ## Project Structure
 
-```
+```text
 my-project/
 ├── specs/
 │   ├── active/         # Specs being developed

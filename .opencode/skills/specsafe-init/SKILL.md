@@ -19,6 +19,7 @@ Initialize a SpecSafe project.
 
 2. **Verify created**
    - specs/active/, completed/, archive/
+   - specs/template.md
    - specsafe.config.json
    - PROJECT_STATE.md
 
