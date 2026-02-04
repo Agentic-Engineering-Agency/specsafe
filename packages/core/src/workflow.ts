@@ -12,6 +12,11 @@ export class Workflow {
    * Create a new spec in the SPEC stage
    */
   createSpec(id: string, name: string, description: string, author: string, project: string): Spec {
+    // Check if spec already exists to prevent overwriting
+    if (this.specs.has(id)) {
+      throw new Error(`Spec with ID ${id} already exists. Use a different name or delete the existing spec first.`);
+    }
+    
     const spec: Spec = {
       id,
       name,
@@ -37,6 +42,13 @@ export class Workflow {
    */
   getSpec(id: string): Spec | undefined {
     return this.specs.get(id);
+  }
+
+  /**
+   * Load an existing spec into the workflow (for hydration from disk)
+   */
+  loadSpec(spec: Spec): void {
+    this.specs.set(spec.id, spec);
   }
 
   /**
@@ -120,6 +132,10 @@ export class Workflow {
     if (spec.stage !== 'qa') {
       throw new Error(`Cannot move to COMPLETE from ${spec.stage}. Must be in QA stage.`);
     }
+    // Validate QA report belongs to target spec
+    if (qaReport.specId !== specId) {
+      throw new Error(`QA report spec ID (${qaReport.specId}) does not match target spec (${specId})`);
+    }
     if (qaReport.recommendation !== 'GO') {
       throw new Error('Cannot complete: QA report recommends NO-GO. Address issues first.');
     }
@@ -175,6 +191,20 @@ export class Workflow {
 
     if (!transitions[spec.stage].includes(toStage)) {
       return { valid: false, reason: `Cannot transition from ${spec.stage} to ${toStage}` };
+    }
+
+    // Validate prerequisites based on target stage
+    if (toStage === 'test' && spec.requirements.length === 0) {
+      return { valid: false, reason: 'Cannot move to TEST: No requirements defined' };
+    }
+    if (toStage === 'code' && spec.testFiles.length === 0) {
+      return { valid: false, reason: 'Cannot move to CODE: No test files generated' };
+    }
+    if (toStage === 'qa' && spec.implementationFiles.length === 0) {
+      return { valid: false, reason: 'Cannot move to QA: No implementation files' };
+    }
+    if (toStage === 'complete' && spec.stage !== 'qa') {
+      return { valid: false, reason: 'Cannot move to COMPLETE: Must be in QA stage first' };
     }
 
     return { valid: true };

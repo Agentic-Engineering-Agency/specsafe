@@ -2,6 +2,10 @@
   "name": "@specsafe/cli",
   "version": "0.1.0",
   "description": "CLI for SpecSafe TDD framework",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {

@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { writeFile, mkdir } from 'fs/promises';
+import { writeFile, mkdir, readdir } from 'fs/promises';
 import { join } from 'path';
 import { Workflow } from '@specsafe/core';
 import { ProjectTracker } from '@specsafe/core';
@@ -18,9 +18,27 @@ export const newCommand = new Command('new')
       const workflow = new Workflow();
       const tracker = new ProjectTracker(process.cwd());
 
-      // Generate spec ID
+      // Generate spec ID with auto-increment to avoid collisions
       const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
-      const id = `SPEC-${date}-001`; // TODO: Auto-increment
+      
+      // List existing specs for today and find max suffix
+      let maxSuffix = 0;
+      try {
+        const files = await readdir('specs/active');
+        const todayPrefix = `SPEC-${date}-`;
+        for (const file of files) {
+          if (file.startsWith(todayPrefix) && file.endsWith('.md')) {
+            const suffix = parseInt(file.replace(todayPrefix, '').replace('.md', ''), 10);
+            if (!isNaN(suffix) && suffix > maxSuffix) {
+              maxSuffix = suffix;
+            }
+          }
+        }
+      } catch {
+        // Directory doesn't exist yet, that's fine
+      }
+      
+      const id = `SPEC-${date}-${String(maxSuffix + 1).padStart(3, '0')}`;
 
       // Create spec
       const spec = workflow.createSpec(

@@ -50,9 +50,16 @@ export class ProjectTracker {
     try {
       await access(this.stateFile);
       const content = await readFile(this.stateFile, 'utf-8');
-      return this.parseMarkdown(content);
-    } catch {
-      return null;
+      const parsed = this.parseMarkdown(content);
+      if (parsed === null && content.length > 0) {
+        throw new Error('Failed to parse PROJECT_STATE.md - file exists but is malformed');
+      }
+      return parsed;
+    } catch (error: any) {
+      if (error.code === 'ENOENT') {
+        return null;
+      }
+      throw error;
     }
   }
 
@@ -188,8 +195,75 @@ ${rows}`;
   }
 
   private parseMarkdown(content: string): ProjectState | null {
-    // Simple parsing - could be enhanced
-    return null;
+    try {
+      // Extract project name from header
+      const nameMatch = content.match(/^#\s+(.+?)\s+-\s+Project\s+State/m);
+      const projectName = nameMatch ? nameMatch[1] : 'Untitled Project';
+      
+      // Extract version
+      const versionMatch = content.match(/\*\*Version:\*\*\s*(.+)/m);
+      const version = versionMatch ? versionMatch[1].trim() : '1.0.0';
+      
+      // Extract specs from table
+      const specs: SpecSummary[] = [];
+      const tableRegex = /\|\s*(SPEC-\d+-\d+)\s*\|\s*([^|]+)\|\s*(SPEC|TEST|CODE|QA|COMPLETE|ARCHIVED)\s*\|\s*(\d+)%?\s*\|\s*(\d{4}-\d{2}-\d{2})\s*\|/gi;
+      let match;
+      while ((match = tableRegex.exec(content)) !== null) {
+        specs.push({
+          id: match[1].trim(),
+          name: match[2].trim(),
+          stage: match[3].toLowerCase() as SpecStage,
+          progress: parseInt(match[4], 10),
+          lastUpdated: new Date(match[5])
+        });
+      }
+      
+      // Calculate metrics
+      const metrics = this.calculateMetrics(specs);
+      
+      return {
+        projectName,
+        version,
+        lastUpdated: new Date(),
+        specs,
+        metrics
+      };
+    } catch {
+      return null;
+    }
+  }
+  
+  /**
+   * Load all specs from PROJECT_STATE.md into a Workflow instance
+   */
+  async loadSpecsIntoWorkflow(workflow: any): Promise<void> {
+    const state = await this.readState();
+    if (!state) return;
+    
+    for (const summary of state.specs) {
+      // Try to read the actual spec file for full details
+      const specPath = join(this.projectPath, 'specs', summary.stage === 'complete' || summary.stage === 'archived' ? 'completed' : 'active', `${summary.id}.md`);
+      try {
+        const content = await readFile(specPath, 'utf-8');
+        // Create a minimal spec object with the data we have
+        const spec: Spec = {
+          id: summary.id,
+          name: summary.name,
+          description: '', // Would need to parse from markdown
+          stage: summary.stage,
+          createdAt: summary.lastUpdated,
+          updatedAt: summary.lastUpdated,
+          requirements: [],
+          testFiles: [],
+          implementationFiles: [],
+          metadata: {}
+        };
+        // Inject into workflow's specs map
+        workflow.loadSpec(spec);
+      } catch {
+        // Spec file not found, skip
+      }
+    }
   }
 
   private async createDefaultState(): Promise<ProjectState> {

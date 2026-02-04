@@ -3,8 +3,9 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { Workflow } from '@specsafe/core';
 import { ProjectTracker } from '@specsafe/core';
-import { rename } from 'fs/promises';
+import { rename, readFile } from 'fs/promises';
 import { join } from 'path';
+import type { QAReport } from '@specsafe/core';
 
 export const completeCommand = new Command('complete')
   .description('Complete spec (QA → COMPLETE)')
@@ -17,17 +18,35 @@ export const completeCommand = new Command('complete')
       const workflow = new Workflow();
       const tracker = new ProjectTracker(process.cwd());
 
-      // TODO: Load actual QA report
-      const qaReport = {
-        id: `QA-${id}`,
-        specId: id,
-        timestamp: new Date(),
-        testResults: [],
-        coverage: { statements: 100, branches: 100, functions: 100, lines: 100 },
-        recommendation: 'GO' as const,
-        issues: [],
-        notes: 'All tests passing'
-      };
+      // Load existing specs from disk
+      await tracker.loadSpecsIntoWorkflow(workflow);
+
+      // Load QA report from file if provided
+      let qaReport: QAReport;
+      if (options.report) {
+        const reportContent = await readFile(options.report, 'utf-8');
+        qaReport = JSON.parse(reportContent) as QAReport;
+      } else {
+        // Default QA report
+        qaReport = {
+          id: `QA-${id}`,
+          specId: id,
+          timestamp: new Date(),
+          testResults: [],
+          coverage: { statements: 100, branches: 100, functions: 100, lines: 100 },
+          recommendation: 'GO' as const,
+          issues: [],
+          notes: 'All tests passing'
+        };
+      }
+
+      // Validate QA report
+      if (qaReport.specId !== id) {
+        throw new Error(`QA report spec ID (${qaReport.specId}) does not match target spec (${id})`);
+      }
+      if (qaReport.recommendation !== 'GO') {
+        throw new Error('Cannot complete: QA report recommends NO-GO. Address issues first.');
+      }
 
       workflow.moveToComplete(id, qaReport);
       await tracker.addSpec(workflow.getSpec(id)!);
