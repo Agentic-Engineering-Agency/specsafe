@@ -197,7 +197,8 @@ ${rows}`;
     let completedCount = 0;
     
     for (const spec of specs) {
-      if ((spec.stage === 'complete' || spec.stage === 'archived') && spec.completedAt && spec.createdAt) {
+      const isCompleted = spec.stage === 'complete' || spec.stage === 'archived';
+      if (isCompleted && spec.completedAt && spec.createdAt) {
         const cycleTime = spec.completedAt.getTime() - spec.createdAt.getTime();
         totalCycleTime += cycleTime;
         completedCount++;

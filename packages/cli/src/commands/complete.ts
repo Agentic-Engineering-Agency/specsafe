@@ -61,7 +61,7 @@ export const completeCommand = new Command('complete')
         // Rollback workflow state if file move fails
         const spec = workflow.getSpec(id);
         if (spec) {
-          spec.stage = 'qa';
+          spec.stage = 'qa' as const;
         }
         throw new Error(`Failed to move spec file: ${renameError.message}`);
       }
