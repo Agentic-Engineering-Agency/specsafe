@@ -14,15 +14,12 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"]
+  "files": ["dist"],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "test": "vitest",
     "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "yaml": "^2.3.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

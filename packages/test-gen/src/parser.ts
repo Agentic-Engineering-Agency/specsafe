@@ -43,7 +43,7 @@ export class ScenarioParser {
     
     let index = 0;
     for (const match of scenarioMatches) {
-      const [_, given, when, then] = match;
+      const [, given, when, then] = match;
       if (given && when && then && given.trim() !== 'GIVEN') {
         scenarios.push({
           id: `SC-${index++}`,

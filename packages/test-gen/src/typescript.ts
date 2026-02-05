@@ -63,11 +63,10 @@ export class TypeScriptTestGenerator {
   }
 
   private scenarioToTestName(scenario: Scenario): string {
-    // Convert scenario to readable test name
+    // Convert scenario to readable test name, preserving original case
     return scenario.then
       .replace(/^then\s+/i, '')
-      .replace(/\.$/, '')
-      .toLowerCase();
+      .replace(/\.$/, '');
   }
 
   /**

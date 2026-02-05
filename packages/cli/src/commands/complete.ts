@@ -51,11 +51,20 @@ export const completeCommand = new Command('complete')
       workflow.moveToComplete(id, qaReport);
       await tracker.addSpec(workflow.getSpec(id)!);
 
-      // Move spec file to completed/
-      await rename(
-        join('specs/active', `${id}.md`),
-        join('specs/completed', `${id}.md`)
-      );
+      // Check if source file exists before moving
+      const sourcePath = join('specs/active', `${id}.md`);
+      const targetPath = join('specs/completed', `${id}.md`);
+      
+      try {
+        await rename(sourcePath, targetPath);
+      } catch (renameError: any) {
+        // Rollback workflow state if file move fails
+        const spec = workflow.getSpec(id);
+        if (spec) {
+          spec.stage = 'qa';
+        }
+        throw new Error(`Failed to move spec file: ${renameError.message}`);
+      }
 
       spinner.succeed(chalk.green(`✅ Completed ${id}`));
       console.log(chalk.blue('Spec moved to specs/completed/'));

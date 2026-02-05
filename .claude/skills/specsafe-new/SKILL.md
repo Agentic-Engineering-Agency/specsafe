@@ -44,7 +44,7 @@ Create a new SpecSafe specification using the SPEC → TEST → CODE → QA → 
    - Spec ID and location
    - Current stage: SPEC
    - Next: Edit the spec to add requirements
-   - Then: Run `/specsafe-spec` to proceed to TEST stage
+   - Then: Run `/specsafe-test` to generate tests and proceed to TEST stage
 
 **Output**
 

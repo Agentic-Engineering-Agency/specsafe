@@ -5,7 +5,7 @@
 
 import { writeFile, readFile, access } from 'fs/promises';
 import { join } from 'path';
-import type { Spec, ProjectState, SpecSummary, ProjectMetrics } from './types.js';
+import type { Spec, ProjectState, SpecSummary, ProjectMetrics, SpecStage } from './types.js';
 
 export class ProjectTracker {
   private projectPath: string;
@@ -74,12 +74,18 @@ export class ProjectTracker {
       name: spec.name,
       stage: spec.stage,
       progress: this.calculateProgress(spec),
-      lastUpdated: spec.updatedAt
+      lastUpdated: spec.updatedAt,
+      createdAt: spec.createdAt,
+      completedAt: spec.completedAt
     };
 
     // Update or add spec
     const existingIndex = state.specs.findIndex(s => s.id === spec.id);
     if (existingIndex >= 0) {
+      // Preserve createdAt from existing summary if not set
+      if (!summary.createdAt && state.specs[existingIndex].createdAt) {
+        summary.createdAt = state.specs[existingIndex].createdAt;
+      }
       state.specs[existingIndex] = summary;
     } else {
       state.specs.push(summary);
@@ -186,11 +192,27 @@ ${rows}`;
 
     const completionRate = total > 0 ? byStage.complete / total : 0;
 
+    // Calculate average cycle time for completed specs (in days)
+    let totalCycleTime = 0;
+    let completedCount = 0;
+    
+    for (const spec of specs) {
+      if ((spec.stage === 'complete' || spec.stage === 'archived') && spec.completedAt && spec.createdAt) {
+        const cycleTime = spec.completedAt.getTime() - spec.createdAt.getTime();
+        totalCycleTime += cycleTime;
+        completedCount++;
+      }
+    }
+    
+    const averageCycleTime = completedCount > 0 
+      ? totalCycleTime / completedCount / (1000 * 60 * 60 * 24)
+      : 0;
+
     return {
       totalSpecs: total,
       byStage,
       completionRate,
-      averageCycleTime: 0 // TODO: Calculate from actual cycle times
+      averageCycleTime
     };
   }
 
@@ -256,7 +278,11 @@ ${rows}`;
           requirements: [],
           testFiles: [],
           implementationFiles: [],
-          metadata: {}
+          metadata: {
+            author: '',
+            project: '',
+            tags: []
+          }
         };
         // Inject into workflow's specs map
         workflow.loadSpec(spec);

@@ -2,7 +2,6 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
 import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
 import { ProjectTracker } from '@specsafe/core';
 
 export const initCommand = new Command('init')
