@@ -38,9 +38,9 @@ export const testCommand = new Command('test')
         if (rows) {
           requirements = rows.map(row => ({
             id: row.match(/FR-\d+/)?.[0] || 'REQ-1',
-            description: row.split('|')[2]?.trim() || 'Requirement',
+            text: row.split('|')[2]?.trim() || 'Requirement',
             priority: 'P0' as const,
-            acceptanceCriteria: []
+            scenarios: []
           }));
         }
       }
@@ -56,8 +56,7 @@ export const testCommand = new Command('test')
       
       // Generate test files
       const generator = new TypeScriptTestGenerator({
-        framework: 'vitest',
-        outputDir: 'tests'
+        framework: 'vitest'
       });
       
       // Parse scenarios from spec
@@ -72,10 +71,13 @@ export const testCommand = new Command('test')
         createdAt: new Date(),
         updatedAt: new Date(),
         requirements,
-        scenarios: scenarios || [],
         testFiles: [],
         implementationFiles: [],
-        metadata: {}
+        metadata: {
+          author: '',
+          project: '',
+          tags: []
+        }
       });
       
       // Write test file

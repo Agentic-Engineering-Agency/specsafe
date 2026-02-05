@@ -36,11 +36,13 @@ program.addCommand(completeCommand);
 // Global error handling
 program.exitOverride();
 
-try {
-  await program.parseAsync();
-} catch (error: any) {
-  if (error.code !== 'commander.help' && error.code !== 'commander.version') {
-    console.error(chalk.red('Error:'), error.message);
-    process.exit(1);
+(async () => {
+  try {
+    await program.parseAsync();
+  } catch (error: any) {
+    if (error.code !== 'commander.help' && error.code !== 'commander.version') {
+      console.error(chalk.red('Error:'), error.message);
+      process.exit(1);
+    }
   }
-}
+})();

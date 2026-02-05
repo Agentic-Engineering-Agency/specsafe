@@ -4,7 +4,7 @@ import ora from 'ora';
 import { Workflow } from '@specsafe/core';
 import { ProjectTracker } from '@specsafe/core';
 import { readFile } from 'fs/promises';
-import { join } from 'path';
+import { join, basename } from 'path';
 
 export const specCommand = new Command('spec')
   .description('Validate spec requirements and move to SPEC stage')
@@ -38,7 +38,7 @@ export const specCommand = new Command('spec')
             name,
             `Spec loaded from ${specPath}`,
             'developer',
-            process.cwd().split('/').pop() || 'project'
+            basename(process.cwd())
           );
           
           // Parse requirements from content
@@ -49,9 +49,9 @@ export const specCommand = new Command('spec')
             if (rows && rows.length > 0) {
               spec.requirements = rows.map(row => ({
                 id: row.match(/FR-\d+/)?.[0] || 'REQ-1',
-                description: row.split('|')[2]?.trim() || 'Requirement',
+                text: row.split('|')[2]?.trim() || 'Requirement',
                 priority: 'P0' as const,
-                acceptanceCriteria: []
+                scenarios: []
               }));
             }
           }

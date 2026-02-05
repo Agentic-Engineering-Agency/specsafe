@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
 import { writeFile, mkdir, readdir } from 'fs/promises';
-import { join } from 'path';
+import { join, basename } from 'path';
 import { Workflow } from '@specsafe/core';
 import { ProjectTracker } from '@specsafe/core';
 
@@ -46,7 +46,7 @@ export const newCommand = new Command('new')
         name,
         options.description || `Spec for ${name}`,
         options.author,
-        process.cwd().split('/').pop() || 'project'
+        basename(process.cwd())
       );
 
       // Create spec file

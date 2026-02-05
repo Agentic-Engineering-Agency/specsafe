@@ -1,6 +1,5 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { readFile } from 'fs/promises';
 import { ProjectTracker } from '@specsafe/core';
 
 export const statusCommand = new Command('status')

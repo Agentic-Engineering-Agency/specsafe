@@ -85,6 +85,8 @@ export interface SpecSummary {
   stage: SpecStage;
   progress: number;
   lastUpdated: Date;
+  createdAt?: Date;
+  completedAt?: Date;
 }
 
 export interface ProjectMetrics {
