@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-02-11
+
+### Added
+- `specsafe rules` command — list, add, remove, and update AI coding tool integrations
+- `specsafe rules add <tool>` — install tool-specific configuration files
+- `specsafe rules remove <tool>` — uninstall tool configurations
+- `specsafe rules update` — update all installed rules to latest version
+- Interactive `specsafe init` — auto-detects installed tools (Cursor, Continue.dev, Aider, Zed) and offers to configure them
+- Tool configuration files for 5 AI coding assistants:
+  - **Cursor** — `.cursorrules` with spec-driven development instructions
+  - **Continue.dev** — `config.yaml` (v1 schema) with prompt files for `/specsafe`, `/spec`, `/validate` commands
+  - **Aider** — `.aider.conf.yml` + `.aiderignore` + `CONVENTIONS.md`
+  - **Zed** — `settings.json` with agent configuration
+  - **Git Hooks** — `pre-commit` hook for spec validation
+- Dynamic version tracking for installed rules
+- Executable permissions automatically set for git hook files
+- Path resolution with fallback for rules source directory
+- 194 passing tests (up from 139 in v0.1.0)
+
+### Fixed
+- Source path mapping for rule file installation (dot-prefixed directory handling)
+- `removeToolConfig` now handles malformed JSON gracefully
+- Pre-commit hook uses NUL-delimited filenames for safe handling of spaces
+
+### Security
+- Added `.env*` to `.gitignore`
+
 ## [0.1.0] - 2026-02-11
 
 ### Added
