@@ -109,7 +109,20 @@ export const completeCommand = new Command('complete')
       }
 
       // Now update workflow state and persist
-      workflow.moveToComplete(id, qaReport);
+      try {
+        workflow.moveToComplete(id, qaReport);
+      } catch (moveError: any) {
+        if (moveError.message.includes('not found')) {
+          throw new Error(`Spec '${id}' not found. Run 'specsafe spec ${id}' to create it first.`);
+        }
+        if (moveError.message.includes('Must be in QA stage')) {
+          throw new Error(`Spec '${id}' is not in QA stage. Run 'specsafe qa ${id}' first.`);
+        }
+        if (moveError.message.includes('NO-GO')) {
+          throw new Error(`Cannot complete: QA report recommends NO-GO. Fix issues and re-run 'specsafe qa ${id}' first.`);
+        }
+        throw moveError;
+      }
       await tracker.addSpec(workflow.getSpec(id)!);
 
       spinner.succeed(chalk.green(`✅ Completed ${id}`));
@@ -117,6 +130,15 @@ export const completeCommand = new Command('complete')
       console.log(chalk.green('Ready for production!'));
     } catch (error: any) {
       spinner.fail(chalk.red(error.message));
+      if (error.message.includes('not in QA stage') || error.message.includes('Run \'specsafe qa\'')) {
+        console.log(chalk.gray(`💡 Tip: Run 'specsafe qa ${id}' to run QA validation first.`));
+      } else if (error.message.includes('NO-GO')) {
+        console.log(chalk.gray(`💡 Tip: Fix the failing tests and re-run 'specsafe qa ${id}' before completing.`));
+      } else if (error.message.includes('not found')) {
+        console.log(chalk.gray(`💡 Tip: Run 'specsafe new <name>' to create a spec first.`));
+      } else if (error.message.includes('QA report')) {
+        console.log(chalk.gray(`💡 Tip: Run 'specsafe qa ${id}' to generate a QA report first.`));
+      }
       process.exit(1);
     }
   });

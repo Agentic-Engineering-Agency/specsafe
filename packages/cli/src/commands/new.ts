@@ -21,6 +21,16 @@ export const newCommand = new Command('new')
       // Generate spec ID with auto-increment to avoid collisions
       const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
       
+      // Check if specs/active directory exists
+      try {
+        await readdir('specs/active');
+      } catch (err: any) {
+        if (err.code === 'ENOENT') {
+          throw new Error('specs/active/ directory not found. Run "specsafe init" first to initialize the project.');
+        }
+        throw err;
+      }
+      
       // List existing specs for today and find max suffix
       let maxSuffix = 0;
       try {
@@ -135,6 +145,11 @@ export const newCommand = new Command('new')
       console.log(chalk.gray('  Edit the spec to add requirements, then run: specsafe spec <id>'));
     } catch (error: any) {
       spinner.fail(chalk.red(`Failed to create spec: ${error.message}`));
+      if (error.message.includes('specs/active/')) {
+        console.log(chalk.gray('💡 Tip: Run "specsafe init" to initialize the project first.'));
+      } else if (error.message.includes('already exists')) {
+        console.log(chalk.gray('💡 Tip: Use a different spec name or delete the existing spec first.'));
+      }
       process.exit(1);
     }
   });

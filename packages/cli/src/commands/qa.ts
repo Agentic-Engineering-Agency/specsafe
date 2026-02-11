@@ -32,9 +32,11 @@ export const qaCommand = new Command('qa')
       let testResults: TestResult[] = [];
       let coverage: CoverageReport = { statements: 0, branches: 0, functions: 0, lines: 0 };
       let allPassed = false;
+      let testsFound = false;
       
       try {
         const { stdout } = await execAsync('npm test -- --reporter=json --coverage');
+        testsFound = true;
         // Parse test results from JSON reporter output
         try {
           const parsed = JSON.parse(stdout);
@@ -65,12 +67,28 @@ export const qaCommand = new Command('qa')
         allPassed = testResults.every(r => r.failed === 0);
       } catch (testError) {
         // Tests failed (non-zero exit)
+        if (!testsFound) {
+          throw new Error('No tests found. Run \'specsafe test ' + id + '\' to generate tests first.');
+        }
         testResults = [{ file: 'test-suite', passed: 0, failed: 1, skipped: 0, duration: 0 }];
         allPassed = false;
       }
       
-      // Move to QA stage
-      workflow.moveToQA(id);
+      // Move to QA stage (validates implementation exists)
+      try {
+        workflow.moveToQA(id);
+      } catch (moveError: any) {
+        if (moveError.message.includes('not found')) {
+          throw new Error(`Spec '${id}' not found. Run 'specsafe spec ${id}' to create it first.`);
+        }
+        if (moveError.message.includes('Must be in CODE stage')) {
+          throw new Error(`Spec '${id}' is not in CODE stage. Run 'specsafe code ${id}' first.`);
+        }
+        if (moveError.message.includes('No implementation files')) {
+          throw new Error(`Spec '${id}' has no implementation files. Run 'specsafe code ${id}' and implement the functionality first.`);
+        }
+        throw moveError;
+      }
       
       // Build issues from failing tests as proper Issue objects
       const issues: Issue[] = testResults
@@ -116,6 +134,15 @@ export const qaCommand = new Command('qa')
       }
     } catch (error: any) {
       spinner.fail(chalk.red(error.message));
+      if (error.message.includes('not in CODE stage') || error.message.includes('Run \'specsafe code\'')) {
+        console.log(chalk.gray(`💡 Tip: Run 'specsafe code ${id}' to move to CODE stage first.`));
+      } else if (error.message.includes('No tests found') || error.message.includes('generate tests')) {
+        console.log(chalk.gray(`💡 Tip: Run 'specsafe test ${id}' to generate tests first.`));
+      } else if (error.message.includes('not found')) {
+        console.log(chalk.gray(`💡 Tip: Run 'specsafe new <name>' to create a spec first.`));
+      } else if (error.message.includes('No implementation files')) {
+        console.log(chalk.gray(`💡 Tip: Implement the functionality in src/ to match the requirements.`));
+      }
       process.exit(1);
     }
   });
