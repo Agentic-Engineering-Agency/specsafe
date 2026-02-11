@@ -3,9 +3,10 @@
  * Downloads rules from the GitHub repository or local source
  */
 
-import { readFile, access, mkdir, writeFile, copyFile } from 'fs/promises';
+import { readFile, access, mkdir, writeFile, copyFile, rm, chmod } from 'fs/promises';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { existsSync } from 'fs';
 import type { DownloadOptions, RuleOperationResult } from './types.js';
 import { getTool, isValidTool } from './registry.js';
 
@@ -25,6 +26,9 @@ export function getRulesSourcePath(): string {
     join(process.cwd(), 'rules'), // Local development
   ];
 
+  for (const p of possiblePaths) {
+    if (existsSync(p)) return p;
+  }
   return possiblePaths[0];
 }
 
@@ -124,11 +128,21 @@ export async function downloadRules(
       try {
         const content = await readFile(sourcePath, 'utf-8');
         await writeFile(targetPath, content);
+        
+        // Set execute permission for hook files
+        if (file.includes('hook') || file === 'pre-commit' || file === 'post-commit') {
+          await chmod(targetPath, 0o755);
+        }
       } catch (error: any) {
         // If file doesn't exist in source, create an empty placeholder
         if (error.code === 'ENOENT') {
           await mkdir(dirname(targetPath), { recursive: true });
           await writeFile(targetPath, getPlaceholderContent(toolName, file));
+          
+          // Set execute permission for hook files
+          if (file.includes('hook') || file === 'pre-commit' || file === 'post-commit') {
+            await chmod(targetPath, 0o755);
+          }
         } else {
           throw error;
         }
@@ -268,6 +282,3 @@ function getPlaceholderContent(toolName: string, fileName: string): string {
 `;
   }
 }
-
-// Import rm for removeRules
-import { rm } from 'fs/promises';

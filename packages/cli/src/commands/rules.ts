@@ -10,7 +10,7 @@ import {
   isValidTool,
   getTool,
 } from '../rules/index.js';
-import { downloadRules, updateRules, removeRules } from '../rules/downloader.js';
+import { downloadRules, updateRules, removeRules, getRulesVersion } from '../rules/downloader.js';
 
 /**
  * Rules command - manage AI coding assistant integrations
@@ -80,7 +80,8 @@ export const rulesCommand = new Command('rules')
 
           if (result.success) {
             // Save to config
-            await saveToolConfig(toolName, { enabled: true, version: '1.0.0' });
+            const version = await getRulesVersion(toolName);
+            await saveToolConfig(toolName, { enabled: true, version });
             spinner.succeed(chalk.green(result.message));
             
             console.log(chalk.gray(`\nCreated files:`));

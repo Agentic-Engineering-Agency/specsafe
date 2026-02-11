@@ -145,15 +145,15 @@ export async function removeToolConfig(
   cwd: string = process.cwd()
 ): Promise<void> {
   const configPath = join(cwd, 'specsafe.config.json');
+  let content: string;
   try {
-    const content = await readFile(configPath, 'utf-8');
-    const config = JSON.parse(content);
-    
-    if (config.tools && config.tools[toolName]) {
-      delete config.tools[toolName];
-      await writeFile(configPath, JSON.stringify(config, null, 2));
-    }
+    content = await readFile(configPath, 'utf-8');
   } catch {
-    // Config doesn't exist or tool not in config
+    return;
+  }
+  const config = JSON.parse(content);
+  if (config.tools && config.tools[toolName]) {
+    delete config.tools[toolName];
+    await writeFile(configPath, JSON.stringify(config, null, 2));
   }
 }
