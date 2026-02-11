@@ -10,7 +10,7 @@ if [ ! -f "PROJECT_STATE.md" ]; then
     exit 1
 fi
 
-# Check for TODO markers in staged files only
+# Check for TODO markers in staged files only (NUL-delimited for safe filenames)
 if git diff --cached --name-only -z --diff-filter=ACM -- '*.ts' '*.js' | xargs -0 grep -l "TODO.*spec" 2>/dev/null | head -1 >/dev/null; then
     echo "⚠️  Found TODO items mentioning specs - review before committing"
 fi

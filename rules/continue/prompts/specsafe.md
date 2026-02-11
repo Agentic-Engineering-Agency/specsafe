@@ -1,5 +1,6 @@
 ---
 name: specsafe
+description: Show SpecSafe project status
 invokable: true
 ---
 

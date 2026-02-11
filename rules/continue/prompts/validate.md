@@ -1,5 +1,6 @@
 ---
 name: validate
+description: Validate current implementation against spec
 invokable: true
 ---
 

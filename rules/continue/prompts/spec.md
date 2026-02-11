@@ -1,5 +1,6 @@
 ---
 name: spec
+description: Show details for a specific spec by ID
 invokable: true
 ---
 

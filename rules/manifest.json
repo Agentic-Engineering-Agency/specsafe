@@ -8,8 +8,8 @@
     },
     "continue": {
       "version": "1.0.0",
-      "source": "rules/continue/config.yaml",
-      "files": [".continue/config.yaml"]
+      "source": "rules/continue/",
+      "files": [".continue/config.yaml", ".continue/prompts/specsafe.md", ".continue/prompts/spec.md", ".continue/prompts/validate.md"]
     },
     "aider": {
       "version": "1.0.0",
