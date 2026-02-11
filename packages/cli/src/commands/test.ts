@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { Workflow, ProjectTracker, validateSpecId } from '@specsafe/core';
 import { TypeScriptTestGenerator, ScenarioParser } from '@specsafe/test-gen';
+import { loadConfig } from '../config.js';
 import { mkdir, writeFile, readFile } from 'fs/promises';
 import { join } from 'path';
 
@@ -16,6 +17,7 @@ export const testCommand = new Command('test')
       // Validate spec ID format
       validateSpecId(id);
 
+      const config = await loadConfig();
       const workflow = new Workflow();
       const tracker = new ProjectTracker(process.cwd());
       
@@ -62,7 +64,7 @@ export const testCommand = new Command('test')
       
       // Also parse inline scenarios from spec content
       const generator = new TypeScriptTestGenerator({
-        framework: 'vitest'
+        framework: config.testFramework
       });
       const inlineScenarios = generator.parseScenarios(specContent);
       
@@ -94,6 +96,7 @@ export const testCommand = new Command('test')
       
       spinner.succeed(chalk.green(`Generated tests for ${id}`));
       console.log(chalk.blue(`  Test file: ${testPath}`));
+      console.log(chalk.blue(`  Framework: ${config.testFramework}`));
       console.log(chalk.blue(`  Requirements: ${requirements.length}`));
       console.log(chalk.blue('Next: Run specsafe code <id> to start implementation'));
     } catch (error: any) {
