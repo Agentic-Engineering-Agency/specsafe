@@ -25,6 +25,16 @@
       "version": "1.0.0",
       "source": "rules/git-hooks/pre-commit",
       "files": [".githooks/pre-commit"]
+    },
+    "claude-code": {
+      "version": "1.0.0",
+      "source": "rules/claude-code/CLAUDE.md",
+      "files": ["CLAUDE.md"]
+    },
+    "crush": {
+      "version": "1.0.0",
+      "source": "rules/crush/CRUSH.md",
+      "files": ["CRUSH.md"]
     }
   }
 }
