@@ -3,6 +3,7 @@
 
 name: SpecSafe
 version: 1.0.0
+schema: v1
 
 # Prompt files for spec-driven development (invokable as /commands)
 prompts:

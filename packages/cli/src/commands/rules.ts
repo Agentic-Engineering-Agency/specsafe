@@ -145,7 +145,10 @@ export const rulesCommand = new Command('rules')
           spinner.text = `Updating ${installedTools.length} rule set(s)...`;
 
           const results = await Promise.all(
-            installedTools.map((tool) => updateRules(tool.name))
+            installedTools.map(async (tool) => {
+              const result = await updateRules(tool.name);
+              return { ...result, toolName: tool.name };
+            })
           );
 
           spinner.stop();
@@ -156,6 +159,8 @@ export const rulesCommand = new Command('rules')
           for (const result of results) {
             if (result.success) {
               console.log(chalk.green(`✓ ${result.message}`));
+              const version = await getRulesVersion(result.toolName);
+              await saveToolConfig(result.toolName, { enabled: true, version });
               successCount++;
             } else {
               console.log(chalk.red(`✗ ${result.message}`));
