@@ -151,7 +151,15 @@ export async function removeToolConfig(
   } catch {
     return;
   }
-  const config = JSON.parse(content);
+
+  let config: Record<string, any>;
+  try {
+    config = JSON.parse(content);
+  } catch {
+    // Config is malformed JSON, nothing safe to do
+    return;
+  }
+
   if (config.tools && config.tools[toolName]) {
     delete config.tools[toolName];
     await writeFile(configPath, JSON.stringify(config, null, 2));

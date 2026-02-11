@@ -119,7 +119,11 @@ export async function downloadRules(
 
     // Install each file defined for the tool
     for (const file of tool.files) {
-      const sourcePath = join(rulesPath, file);
+      // tool.files contains destination paths (e.g. ".continue/config.yaml")
+      // Source files are stored flat in rules/<tool>/ (e.g. "rules/continue/config.yaml")
+      // Extract just the filename for source path lookup
+      const sourceFile = file.split('/').pop()!;
+      const sourcePath = join(rulesPath, sourceFile);
       const targetPath = join(cwd, file);
 
       // Create parent directories if needed
