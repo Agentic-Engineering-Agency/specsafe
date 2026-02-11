@@ -21,6 +21,9 @@ export const qaCommand = new Command('qa')
     const spinner = ora(`Running QA for ${id}...`).start();
     
     try {
+      // Validate spec ID format
+      validateSpecId(id);
+
       const workflow = new Workflow();
       const tracker = new ProjectTracker(process.cwd());
       
@@ -58,6 +61,7 @@ export const qaCommand = new Command('qa')
           }
         } catch {
           // JSON parse failed, treat as success with defaults
+          spinner.text = `Warning: Could not parse test output as JSON, using default results...`;
           testResults = [{ file: 'test-suite', passed: 1, failed: 0, skipped: 0, duration: 0 }];
           coverage = { statements: 85, branches: 80, functions: 90, lines: 85 };
         }

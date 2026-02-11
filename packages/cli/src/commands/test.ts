@@ -16,6 +16,9 @@ export const testCommand = new Command('test')
     const spinner = ora(`Generating tests for ${id}...`).start();
     
     try {
+      // Validate spec ID format
+      validateSpecId(id);
+
       const workflow = new Workflow();
       const tracker = new ProjectTracker(process.cwd());
       

@@ -15,6 +15,9 @@ export const specCommand = new Command('spec')
     const spinner = ora(`Validating ${id} requirements...`).start();
     
     try {
+      // Validate spec ID format
+      validateSpecId(id);
+
       const workflow = new Workflow();
       const tracker = new ProjectTracker(process.cwd());
       

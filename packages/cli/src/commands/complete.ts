@@ -17,6 +17,9 @@ export const completeCommand = new Command('complete')
     const spinner = ora(`Completing ${id}...`).start();
     
     try {
+      // Validate spec ID format
+      validateSpecId(id);
+
       const workflow = new Workflow();
       const tracker = new ProjectTracker(process.cwd());
 
@@ -66,6 +69,13 @@ export const completeCommand = new Command('complete')
       }
       if (qaReport.recommendation !== 'GO') {
         throw new Error('Cannot complete: QA report recommends NO-GO. Address issues first.');
+      }
+
+      // Validate required fields are present
+      const requiredFields = ['id', 'specId', 'timestamp', 'recommendation', 'testResults', 'coverage', 'issues', 'notes'];
+      const missingFields = requiredFields.filter(field => !(field in qaReport));
+      if (missingFields.length > 0) {
+        throw new Error(`QA report is missing required fields: ${missingFields.join(', ')}`);
       }
 
       // Move file FIRST, before updating state, to prevent inconsistent state on failure
