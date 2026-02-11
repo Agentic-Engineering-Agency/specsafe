@@ -1,5 +1,7 @@
 # SpecSafe
 
+![CI](https://github.com/luci-efe/specsafe/actions/workflows/ci.yml/badge.svg)
+
 **Test-Driven Development framework for AI-assisted software engineering**
 
 ```text

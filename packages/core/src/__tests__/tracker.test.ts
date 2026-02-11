@@ -76,8 +76,8 @@ describe('ProjectTracker', () => {
 
 | ID | Name | Stage | Progress | Last Updated |
 |----|------|-------|----------|--------------|
-| SPEC-2024-001 | First Spec | SPEC | 20% | 2024-01-15 |
-| SPEC-2024-002 | Completed Spec | COMPLETE | 100% | 2024-01-14 |
+| SPEC-20240115-001 | First Spec | SPEC | 20% | 2024-01-15 |
+| SPEC-20240115-002 | Completed Spec | COMPLETE | 100% | 2024-01-14 |
 
 ---
 
@@ -90,9 +90,9 @@ describe('ProjectTracker', () => {
       expect(state?.projectName).toBe('Test Project');
       expect(state?.version).toBe('1.0.0');
       expect(state?.specs).toHaveLength(2);
-      expect(state?.specs[0].id).toBe('SPEC-2024-001');
+      expect(state?.specs[0].id).toBe('SPEC-20240115-001');
       expect(state?.specs[0].stage).toBe('spec');
-      expect(state?.specs[1].id).toBe('SPEC-2024-002');
+      expect(state?.specs[1].id).toBe('SPEC-20240115-002');
       expect(state?.specs[1].stage).toBe('complete');
       expect(state?.metrics.totalSpecs).toBe(2);
       expect(state?.metrics.completionRate).toBe(0.5);
@@ -104,7 +104,7 @@ describe('ProjectTracker', () => {
       await tracker.initialize('Test Project');
       
       const spec: Spec = {
-        id: 'SPEC-2024-001',
+        id: 'SPEC-20240115-001',
         name: 'New Spec',
         description: 'A new specification',
         stage: 'spec',
@@ -120,7 +120,7 @@ describe('ProjectTracker', () => {
       
       const state = await tracker.readState();
       expect(state?.specs).toHaveLength(1);
-      expect(state?.specs[0].id).toBe('SPEC-2024-001');
+      expect(state?.specs[0].id).toBe('SPEC-20240115-001');
       expect(state?.specs[0].name).toBe('New Spec');
       expect(state?.metrics.totalSpecs).toBe(1);
       expect(state?.metrics.byStage.spec).toBe(1);
@@ -130,7 +130,7 @@ describe('ProjectTracker', () => {
       await tracker.initialize('Test Project');
       
       const spec1: Spec = {
-        id: 'SPEC-2024-001',
+        id: 'SPEC-20240115-001',
         name: 'Original Name',
         description: 'Original',
         stage: 'spec',
@@ -145,7 +145,7 @@ describe('ProjectTracker', () => {
       await tracker.addSpec(spec1);
       
       const spec2: Spec = {
-        id: 'SPEC-2024-001',
+        id: 'SPEC-20240115-001',
         name: 'Updated Name',
         description: 'Updated',
         stage: 'test',
@@ -171,7 +171,7 @@ describe('ProjectTracker', () => {
       await tracker.initialize('Round-trip Test');
       
       const spec: Spec = {
-        id: 'SPEC-2024-001',
+        id: 'SPEC-20240115-001',
         name: 'Round-trip Spec',
         description: 'Testing round-trip',
         stage: 'code',
@@ -187,7 +187,7 @@ describe('ProjectTracker', () => {
       
       const state = await tracker.readState();
       expect(state?.projectName).toBe('Round-trip Test');
-      expect(state?.specs[0].id).toBe('SPEC-2024-001');
+      expect(state?.specs[0].id).toBe('SPEC-20240115-001');
       expect(state?.specs[0].name).toBe('Round-trip Spec');
       expect(state?.specs[0].stage).toBe('code');
       expect(state?.specs[0].progress).toBe(60);
@@ -259,10 +259,10 @@ No specs yet.
       await tracker.initialize('Metrics Test');
       
       const specs: Spec[] = [
-        { id: 'SPEC-2024-001', name: 'Spec 1', description: '', stage: 'spec', createdAt: new Date(), updatedAt: new Date(), requirements: [], testFiles: [], implementationFiles: [], metadata: { author: '', project: '', tags: [] } },
-        { id: 'SPEC-2024-002', name: 'Spec 2', description: '', stage: 'spec', createdAt: new Date(), updatedAt: new Date(), requirements: [], testFiles: [], implementationFiles: [], metadata: { author: '', project: '', tags: [] } },
-        { id: 'SPEC-2024-003', name: 'Spec 3', description: '', stage: 'test', createdAt: new Date(), updatedAt: new Date(), requirements: [], testFiles: [], implementationFiles: [], metadata: { author: '', project: '', tags: [] } },
-        { id: 'SPEC-2024-004', name: 'Spec 4', description: '', stage: 'complete', createdAt: new Date(), updatedAt: new Date(), completedAt: new Date(), requirements: [], testFiles: [], implementationFiles: [], metadata: { author: '', project: '', tags: [] } },
+        { id: 'SPEC-20240115-001', name: 'Spec 1', description: '', stage: 'spec', createdAt: new Date(), updatedAt: new Date(), requirements: [], testFiles: [], implementationFiles: [], metadata: { author: '', project: '', tags: [] } },
+        { id: 'SPEC-20240115-002', name: 'Spec 2', description: '', stage: 'spec', createdAt: new Date(), updatedAt: new Date(), requirements: [], testFiles: [], implementationFiles: [], metadata: { author: '', project: '', tags: [] } },
+        { id: 'SPEC-20240115-003', name: 'Spec 3', description: '', stage: 'test', createdAt: new Date(), updatedAt: new Date(), requirements: [], testFiles: [], implementationFiles: [], metadata: { author: '', project: '', tags: [] } },
+        { id: 'SPEC-20240115-004', name: 'Spec 4', description: '', stage: 'complete', createdAt: new Date(), updatedAt: new Date(), completedAt: new Date(), requirements: [], testFiles: [], implementationFiles: [], metadata: { author: '', project: '', tags: [] } },
       ];
       
       for (const spec of specs) {
@@ -282,9 +282,9 @@ No specs yet.
       await tracker.initialize('Completion Test');
       
       const specs: Spec[] = [
-        { id: 'SPEC-2024-001', name: 'Spec 1', description: '', stage: 'spec', createdAt: new Date(), updatedAt: new Date(), requirements: [], testFiles: [], implementationFiles: [], metadata: { author: '', project: '', tags: [] } },
-        { id: 'SPEC-2024-002', name: 'Spec 2', description: '', stage: 'complete', createdAt: new Date(), updatedAt: new Date(), completedAt: new Date(), requirements: [], testFiles: [], implementationFiles: [], metadata: { author: '', project: '', tags: [] } },
-        { id: 'SPEC-2024-003', name: 'Spec 3', description: '', stage: 'complete', createdAt: new Date(), updatedAt: new Date(), completedAt: new Date(), requirements: [], testFiles: [], implementationFiles: [], metadata: { author: '', project: '', tags: [] } },
+        { id: 'SPEC-20240115-001', name: 'Spec 1', description: '', stage: 'spec', createdAt: new Date(), updatedAt: new Date(), requirements: [], testFiles: [], implementationFiles: [], metadata: { author: '', project: '', tags: [] } },
+        { id: 'SPEC-20240115-002', name: 'Spec 2', description: '', stage: 'complete', createdAt: new Date(), updatedAt: new Date(), completedAt: new Date(), requirements: [], testFiles: [], implementationFiles: [], metadata: { author: '', project: '', tags: [] } },
+        { id: 'SPEC-20240115-003', name: 'Spec 3', description: '', stage: 'complete', createdAt: new Date(), updatedAt: new Date(), completedAt: new Date(), requirements: [], testFiles: [], implementationFiles: [], metadata: { author: '', project: '', tags: [] } },
       ];
       
       for (const spec of specs) {
@@ -306,7 +306,7 @@ No specs yet.
       
       const specs: Spec[] = [
         { 
-          id: 'SPEC-2024-001', 
+          id: 'SPEC-20240115-001', 
           name: 'Spec 1', 
           description: '', 
           stage: 'complete', 
@@ -319,7 +319,7 @@ No specs yet.
           metadata: { author: '', project: '', tags: [] } 
         },
         { 
-          id: 'SPEC-2024-002', 
+          id: 'SPEC-20240115-002', 
           name: 'Spec 2', 
           description: '', 
           stage: 'complete', 
