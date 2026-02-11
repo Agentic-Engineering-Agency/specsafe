@@ -277,8 +277,8 @@ my-project/
 
 ## Related Packages
 
-- [@specsafe/core](../core/) - Core workflow engine and types
-- [@specsafe/test-gen](../test-gen/) - Test generation library
+- [@specsafe/core](https://www.npmjs.com/package/@specsafe/core) - Core workflow engine and types
+- [@specsafe/test-gen](https://www.npmjs.com/package/@specsafe/test-gen) - Test generation library
 
 ## Specification Format
 

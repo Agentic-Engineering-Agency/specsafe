@@ -161,7 +161,7 @@ describe('My Feature', () => {
 
 ```typescript
 import { ScenarioParser, TypeScriptTestGenerator } from '@specsafe/test-gen';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 
 // Read spec file
 const specContent = readFileSync('./specs/active/login.spec.md', 'utf-8');

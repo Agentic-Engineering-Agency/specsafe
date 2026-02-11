@@ -69,7 +69,7 @@ const spec = await workflow.moveToCode('user-auth');
 
 #### `moveToQA(specId: string, report?: QAReport): Promise<Spec>`
 
-Move a spec to QA or complete QA.
+Transition a spec into QA review or mark QA as complete. Optionally accepts a QAReport to record results.
 
 ```typescript
 const spec = await workflow.moveToQA('user-auth', {
