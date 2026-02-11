@@ -20,7 +20,7 @@ export const AVAILABLE_RULES: ToolDefinition[] = [
   {
     name: 'continue',
     description: 'Continue.dev for VS Code',
-    files: ['.continue/config.yaml'],
+    files: ['.continue/config.json', '.continue/rules.md'],
   },
   {
     name: 'aider',
@@ -145,15 +145,15 @@ export async function removeToolConfig(
   cwd: string = process.cwd()
 ): Promise<void> {
   const configPath = join(cwd, 'specsafe.config.json');
-  let content: string;
   try {
-    content = await readFile(configPath, 'utf-8');
+    const content = await readFile(configPath, 'utf-8');
+    const config = JSON.parse(content);
+    
+    if (config.tools && config.tools[toolName]) {
+      delete config.tools[toolName];
+      await writeFile(configPath, JSON.stringify(config, null, 2));
+    }
   } catch {
-    return;
-  }
-  const config = JSON.parse(content);
-  if (config.tools && config.tools[toolName]) {
-    delete config.tools[toolName];
-    await writeFile(configPath, JSON.stringify(config, null, 2));
+    // Config doesn't exist or tool not in config
   }
 }

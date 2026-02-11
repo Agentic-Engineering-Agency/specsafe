@@ -128,7 +128,7 @@ describe('Rules Registry', () => {
     const { AVAILABLE_RULES } = await import('../rules/registry.js');
     const continueTool = AVAILABLE_RULES.find((t) => t.name === 'continue');
     expect(continueTool).toBeDefined();
-    expect(continueTool?.files).toContain('.continue/config.yaml');
+    expect(continueTool?.files).toContain('.continue/config.json');
   });
 
   it('should include aider tool', async () => {
