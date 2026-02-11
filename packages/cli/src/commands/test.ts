@@ -10,7 +10,8 @@ import { join } from 'path';
 export const testCommand = new Command('test')
   .description('Generate tests from spec (SPEC → TEST)')
   .argument('<id>', 'Spec ID')
-  .action(async (id: string) => {
+  .option('-n, --dry-run', 'Preview changes without writing files')
+  .action(async (id: string, options: { dryRun?: boolean }) => {
     const spinner = ora(`Generating tests for ${id}...`).start();
     
     try {
@@ -83,9 +84,28 @@ export const testCommand = new Command('test')
       // Generate test code using the actual spec object
       const testCode = generator.generate(spec);
       
+      // Determine test file path
+      const testPath = join('tests', `${id.toLowerCase().replace(/-/g, '_')}.test.ts`);
+      
+      // Handle dry-run mode
+      if (options.dryRun) {
+        spinner.stop();
+        console.log(chalk.cyan('[DRY RUN] Would generate the following test file:\n'));
+        console.log(chalk.cyan(`  ${testPath}`));
+        console.log(chalk.cyan(`\nTest code preview (first 20 lines):\n`));
+        const previewLines = testCode.split('\n').slice(0, 20).join('\n');
+        console.log(chalk.gray(previewLines));
+        if (testCode.split('\n').length > 20) {
+          console.log(chalk.gray('  ... (truncated)'));
+        }
+        console.log(chalk.cyan(`\nFramework: ${config.testFramework}`));
+        console.log(chalk.cyan(`Requirements: ${requirements.length}`));
+        console.log(chalk.cyan(`Would update PROJECT_STATE.md for spec: ${id}`));
+        process.exit(0);
+      }
+      
       // Write test file
       await mkdir('tests', { recursive: true });
-      const testPath = join('tests', `${id.toLowerCase().replace(/-/g, '_')}.test.ts`);
       await writeFile(testPath, testCode);
       
       // Update spec with test file reference

@@ -10,7 +10,8 @@ export const completeCommand = new Command('complete')
   .description('Complete spec (QA → COMPLETE)')
   .argument('<id>', 'Spec ID')
   .option('-r, --report <path>', 'Path to QA report')
-  .action(async (id: string, options: { report?: string }) => {
+  .option('-n, --dry-run', 'Preview changes without writing files')
+  .action(async (id: string, options: { report?: string; dryRun?: boolean }) => {
     const spinner = ora(`Completing ${id}...`).start();
     
     try {
@@ -75,10 +76,26 @@ export const completeCommand = new Command('complete')
         throw new Error(`QA report is missing required fields: ${missingFields.join(', ')}`);
       }
 
-      // Move file FIRST, before updating state, to prevent inconsistent state on failure
       const sourcePath = join('specs', 'active', `${id}.md`);
       const targetPath = join('specs', 'completed', `${id}.md`);
-      
+
+      // Handle dry-run mode
+      if (options.dryRun) {
+        spinner.stop();
+        console.log(chalk.cyan('[DRY RUN] Would perform the following actions:\n'));
+        console.log(chalk.cyan('  State transition:'));
+        console.log(chalk.gray(`    QA → COMPLETE`));
+        console.log(chalk.cyan(`\n  File move:`));
+        console.log(chalk.gray(`    ${sourcePath} → ${targetPath}`));
+        console.log(chalk.cyan(`\n  QA Report:`));
+        console.log(chalk.gray(`    ID: ${qaReport.id}`));
+        console.log(chalk.gray(`    Recommendation: ${qaReport.recommendation}`));
+        console.log(chalk.gray(`    Coverage: ${JSON.stringify(qaReport.coverage)}`));
+        console.log(chalk.cyan(`\n  Would update PROJECT_STATE.md for spec: ${id}`));
+        process.exit(0);
+      }
+
+      // Move file FIRST, before updating state, to prevent inconsistent state on failure
       try {
         await access(sourcePath);
         await rename(sourcePath, targetPath);

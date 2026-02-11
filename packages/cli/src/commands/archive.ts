@@ -8,7 +8,8 @@ import { join } from 'path';
 export const archiveCommand = new Command('archive')
   .description('Move a COMPLETE spec to ARCHIVED stage')
   .argument('<id>', 'Spec ID to archive')
-  .action(async (id: string) => {
+  .option('-n, --dry-run', 'Preview changes without writing files')
+  .action(async (id: string, options: { dryRun?: boolean }) => {
     const spinner = ora(`Archiving ${id}...`).start();
     
     try {
@@ -43,11 +44,30 @@ export const archiveCommand = new Command('archive')
       const destPath = join(archiveDir, `${id}.md`);
       
       // Check if source file exists
+      let fileExists = false;
       try {
         await access(sourcePath);
+        fileExists = true;
       } catch {
-        spinner.warn(chalk.yellow(`Spec file not found at ${sourcePath}`));
-        console.log(chalk.gray('Continuing with workflow archive...'));
+        // Source file doesn't exist
+      }
+      
+      // Handle dry-run mode
+      if (options.dryRun) {
+        spinner.stop();
+        console.log(chalk.cyan('[DRY RUN] Would perform the following actions:\n'));
+        console.log(chalk.cyan('  State transition:'));
+        console.log(chalk.gray(`    COMPLETE → ARCHIVED`));
+        if (fileExists) {
+          console.log(chalk.cyan(`\n  File move:`));
+          console.log(chalk.gray(`    ${sourcePath} → ${destPath}`));
+        } else {
+          console.log(chalk.cyan(`\n  File move:`));
+          console.log(chalk.yellow(`    Source file not found at ${sourcePath}`));
+          console.log(chalk.gray(`    Would continue with workflow archive only`));
+        }
+        console.log(chalk.cyan(`\n  Would update PROJECT_STATE.md for spec: ${id}`));
+        process.exit(0);
       }
       
       // Ensure archive directory exists
