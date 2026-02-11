@@ -49,7 +49,7 @@ After generating tests:
 - Test files location
 - Number of tests created
 - Reminder: Tests are marked with `.skip`
-- Prompt: "Implement the tests to make them pass. Ready? Run `/specsafe-code <id>`"
+- Prompt: "Implement the tests to make them pass. Ready? Run `specsafe code <id>`"
 
 **Guardrails**
 - Spec must be in SPEC stage

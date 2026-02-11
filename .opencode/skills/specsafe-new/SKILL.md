@@ -27,7 +27,7 @@ Create a new SpecSafe specification.
 4. **Show results**
    - Spec ID and location
    - Current stage: SPEC
-   - Next: Edit requirements, then run `specsafe-test <id>`
+   - Next: Edit requirements, then run `specsafe test <id>`
 
 **Guardrails:**
 - Require valid kebab-case name

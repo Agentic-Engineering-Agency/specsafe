@@ -6,6 +6,7 @@
 import { writeFile, readFile, access } from 'fs/promises';
 import { join } from 'path';
 import type { Spec, ProjectState, SpecSummary, ProjectMetrics, SpecStage } from './types.js';
+import type { Workflow } from './workflow.js';
 
 export class ProjectTracker {
   private projectPath: string;
@@ -259,37 +260,43 @@ ${rows}`;
   /**
    * Load all specs from PROJECT_STATE.md into a Workflow instance
    */
-  async loadSpecsIntoWorkflow(workflow: any): Promise<void> {
+  async loadSpecsIntoWorkflow(workflow: Workflow): Promise<void> {
     const state = await this.readState();
     if (!state) return;
     
     for (const summary of state.specs) {
       // Try to read the actual spec file for full details
-      const specPath = join(this.projectPath, 'specs', summary.stage === 'complete' || summary.stage === 'archived' ? 'completed' : 'active', `${summary.id}.md`);
+      const dir = summary.stage === 'complete' || summary.stage === 'archived' ? 'completed' : 'active';
+      const specPath = join(this.projectPath, 'specs', dir, `${summary.id}.md`);
+      
+      // Create spec object from summary data
+      const spec: Spec = {
+        id: summary.id,
+        name: summary.name,
+        description: '',
+        stage: summary.stage,
+        createdAt: summary.createdAt || summary.lastUpdated,
+        updatedAt: summary.lastUpdated,
+        completedAt: summary.completedAt,
+        requirements: [],
+        testFiles: [],
+        implementationFiles: [],
+        metadata: {
+          author: '',
+          project: '',
+          tags: []
+        }
+      };
+      
+      // Try to read actual spec file for richer data
       try {
-        const content = await readFile(specPath, 'utf-8');
-        // Create a minimal spec object with the data we have
-        const spec: Spec = {
-          id: summary.id,
-          name: summary.name,
-          description: '', // Would need to parse from markdown
-          stage: summary.stage,
-          createdAt: summary.lastUpdated,
-          updatedAt: summary.lastUpdated,
-          requirements: [],
-          testFiles: [],
-          implementationFiles: [],
-          metadata: {
-            author: '',
-            project: '',
-            tags: []
-          }
-        };
-        // Inject into workflow's specs map
-        workflow.loadSpec(spec);
+        await access(specPath);
+        // File exists — we could parse more details here in the future
       } catch {
-        // Spec file not found, skip
+        // Spec file not found, still load the summary-based spec
       }
+      
+      workflow.loadSpec(spec);
     }
   }
 
