@@ -9,12 +9,12 @@ export const archiveCommand = new Command('archive')
   .description('Move a COMPLETE spec to ARCHIVED stage')
   .argument('<id>', 'Spec ID to archive')
   .action(async (id: string) => {
-    // Validate spec ID format
-    validateSpecId(id);
-    
     const spinner = ora(`Archiving ${id}...`).start();
     
     try {
+      // Validate spec ID format
+      validateSpecId(id);
+
       const workflow = new Workflow();
       const tracker = new ProjectTracker(process.cwd());
       
@@ -54,10 +54,14 @@ export const archiveCommand = new Command('archive')
       await mkdir(archiveDir, { recursive: true });
       
       // Move the file (if it exists)
+      let fileMoved = false;
       try {
         await rename(sourcePath, destPath);
-      } catch {
-        // File might not exist, that's okay
+        fileMoved = true;
+      } catch (err: any) {
+        if (err.code !== 'ENOENT') {
+          throw err;
+        }
       }
       
       // Use workflow to archive the spec
@@ -71,7 +75,11 @@ export const archiveCommand = new Command('archive')
       
       spinner.succeed(chalk.green(`Archived ${id}`));
       console.log(chalk.blue(`  Stage: ${spec.stage.toUpperCase()} → ARCHIVED`));
-      console.log(chalk.gray(`  File moved to: specs/archive/${id}.md`));
+      if (fileMoved) {
+        console.log(chalk.gray(`  File moved to: specs/archive/${id}.md`));
+      } else {
+        console.log(chalk.gray(`  No spec file was moved (file not found).`));
+      }
       
     } catch (error: any) {
       spinner.fail(chalk.red(error.message));
