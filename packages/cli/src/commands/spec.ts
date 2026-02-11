@@ -75,6 +75,10 @@ export const specCommand = new Command('spec')
       console.log(chalk.blue('Next: Run specsafe test <id> to generate tests'));
     } catch (error: any) {
       spinner.fail(chalk.red(error.message));
+      if (error.message.includes('not found')) {
+        console.log(chalk.gray(`💡 Tip: Run 'specsafe new <name>' to create a spec first.`));
+        console.log(chalk.gray(`   Expected file: specs/active/SPEC-YYYYMMDD-NNN.md`));
+      }
       process.exit(1);
     }
   });

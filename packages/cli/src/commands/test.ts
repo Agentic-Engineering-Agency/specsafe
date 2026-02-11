@@ -79,7 +79,20 @@ export const testCommand = new Command('test')
       }
       
       // Move to test stage (validates requirements exist)
-      workflow.moveToTest(id);
+      try {
+        workflow.moveToTest(id);
+      } catch (moveError: any) {
+        if (moveError.message.includes('not found')) {
+          throw new Error(`Spec '${id}' not found in project state. Run 'specsafe spec ${id}' first.`);
+        }
+        if (moveError.message.includes('Must be in SPEC stage')) {
+          throw new Error(`Spec '${id}' is not in SPEC stage. Run 'specsafe spec ${id}' first.`);
+        }
+        if (moveError.message.includes('No requirements defined')) {
+          throw new Error(`Spec '${id}' has no requirements defined. Add requirements to the spec file first.`);
+        }
+        throw moveError;
+      }
       
       // Generate test code using the actual spec object
       const testCode = generator.generate(spec);
@@ -121,6 +134,14 @@ export const testCommand = new Command('test')
       console.log(chalk.blue('Next: Run specsafe code <id> to start implementation'));
     } catch (error: any) {
       spinner.fail(chalk.red(error.message));
+      if (error.message.includes('not found in project state') || error.message.includes('Run \'specsafe spec\'')) {
+        console.log(chalk.gray(`💡 Tip: Run 'specsafe spec ${id}' to validate the spec first.`));
+      } else if (error.message.includes('no requirements defined')) {
+        console.log(chalk.gray(`💡 Tip: Add requirements to specs/active/${id}.md before generating tests.`));
+      } else if (error.message.includes('Spec file not found')) {
+        console.log(chalk.gray(`💡 Tip: Run 'specsafe new <name>' to create a spec first.`));
+        console.log(chalk.gray(`   Expected file: specs/active/${id}.md`));
+      }
       process.exit(1);
     }
   });

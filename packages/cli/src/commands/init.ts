@@ -77,6 +77,9 @@ export const initCommand = new Command('init')
       console.log('  3. Edit specs/active/ to define requirements');
     } catch (error: any) {
       spinner.fail(chalk.red(`Failed to initialize: ${error.message}`));
+      if (error.message.includes('EEXIST')) {
+        console.log(chalk.gray('💡 Tip: Directory already exists. Use \'specsafe init <name>\' to create elsewhere.'));
+      }
       process.exit(1);
     }
   });

@@ -16,11 +16,12 @@ export const listCommand = new Command('list')
       const config = await loadConfig();
       const tracker = new ProjectTracker(process.cwd());
       const state = await tracker.readState();
-      
+
       if (!state) {
         spinner.stop();
-        console.log(chalk.yellow('No SpecSafe project found. Run: specsafe init'));
-        return;
+        console.log(chalk.yellow('No SpecSafe project found.'));
+        console.log(chalk.gray('💡 Tip: Run "specsafe init" to initialize a new project.'));
+        process.exit(1);
       }
       
       spinner.stop();
@@ -108,6 +109,11 @@ export const listCommand = new Command('list')
       
     } catch (error: any) {
       spinner.fail(chalk.red(error.message));
+      if (error.message.includes('PROJECT_STATE') || error.message.includes('not found')) {
+        console.log(chalk.gray('💡 Tip: Run "specsafe init" to initialize the project.'));
+      } else if (error.message.includes('Invalid stage')) {
+        console.log(chalk.gray('💡 Tip: Valid stages: spec, test, code, qa, complete, archived'));
+      }
       process.exit(1);
     }
   });
