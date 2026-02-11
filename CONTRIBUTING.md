@@ -8,7 +8,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/) to mainta
 
 ### Commit Message Format
 
-```
+```text
 <type>: <description>
 
 [optional body]

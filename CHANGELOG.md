@@ -35,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - QA report schema validation
 - Committed lockfile for reproducible builds
 
-## Package Releases
+### Package Releases
 
 - `@specsafe/core@0.1.0` — Core workflow engine and types
 - `@specsafe/cli@0.1.0` — Command-line interface

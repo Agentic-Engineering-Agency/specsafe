@@ -9,7 +9,7 @@
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
-    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
+    "changelog": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
