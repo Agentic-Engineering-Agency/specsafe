@@ -10,9 +10,6 @@ export const testCommand = new Command('test')
   .description('Generate tests from spec (SPEC → TEST)')
   .argument('<id>', 'Spec ID')
   .action(async (id: string) => {
-    // Validate spec ID format
-    validateSpecId(id);
-    
     const spinner = ora(`Generating tests for ${id}...`).start();
     
     try {

@@ -11,9 +11,6 @@ export const completeCommand = new Command('complete')
   .argument('<id>', 'Spec ID')
   .option('-r, --report <path>', 'Path to QA report')
   .action(async (id: string, options: { report?: string }) => {
-    // Validate spec ID format
-    validateSpecId(id);
-    
     const spinner = ora(`Completing ${id}...`).start();
     
     try {

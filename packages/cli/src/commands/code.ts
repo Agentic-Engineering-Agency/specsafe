@@ -7,9 +7,6 @@ export const codeCommand = new Command('code')
   .description('Start implementation (TEST → CODE)')
   .argument('<id>', 'Spec ID')
   .action(async (id: string) => {
-    // Validate spec ID format
-    validateSpecId(id);
-    
     const spinner = ora(`Starting implementation for ${id}...`).start();
     
     try {

@@ -15,9 +15,6 @@ export const qaCommand = new Command('qa')
   .argument('<id>', 'Spec ID')
   .option('-o, --output <path>', 'Output path for QA report')
   .action(async (id: string, options: { output?: string }) => {
-    // Validate spec ID format
-    validateSpecId(id);
-    
     const spinner = ora(`Running QA for ${id}...`).start();
     
     try {

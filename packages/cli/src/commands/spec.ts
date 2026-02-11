@@ -9,9 +9,6 @@ export const specCommand = new Command('spec')
   .description('Validate spec requirements and move to SPEC stage')
   .argument('<id>', 'Spec ID')
   .action(async (id: string) => {
-    // Validate spec ID format
-    validateSpecId(id);
-    
     const spinner = ora(`Validating ${id} requirements...`).start();
     
     try {
