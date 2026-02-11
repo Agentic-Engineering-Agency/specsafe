@@ -15,7 +15,7 @@
     "build": "tsc",
     "postbuild": "chmod +x dist/index.js",
     "dev": "tsc --watch",
-    "test": "vitest",
+    "test": "vitest --passWithNoTests",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
