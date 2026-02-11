@@ -1,6 +1,6 @@
 {
   "name": "@specsafe/test-gen",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Test generators for SpecSafe",
   "type": "module",
   "engines": {
