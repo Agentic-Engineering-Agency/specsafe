@@ -15,6 +15,8 @@ import { testCommand } from './commands/test.js';
 import { codeCommand } from './commands/code.js';
 import { qaCommand } from './commands/qa.js';
 import { completeCommand } from './commands/complete.js';
+import { listCommand } from './commands/list.js';
+import { archiveCommand } from './commands/archive.js';
 
 const program = new Command();
 
@@ -27,11 +29,13 @@ program
 program.addCommand(initCommand);
 program.addCommand(newCommand);
 program.addCommand(statusCommand);
+program.addCommand(listCommand);
 program.addCommand(specCommand);
 program.addCommand(testCommand);
 program.addCommand(codeCommand);
 program.addCommand(qaCommand);
 program.addCommand(completeCommand);
+program.addCommand(archiveCommand);
 
 // Global error handling
 program.exitOverride();
