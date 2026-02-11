@@ -3,22 +3,27 @@
   "tools": {
     "cursor": {
       "version": "1.0.0",
+      "source": "rules/cursor/.cursorrules",
       "files": [".cursorrules"]
     },
     "continue": {
       "version": "1.0.0",
-      "files": [".continue/config.json"]
+      "source": "rules/continue/config.yaml",
+      "files": [".continue/config.yaml"]
     },
     "aider": {
       "version": "1.0.0",
-      "files": [".aider.conf.yml"]
+      "source": "rules/aider/.aider.conf.yml",
+      "files": [".aider.conf.yml", ".aiderignore"]
     },
     "zed": {
       "version": "1.0.0",
+      "source": "rules/zed/settings.json",
       "files": [".zed/settings.json"]
     },
     "git-hooks": {
       "version": "1.0.0",
+      "source": "rules/git-hooks/pre-commit",
       "files": [".githooks/pre-commit"]
     }
   }
