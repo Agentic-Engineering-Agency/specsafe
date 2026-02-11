@@ -11,6 +11,10 @@
   "bin": {
     "specsafe": "./dist/index.js"
   },
+  "files": ["dist/", "README.md", "LICENSE"],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc",
     "postbuild": "chmod +x dist/index.js",
