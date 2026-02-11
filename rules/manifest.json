@@ -13,7 +13,7 @@
     },
     "aider": {
       "version": "1.0.0",
-      "source": "rules/aider/.aider.conf.yml",
+      "source": ["rules/aider/.aider.conf.yml", "rules/aider/.aiderignore"],
       "files": [".aider.conf.yml", ".aiderignore"]
     },
     "zed": {

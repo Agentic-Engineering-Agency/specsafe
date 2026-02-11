@@ -1,13 +1,6 @@
 {
-  "agent": {
-    "default_model": {
-      "provider": "openai",
-      "model": "gpt-4o"
-    },
-    "default_context": [
-      "Read PROJECT_STATE.md to understand active specs and their stages before making changes.",
-      "Follow spec-driven development: requirements → tests → implementation.",
-      "Check the current spec file in specs/active/ before implementing features."
-    ]
-  }
+  "name": "specsafe-zed",
+  "version": "1.0.0",
+  "description": "SpecSafe rules for Zed Editor",
+  "note": "This is a placeholder. Full content will be added in a future update."
 }

@@ -1,31 +1,17 @@
 # Aider configuration for SpecSafe projects
-# https://aider.chat/docs/config/aider_conf.html
+# Version: 1.0.0
 
-# Read these files for context
+# Always read PROJECT_STATE.md for context
 read:
   - PROJECT_STATE.md
   - README.md
+  - CONVENTIONS.md
 
-# Assistant instructions
-assistant_prompt: |
-  You are working in a SpecSafe project which follows spec-driven development.
+# Files to ignore
+ignore:
+  - specs/archive/
+  - node_modules/
+  - dist/
+  - .git/
 
-  CRITICAL RULES:
-  1. ALWAYS read PROJECT_STATE.md first to understand active specs
-  2. Check which spec is currently in progress and its stage
-  3. Look at requirements in specs/active/ before implementing
-  4. Tests define what needs to be implemented - don't skip them
-  5. Use specsafe commands to advance stages, don't modify PROJECT_STATE.md manually
-
-  WORKFLOW BY STAGE:
-  - SPEC: Generate tests with `specsafe test <id>`
-  - TEST: Implement code to pass tests
-  - CODE: Refactor with tests passing
-  - QA: Validate against scenarios in spec
-  - COMPLETE: Use `specsafe complete <id>` to finish
-
-# Use .aiderignore for file exclusions (gitignore syntax)
-aiderignore: .aiderignore
-
-# Don't add .gitignore'd files to aider's scope
-add-gitignore-files: false
+# Note: This is a placeholder. Full content will be added in a future update.

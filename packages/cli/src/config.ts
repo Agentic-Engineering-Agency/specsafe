@@ -12,6 +12,12 @@ export interface SpecSafeConfig {
   stages: string[];
   testFramework: 'vitest' | 'jest';
   language: 'typescript';
+  tools?: {
+    [toolName: string]: {
+      enabled: boolean;
+      version: string;
+    };
+  };
 }
 
 const DEFAULT_CONFIG: SpecSafeConfig = {
