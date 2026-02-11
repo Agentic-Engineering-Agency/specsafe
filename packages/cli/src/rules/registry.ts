@@ -20,7 +20,7 @@ export const AVAILABLE_RULES: ToolDefinition[] = [
   {
     name: 'continue',
     description: 'Continue.dev for VS Code',
-    files: ['.continue/config.json', '.continue/rules.md'],
+    files: ['.continue/config.yaml'],
   },
   {
     name: 'aider',
