@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-02-11
+
+### Added
+- **Claude Code integration** — `CLAUDE.md` project context file with spec-driven development workflow, stage progression rules, and CLI reference
+- **Crush integration** — `CRUSH.md` context file for Crush (formerly OpenCode by Charmbracelet), a multi-model terminal coding agent
+- Claude Code and Crush added to tool registry (7 tools total)
+- Auto-detection for Claude Code (`.claude/` directory or `CLAUDE.md`) and Crush (`.crush/` directory or `CRUSH.md`)
+- 6 new tests for tool detection and registry (200 total)
+
 ## [0.2.0] - 2026-02-11
 
 ### Added
