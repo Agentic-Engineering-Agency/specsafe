@@ -8,10 +8,12 @@
     "dev": "pnpm -r dev",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "conventional-changelog-cli": "^4.1.0",
     "typescript": "^5.3.0",
     "vitest": "^1.0.0"
   },
