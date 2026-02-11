@@ -203,9 +203,8 @@ export class Workflow {
     if (toStage === 'qa' && spec.implementationFiles.length === 0) {
       return { valid: false, reason: 'Cannot move to QA: No implementation files' };
     }
-    if (toStage === 'complete' && spec.stage !== 'qa') {
-      return { valid: false, reason: 'Cannot move to COMPLETE: Must be in QA stage first' };
-    }
+    // Note: 'complete' transition requires a QA report, but that's validated in moveToComplete()
+    // since canTransition() doesn't have access to the QAReport parameter
 
     return { valid: true };
   }

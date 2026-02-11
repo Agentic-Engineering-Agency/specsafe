@@ -3,8 +3,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { writeFile, mkdir, readdir } from 'fs/promises';
 import { join, basename } from 'path';
-import { Workflow } from '@specsafe/core';
-import { ProjectTracker } from '@specsafe/core';
+import { Workflow, ProjectTracker } from '@specsafe/core';
 
 export const newCommand = new Command('new')
   .description('Create a new spec')

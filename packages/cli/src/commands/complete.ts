@@ -1,9 +1,8 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { Workflow } from '@specsafe/core';
-import { ProjectTracker } from '@specsafe/core';
-import { rename, readFile } from 'fs/promises';
+import { Workflow, ProjectTracker } from '@specsafe/core';
+import { rename, readFile, access } from 'fs/promises';
 import { join } from 'path';
 import type { QAReport } from '@specsafe/core';
 
@@ -26,6 +25,10 @@ export const completeCommand = new Command('complete')
       if (options.report) {
         const reportContent = await readFile(options.report, 'utf-8');
         qaReport = JSON.parse(reportContent) as QAReport;
+        // Convert timestamp from ISO string to Date object (JSON.parse produces strings)
+        if (typeof qaReport.timestamp === 'string') {
+          qaReport.timestamp = new Date(qaReport.timestamp);
+        }
       } else {
         // Default QA report
         qaReport = {
@@ -48,23 +51,25 @@ export const completeCommand = new Command('complete')
         throw new Error('Cannot complete: QA report recommends NO-GO. Address issues first.');
       }
 
-      workflow.moveToComplete(id, qaReport);
-      await tracker.addSpec(workflow.getSpec(id)!);
-
-      // Check if source file exists before moving
-      const sourcePath = join('specs/active', `${id}.md`);
-      const targetPath = join('specs/completed', `${id}.md`);
+      // Move file FIRST, before updating state, to prevent inconsistent state on failure
+      const sourcePath = join('specs', 'active', `${id}.md`);
+      const targetPath = join('specs', 'completed', `${id}.md`);
       
       try {
+        await access(sourcePath);
         await rename(sourcePath, targetPath);
       } catch (renameError: any) {
-        // Rollback workflow state if file move fails
-        const spec = workflow.getSpec(id);
-        if (spec) {
-          spec.stage = 'qa' as const;
+        if (renameError.code === 'ENOENT') {
+          // Source file doesn't exist — skip the move (spec may have been created without a file)
+          spinner.text = `Spec file not found at ${sourcePath}, skipping file move...`;
+        } else {
+          throw new Error(`Failed to move spec file: ${renameError.message}`);
         }
-        throw new Error(`Failed to move spec file: ${renameError.message}`);
       }
+
+      // Now update workflow state and persist
+      workflow.moveToComplete(id, qaReport);
+      await tracker.addSpec(workflow.getSpec(id)!);
 
       spinner.succeed(chalk.green(`✅ Completed ${id}`));
       console.log(chalk.blue('Spec moved to specs/completed/'));

@@ -1,8 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { Workflow } from '@specsafe/core';
-import { ProjectTracker } from '@specsafe/core';
+import { Workflow, ProjectTracker } from '@specsafe/core';
 
 export const codeCommand = new Command('code')
   .description('Start implementation (TEST → CODE)')

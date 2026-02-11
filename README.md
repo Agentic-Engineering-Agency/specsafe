@@ -87,7 +87,7 @@ my-project/
 ```markdown
 # Feature Name
 
-**ID:** SPEC-20240204-001  
+**ID:** SPEC-20260211-001  
 **Status:** SPEC  
 **Priority:** P0
 
