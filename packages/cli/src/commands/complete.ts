@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { Workflow, ProjectTracker } from '@specsafe/core';
+import { Workflow, ProjectTracker, validateSpecId } from '@specsafe/core';
 import { rename, readFile, access } from 'fs/promises';
 import { join } from 'path';
 import type { QAReport } from '@specsafe/core';
@@ -11,6 +11,9 @@ export const completeCommand = new Command('complete')
   .argument('<id>', 'Spec ID')
   .option('-r, --report <path>', 'Path to QA report')
   .action(async (id: string, options: { report?: string }) => {
+    // Validate spec ID format
+    validateSpecId(id);
+    
     const spinner = ora(`Completing ${id}...`).start();
     
     try {
@@ -24,7 +27,21 @@ export const completeCommand = new Command('complete')
       let qaReport: QAReport;
       if (options.report) {
         const reportContent = await readFile(options.report, 'utf-8');
-        qaReport = JSON.parse(reportContent) as QAReport;
+        const parsedReport = JSON.parse(reportContent);
+        
+        // Validate required fields
+        const requiredFields = ['id', 'specId', 'timestamp', 'recommendation', 'testResults', 'coverage', 'issues'];
+        const missingFields = requiredFields.filter(field => !(field in parsedReport));
+        if (missingFields.length > 0) {
+          throw new Error(`Invalid QA report: missing required fields: ${missingFields.join(', ')}`);
+        }
+        
+        // Validate recommendation value
+        if (parsedReport.recommendation !== 'GO' && parsedReport.recommendation !== 'NO-GO') {
+          throw new Error(`Invalid QA report: recommendation must be 'GO' or 'NO-GO', got '${parsedReport.recommendation}'`);
+        }
+        
+        qaReport = parsedReport as QAReport;
         // Convert timestamp from ISO string to Date object (JSON.parse produces strings)
         if (typeof qaReport.timestamp === 'string') {
           qaReport.timestamp = new Date(qaReport.timestamp);

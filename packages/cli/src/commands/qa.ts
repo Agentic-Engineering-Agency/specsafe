@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { Workflow, ProjectTracker } from '@specsafe/core';
+import { Workflow, ProjectTracker, validateSpecId } from '@specsafe/core';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { writeFile, mkdir } from 'fs/promises';
@@ -15,6 +15,9 @@ export const qaCommand = new Command('qa')
   .argument('<id>', 'Spec ID')
   .option('-o, --output <path>', 'Output path for QA report')
   .action(async (id: string, options: { output?: string }) => {
+    // Validate spec ID format
+    validateSpecId(id);
+    
     const spinner = ora(`Running QA for ${id}...`).start();
     
     try {
