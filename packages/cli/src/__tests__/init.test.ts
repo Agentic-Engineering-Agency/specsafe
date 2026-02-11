@@ -26,6 +26,8 @@ vi.mock('../utils/detectTools.js', () => ({
     { name: 'continue', displayName: 'Continue.dev', configFiles: ['.continue/config.json'] },
     { name: 'aider', displayName: 'Aider CLI', configFiles: ['.aider.conf.yml'] },
     { name: 'zed', displayName: 'Zed Editor', configFiles: ['.zed/settings.json'] },
+    { name: 'claude-code', displayName: 'Claude Code', configFiles: ['CLAUDE.md', '.claude/'] },
+    { name: 'crush', displayName: 'Crush', configFiles: ['CRUSH.md', '.crush/'] },
   ],
 }));
 

@@ -87,13 +87,53 @@ describe('detectInstalledTools', () => {
     
     const result = detectInstalledTools();
     
-    expect(result).toEqual(['cursor', 'continue', 'aider', 'zed']);
+    expect(result).toEqual(['cursor', 'continue', 'aider', 'zed', 'claude-code', 'crush']);
+  });
+
+  it('should detect claude-code when .claude directory exists', () => {
+    (existsSync as unknown as ReturnType<typeof vi.fn>).mockImplementation((path: string) => {
+      return path === '.claude';
+    });
+    
+    const result = detectInstalledTools();
+    
+    expect(result).toContain('claude-code');
+  });
+
+  it('should detect claude-code when CLAUDE.md exists', () => {
+    (existsSync as unknown as ReturnType<typeof vi.fn>).mockImplementation((path: string) => {
+      return path === 'CLAUDE.md';
+    });
+    
+    const result = detectInstalledTools();
+    
+    expect(result).toContain('claude-code');
+  });
+
+  it('should detect crush when .crush directory exists', () => {
+    (existsSync as unknown as ReturnType<typeof vi.fn>).mockImplementation((path: string) => {
+      return path === '.crush';
+    });
+    
+    const result = detectInstalledTools();
+    
+    expect(result).toContain('crush');
+  });
+
+  it('should detect crush when CRUSH.md exists', () => {
+    (existsSync as unknown as ReturnType<typeof vi.fn>).mockImplementation((path: string) => {
+      return path === 'CRUSH.md';
+    });
+    
+    const result = detectInstalledTools();
+    
+    expect(result).toContain('crush');
   });
 });
 
 describe('availableTools', () => {
-  it('should have 4 available tools', () => {
-    expect(availableTools).toHaveLength(4);
+  it('should have 6 available tools', () => {
+    expect(availableTools).toHaveLength(6);
   });
 
   it('should include cursor with correct config', () => {

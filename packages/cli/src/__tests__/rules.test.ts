@@ -112,9 +112,9 @@ describe('Rules Registry', () => {
     vi.clearAllMocks();
   });
 
-  it('should export AVAILABLE_RULES with 5 tools', async () => {
+  it('should export AVAILABLE_RULES with 7 tools', async () => {
     const { AVAILABLE_RULES } = await import('../rules/registry.js');
-    expect(AVAILABLE_RULES).toHaveLength(5);
+    expect(AVAILABLE_RULES).toHaveLength(7);
   });
 
   it('should include cursor tool', async () => {
@@ -150,6 +150,20 @@ describe('Rules Registry', () => {
     const gitHooks = AVAILABLE_RULES.find((t) => t.name === 'git-hooks');
     expect(gitHooks).toBeDefined();
     expect(gitHooks?.files).toContain('.githooks/pre-commit');
+  });
+
+  it('should include claude-code tool', async () => {
+    const { AVAILABLE_RULES } = await import('../rules/registry.js');
+    const claudeCode = AVAILABLE_RULES.find((t) => t.name === 'claude-code');
+    expect(claudeCode).toBeDefined();
+    expect(claudeCode?.files).toContain('CLAUDE.md');
+  });
+
+  it('should include crush tool', async () => {
+    const { AVAILABLE_RULES } = await import('../rules/registry.js');
+    const crush = AVAILABLE_RULES.find((t) => t.name === 'crush');
+    expect(crush).toBeDefined();
+    expect(crush?.files).toContain('CRUSH.md');
   });
 
   describe('detectTool', () => {
