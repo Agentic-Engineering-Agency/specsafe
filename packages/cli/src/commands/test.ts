@@ -1,12 +1,10 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { Workflow } from '@specsafe/core';
-import { ProjectTracker } from '@specsafe/core';
-import { TypeScriptTestGenerator } from '@specsafe/test-gen';
-import { mkdir, writeFile } from 'fs/promises';
+import { Workflow, ProjectTracker } from '@specsafe/core';
+import { TypeScriptTestGenerator, ScenarioParser } from '@specsafe/test-gen';
+import { mkdir, writeFile, readFile } from 'fs/promises';
 import { join } from 'path';
-import { readFile } from 'fs/promises';
 
 export const testCommand = new Command('test')
   .description('Generate tests from spec (SPEC → TEST)')
@@ -22,7 +20,7 @@ export const testCommand = new Command('test')
       await tracker.loadSpecsIntoWorkflow(workflow);
       
       // Read spec file to extract scenarios
-      const specPath = join('specs/active', `${id}.md`);
+      const specPath = join('specs', 'active', `${id}.md`);
       let specContent: string;
       try {
         specContent = await readFile(specPath, 'utf-8');
@@ -30,72 +28,70 @@ export const testCommand = new Command('test')
         throw new Error(`Spec file not found: ${specPath}`);
       }
       
-      // Parse requirements from spec
-      const reqMatch = specContent.match(/###\s+Functional\s+Requirements[\s\S]*?(?=###|$)/i);
-      let requirements: any[] = [];
-      if (reqMatch) {
-        const rows = reqMatch[0].match(/\|\s*FR-\d+\s*\|[^|]+\|/g);
-        if (rows) {
-          requirements = rows.map(row => ({
-            id: row.match(/FR-\d+/)?.[0] || 'REQ-1',
-            text: row.split('|')[2]?.trim() || 'Requirement',
-            priority: 'P0' as const,
-            scenarios: []
-          }));
+      // Use ScenarioParser to extract requirements from spec content
+      const parser = new ScenarioParser();
+      let requirements = parser.parseRequirements(specContent);
+      
+      // Fall back to basic table parsing if ScenarioParser finds nothing
+      if (requirements.length === 0) {
+        const reqMatch = specContent.match(/###\s+Functional\s+Requirements[\s\S]*?(?=###|$)/i);
+        if (reqMatch) {
+          const rows = reqMatch[0].match(/\|\s*FR-\d+\s*\|[^|]+\|/g);
+          if (rows) {
+            requirements = rows.map(row => ({
+              id: row.match(/FR-\d+/)?.[0] || 'REQ-1',
+              text: row.split('|')[2]?.trim() || 'Requirement',
+              priority: 'P0' as const,
+              scenarios: []
+            }));
+          }
         }
       }
       
-      // Update spec with requirements
-      const spec = workflow.getSpec(id);
-      if (spec) {
-        spec.requirements = requirements;
+      // Ensure spec exists in workflow
+      let spec = workflow.getSpec(id);
+      if (!spec) {
+        throw new Error(`Spec '${id}' not found in project state. Run 'specsafe spec ${id}' first.`);
       }
       
-      // Move to test stage
-      workflow.moveToTest(id);
+      // Update spec with parsed requirements
+      spec.requirements = requirements;
       
-      // Generate test files
+      // Also parse inline scenarios from spec content
       const generator = new TypeScriptTestGenerator({
         framework: 'vitest'
       });
+      const inlineScenarios = generator.parseScenarios(specContent);
       
-      // Parse scenarios from spec
-      const scenarios = generator.parseScenarios(specContent);
-      
-      // Generate test code
-      const testCode = generator.generate({
-        id,
-        name: id,
-        description: `Tests for ${id}`,
-        stage: 'test',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        requirements,
-        testFiles: [],
-        implementationFiles: [],
-        metadata: {
-          author: '',
-          project: '',
-          tags: []
+      // Add inline scenarios to requirements if they exist and requirements lack scenarios
+      if (inlineScenarios.length > 0 && spec.requirements.length > 0) {
+        // Distribute scenarios across requirements, or add to first requirement
+        const firstReq = spec.requirements[0];
+        if (firstReq.scenarios.length === 0) {
+          firstReq.scenarios = inlineScenarios;
         }
-      });
+      }
+      
+      // Move to test stage (validates requirements exist)
+      workflow.moveToTest(id);
+      
+      // Generate test code using the actual spec object
+      const testCode = generator.generate(spec);
       
       // Write test file
       await mkdir('tests', { recursive: true });
       const testPath = join('tests', `${id.toLowerCase().replace(/-/g, '_')}.test.ts`);
       await writeFile(testPath, testCode);
       
-      // Update spec with test file
-      const updatedSpec = workflow.getSpec(id);
-      if (updatedSpec) {
-        updatedSpec.testFiles.push(testPath);
-      }
+      // Update spec with test file reference
+      spec.testFiles.push(testPath);
       
       // Persist state
-      await tracker.addSpec(workflow.getSpec(id)!);
+      await tracker.addSpec(spec);
       
       spinner.succeed(chalk.green(`Generated tests for ${id}`));
       console.log(chalk.blue(`  Test file: ${testPath}`));
+      console.log(chalk.blue(`  Requirements: ${requirements.length}`));
       console.log(chalk.blue('Next: Run specsafe code <id> to start implementation'));
     } catch (error: any) {
       spinner.fail(chalk.red(error.message));

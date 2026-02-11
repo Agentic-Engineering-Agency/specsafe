@@ -44,14 +44,14 @@ Create a new SpecSafe specification using the SPEC → TEST → CODE → QA → 
    - Spec ID and location
    - Current stage: SPEC
    - Next: Edit the spec to add requirements
-   - Then: Run `/specsafe-test` to generate tests and proceed to TEST stage
+   - Then: Run `specsafe test` to generate tests and proceed to TEST stage
 
 **Output**
 
 After creating the spec:
 - Spec ID and file location
 - Reminder to define requirements using SHALL/MUST language
-- Prompt: "Edit the spec file to add requirements and scenarios. Ready to generate tests? Run `/specsafe-test <id>`"
+- Prompt: "Edit the spec file to add requirements and scenarios. Ready to generate tests? Run `specsafe test <id>`"
 
 **Guardrails**
 - Do NOT proceed without a valid kebab-case name

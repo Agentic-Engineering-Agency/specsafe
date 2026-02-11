@@ -49,7 +49,7 @@ After completion:
 - ✅ Completion confirmation
 - Spec moved to `specs/completed/`
 - PROJECT_STATE.md updated
-- Prompt: "Ready to start a new spec? Run `/specsafe-new`"
+- Prompt: "Ready to start a new spec? Run `specsafe new`"
 
 **Guardrails**
 - Spec must be in QA stage

@@ -1,8 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { Workflow } from '@specsafe/core';
-import { ProjectTracker } from '@specsafe/core';
+import { Workflow, ProjectTracker } from '@specsafe/core';
 import { readFile } from 'fs/promises';
 import { join, basename } from 'path';
 
