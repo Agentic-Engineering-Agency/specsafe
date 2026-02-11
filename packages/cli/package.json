@@ -23,6 +23,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@inquirer/prompts": "^5.5.0",
     "@specsafe/core": "workspace:*",
     "@specsafe/test-gen": "workspace:*",
     "commander": "^11.0.0",
