@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { Workflow, ProjectTracker } from '@specsafe/core';
+import { Workflow, ProjectTracker, validateSpecId } from '@specsafe/core';
 import { readFile } from 'fs/promises';
 import { join, basename } from 'path';
 
@@ -12,6 +12,9 @@ export const specCommand = new Command('spec')
     const spinner = ora(`Validating ${id} requirements...`).start();
     
     try {
+      // Validate spec ID format
+      validateSpecId(id);
+
       const workflow = new Workflow();
       const tracker = new ProjectTracker(process.cwd());
       

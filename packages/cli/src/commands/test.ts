@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { Workflow, ProjectTracker } from '@specsafe/core';
+import { Workflow, ProjectTracker, validateSpecId } from '@specsafe/core';
 import { TypeScriptTestGenerator, ScenarioParser } from '@specsafe/test-gen';
 import { mkdir, writeFile, readFile } from 'fs/promises';
 import { join } from 'path';
@@ -13,6 +13,9 @@ export const testCommand = new Command('test')
     const spinner = ora(`Generating tests for ${id}...`).start();
     
     try {
+      // Validate spec ID format
+      validateSpecId(id);
+
       const workflow = new Workflow();
       const tracker = new ProjectTracker(process.cwd());
       

@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { Workflow, ProjectTracker } from '@specsafe/core';
+import { Workflow, ProjectTracker, validateSpecId } from '@specsafe/core';
 
 export const codeCommand = new Command('code')
   .description('Start implementation (TEST → CODE)')
@@ -10,6 +10,9 @@ export const codeCommand = new Command('code')
     const spinner = ora(`Starting implementation for ${id}...`).start();
     
     try {
+      // Validate spec ID format
+      validateSpecId(id);
+
       const workflow = new Workflow();
       const tracker = new ProjectTracker(process.cwd());
       

@@ -40,3 +40,6 @@ export { Workflow } from './workflow.js';
 
 // Project tracker
 export { ProjectTracker } from './tracker.js';
+
+// Validation utilities
+export { validateSpecId } from './validation.js';
