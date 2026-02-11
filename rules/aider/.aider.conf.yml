@@ -1,0 +1,17 @@
+# Aider configuration for SpecSafe projects
+# Version: 1.0.0
+
+# Always read PROJECT_STATE.md for context
+read:
+  - PROJECT_STATE.md
+  - README.md
+  - CONVENTIONS.md
+
+# Files to ignore
+ignore:
+  - specs/archive/
+  - node_modules/
+  - dist/
+  - .git/
+
+# Note: This is a placeholder. Full content will be added in a future update.

@@ -1,0 +1,17 @@
+# Continue.dev configuration for SpecSafe projects
+# https://docs.continue.dev/reference
+
+name: SpecSafe
+version: 1.0.0
+
+# Prompt files for spec-driven development (invokable as /commands)
+prompts:
+  - uses: file://prompts/specsafe.md
+  - uses: file://prompts/spec.md
+  - uses: file://prompts/validate.md
+
+# Context configuration
+context:
+  include:
+    - PROJECT_STATE.md
+    - specs/active/*.md

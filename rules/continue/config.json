@@ -1,0 +1,26 @@
+{
+  "name": "specsafe-continue",
+  "version": "1.0.0",
+  "description": "SpecSafe rules for Continue.dev",
+  "customCommands": [
+    {
+      "name": "specsafe",
+      "description": "Show current SpecSafe status",
+      "prompt": "Read PROJECT_STATE.md and show me the current active specs, their stages, and what needs to be done next."
+    },
+    {
+      "name": "spec",
+      "description": "Show details for a specific spec",
+      "prompt": "Read the spec file for {{input}} from specs/active/ and show me its requirements, scenarios, and current stage."
+    }
+  ],
+  "contextProviders": [
+    {
+      "name": "specsafe-state",
+      "params": {
+        "file": "PROJECT_STATE.md"
+      }
+    }
+  ],
+  "note": "This is a placeholder. Full content will be added in a future update."
+}

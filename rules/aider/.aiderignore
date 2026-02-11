@@ -1,0 +1,9 @@
+# Aider ignore patterns (gitignore syntax)
+# https://aider.chat/docs/config/aider_conf.html
+
+specs/archive/
+node_modules/
+dist/
+.git/
+coverage/
+*.log
