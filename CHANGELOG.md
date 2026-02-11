@@ -1,4 +1,12 @@
 # Changelog
+## [Unreleased]
+
+## [0.3.1] - 2026-02-11
+
+### Fixed
+- `specsafe init` failing with "Unknown tool: claude-code" when selecting Claude Code or Crush
+- Added missing `generateClaudeCodeConfig` and `generateCrushConfig` functions
+
 
 All notable changes to this project will be documented in this file.
 
