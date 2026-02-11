@@ -11,6 +11,8 @@ export function detectInstalledTools(): string[] {
   if (existsSync('.continue/config.json')) tools.push('continue');
   if (existsSync('.aider.conf.yml')) tools.push('aider');
   if (existsSync('.zed/settings.json')) tools.push('zed');
+  if (existsSync('.claude') || existsSync('CLAUDE.md')) tools.push('claude-code');
+  if (existsSync('.crush') || existsSync('CRUSH.md')) tools.push('crush');
   
   return tools;
 }
@@ -44,5 +46,15 @@ export const availableTools: ToolConfig[] = [
     name: 'zed',
     displayName: 'Zed Editor',
     configFiles: ['.zed/settings.json'],
+  },
+  {
+    name: 'claude-code',
+    displayName: 'Claude Code',
+    configFiles: ['CLAUDE.md', '.claude/'],
+  },
+  {
+    name: 'crush',
+    displayName: 'Crush',
+    configFiles: ['CRUSH.md', '.crush/'],
   },
 ];

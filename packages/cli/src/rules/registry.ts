@@ -37,6 +37,16 @@ export const AVAILABLE_RULES: ToolDefinition[] = [
     description: 'Pre-commit validation',
     files: ['.githooks/pre-commit'],
   },
+  {
+    name: 'claude-code',
+    description: 'Claude Code by Anthropic',
+    files: ['CLAUDE.md'],
+  },
+  {
+    name: 'crush',
+    description: 'Crush (formerly OpenCode) by Charmbracelet',
+    files: ['CRUSH.md'],
+  },
 ];
 
 /**
