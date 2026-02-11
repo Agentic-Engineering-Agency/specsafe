@@ -1,0 +1,15 @@
+{
+  "assistant": {
+    "default_prompt": "You are working in a SpecSafe project. Check PROJECT_STATE.md for active specs and their stages before making changes. Follow spec-driven development: requirements → tests → implementation.",
+    "prompts": [
+      {
+        "name": "Check Spec Status",
+        "prompt": "Read PROJECT_STATE.md and tell me which specs are active, their current stages, and what needs to be done next."
+      },
+      {
+        "name": "Review Requirements",
+        "prompt": "Read the active spec from specs/active/ and list all requirements and scenarios that must be implemented."
+      }
+    ]
+  }
+}

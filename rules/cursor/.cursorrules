@@ -1,0 +1,49 @@
+# SpecSafe Rules for Cursor IDE
+
+You are working in a SpecSafe project. Follow these guidelines:
+
+## Project Context
+- PROJECT_STATE.md is the source of truth for all specs
+- Always check current spec stage before making changes
+- Never modify code without understanding the spec requirements
+
+## Spec-Driven Development Workflow
+1. Read PROJECT_STATE.md to find active specs
+2. Read the spec file from specs/active/ to understand requirements
+3. Generate or review tests before implementation
+4. Implement code that satisfies tests
+5. Run tests to verify
+6. Use specsafe commands to advance stages
+
+## Stage Guidelines
+
+### SPEC Stage
+- Focus: Requirements are defined, tests need to be generated
+- Action: Use `specsafe test <id>` to generate tests
+- Do: Review generated tests match requirements
+
+### TEST Stage  
+- Focus: Tests exist, implementation needed
+- Action: Write code to make tests pass
+- Do: Run tests frequently, ensure they pass
+
+### CODE Stage
+- Focus: Implementation in progress
+- Action: Continue development, maintain test coverage
+- Do: Refactor with tests passing
+
+### QA Stage
+- Focus: Validate against scenarios
+- Action: Review against spec scenarios
+- Do: Fix any issues before completing
+
+## Code Style
+- Follow existing patterns in the codebase
+- Write tests for new functionality
+- Update PROJECT_STATE.md when stages change
+
+## Never
+- Skip writing tests
+- Modify specs without tracking in PROJECT_STATE.md
+- Commit broken tests
+- Delete specs without archiving

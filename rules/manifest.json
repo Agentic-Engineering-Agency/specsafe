@@ -1,0 +1,25 @@
+{
+  "version": "1.0.0",
+  "tools": {
+    "cursor": {
+      "version": "1.0.0",
+      "files": [".cursorrules"]
+    },
+    "continue": {
+      "version": "1.0.0",
+      "files": [".continue/config.json"]
+    },
+    "aider": {
+      "version": "1.0.0",
+      "files": [".aider.conf.yml"]
+    },
+    "zed": {
+      "version": "1.0.0",
+      "files": [".zed/settings.json"]
+    },
+    "git-hooks": {
+      "version": "1.0.0",
+      "files": [".githooks/pre-commit"]
+    }
+  }
+}
