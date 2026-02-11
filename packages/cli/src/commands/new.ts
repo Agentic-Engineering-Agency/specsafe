@@ -10,7 +10,8 @@ export const newCommand = new Command('new')
   .argument('<name>', 'Spec name (kebab-case)')
   .option('-d, --description <desc>', 'Spec description')
   .option('-a, --author <author>', 'Author name', 'developer')
-  .action(async (name: string, options: { description?: string; author: string }) => {
+  .option('-n, --dry-run', 'Preview changes without writing files')
+  .action(async (name: string, options: { description?: string; author: string; dryRun?: boolean }) => {
     const spinner = ora('Creating new spec...').start();
 
     try {
@@ -48,7 +49,7 @@ export const newCommand = new Command('new')
         basename(process.cwd())
       );
 
-      // Create spec file
+      // Create spec content
       const specContent = `# ${name} Specification
 
 **ID:** ${id}  
@@ -106,6 +107,23 @@ export const newCommand = new Command('new')
 `;
 
       const specPath = join('specs/active', `${id}.md`);
+
+      // Handle dry-run mode
+      if (options.dryRun) {
+        spinner.stop();
+        console.log(chalk.cyan('[DRY RUN] Would create the following files:\n'));
+        console.log(chalk.cyan(`  ${specPath}`));
+        console.log(chalk.cyan(`\nContent preview (first 20 lines):\n`));
+        const previewLines = specContent.split('\n').slice(0, 20).join('\n');
+        console.log(chalk.gray(previewLines));
+        if (specContent.split('\n').length > 20) {
+          console.log(chalk.gray('  ... (truncated)'));
+        }
+        console.log(chalk.cyan(`\nWould update PROJECT_STATE.md with spec: ${id}`));
+        process.exit(0);
+      }
+
+      // Create spec file
       await mkdir('specs/active', { recursive: true });
       await writeFile(specPath, specContent);
 

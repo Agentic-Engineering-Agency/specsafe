@@ -17,6 +17,7 @@ import { qaCommand } from './commands/qa.js';
 import { completeCommand } from './commands/complete.js';
 import { listCommand } from './commands/list.js';
 import { archiveCommand } from './commands/archive.js';
+import { doctorCommand } from './commands/doctor.js';
 
 const program = new Command();
 
@@ -36,6 +37,7 @@ program.addCommand(codeCommand);
 program.addCommand(qaCommand);
 program.addCommand(completeCommand);
 program.addCommand(archiveCommand);
+program.addCommand(doctorCommand);
 
 // Global error handling
 program.exitOverride();
