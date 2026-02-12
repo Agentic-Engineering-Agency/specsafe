@@ -43,3 +43,21 @@ export { ProjectTracker } from './tracker.js';
 
 // Validation utilities
 export { validateSpecId } from './validation.js';
+
+// Agent system
+export type {
+  AgentDefinition,
+  AgentAdapter,
+  AgentRegistryEntry,
+  GenerateOptions,
+  GeneratedFile,
+} from './agents/index.js';
+
+export {
+  getAgent,
+  listAgents,
+  getSupportedAgents,
+  isValidAgent,
+  getAgentDefinition,
+  AGENT_DEFINITIONS,
+} from './agents/index.js';
