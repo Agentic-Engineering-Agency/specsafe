@@ -40,16 +40,6 @@ export class SemanticMerger {
 
     // Apply REMOVED requirements
     for (const { id, req } of removalsToProcess) {
-      if (!req) {
-        conflicts.push({
-          type: 'requirement_not_found',
-          requirementId: id,
-          message: `Cannot remove requirement ${id}: not found in base spec`
-        });
-        stats.conflicts++;
-        continue;
-      }
-
       // Remove the entire requirement block
       content = this.removeRequirementBlock(content, req);
       requirementMap.delete(id);
@@ -68,6 +58,13 @@ export class SemanticMerger {
       }
     }
 
+    // Re-parse content after removals to rebuild requirementMap with updated line numbers
+    const updatedRequirements = this.parseRequirements(content);
+    requirementMap.clear();
+    for (const req of updatedRequirements) {
+      requirementMap.set(req.id, req);
+    }
+
     // Sort modifications by startLine descending to avoid stale indices
     const modificationsToProcess = deltaSpec.modified
       .map(modReq => ({ modReq, oldReq: requirementMap.get(modReq.id) }))
@@ -78,16 +75,6 @@ export class SemanticMerger {
 
     // Apply MODIFIED requirements
     for (const { modReq, oldReq } of modificationsToProcess) {
-      if (!oldReq) {
-        conflicts.push({
-          type: 'requirement_not_found',
-          requirementId: modReq.id,
-          message: `Cannot modify requirement ${modReq.id}: not found in base spec`
-        });
-        stats.conflicts++;
-        continue;
-      }
-
       const newReqBlock = this.formatRequirement(modReq);
       content = this.replaceRequirementBlock(content, oldReq, newReqBlock);
       

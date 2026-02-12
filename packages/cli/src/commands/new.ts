@@ -76,7 +76,7 @@ export const newCommand = new Command('new')
       let successMetrics = '';
       let stakeholders = '';
       let timeline = '';
-      let priority = 'P1';
+      let priority: 'P0' | 'P1' | 'P2' = 'P1';
 
       if (!options.skipInteractive && !options.dryRun && !options.ears) {
         console.log(chalk.blue('\n📋 Let\'s create a Product Requirements Document (PRD)\n'));
@@ -168,7 +168,7 @@ So that [some reason]
       // Use EARS template if requested
       let specContent: string;
       if (options.ears) {
-        specContent = generateEARSTemplate(id, featureName, options.author, priority as 'P0' | 'P1' | 'P2');
+        specContent = generateEARSTemplate(id, featureName, options.author, priority);
       } else {
         // Create PRD + BRD-enhanced spec content
         specContent = `# ${featureName} Specification

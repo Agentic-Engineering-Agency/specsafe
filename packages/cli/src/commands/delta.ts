@@ -44,6 +44,7 @@ export const deltaCommand = new Command('delta')
       // Check if delta already exists
       try {
         await readFile(deltaPath, 'utf-8');
+        spinner.stop();
         const overwrite = await confirm({
           message: `Delta spec ${deltaId} already exists. Overwrite?`,
           default: false

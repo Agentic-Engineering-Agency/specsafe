@@ -6,6 +6,11 @@
 import type { EARSRequirement, EARSType } from './types.js';
 
 /**
+ * Common subject pattern for EARS requirements
+ */
+const SUBJECT_PATTERN = '(?:system|application|service|software|product)';
+
+/**
  * Parse a requirement text and extract EARS structure
  */
 export function parseEARSRequirement(text: string): EARSRequirement {
@@ -63,7 +68,7 @@ export function parseEARSRequirement(text: string): EARSRequirement {
  */
 function matchUbiquitous(text: string): EARSRequirement | null {
   const patterns = [
-    /^(?:the\s+)?(?:system|application|service|software|product)\s+(?:shall|must|will)\s+(.+)$/i
+    new RegExp(`^(?:the\\s+)?${SUBJECT_PATTERN}\\s+(?:shall|must|will)\\s+(.+)$`, 'i')
   ];
   
   for (const pattern of patterns) {
@@ -86,8 +91,8 @@ function matchUbiquitous(text: string): EARSRequirement | null {
  */
 function matchEvent(text: string): EARSRequirement | null {
   const patterns = [
-    /^when\s+(.+?),\s*(?:the\s+)?(?:system|application|service)\s+(?:shall|must|will)\s+(.+)$/i,
-    /^(?:upon|on)\s+(.+?),\s*(?:the\s+)?(?:system|application|service)\s+(?:shall|must|will)\s+(.+)$/i
+    new RegExp(`^when\\s+(.+?),\\s*(?:the\\s+)?${SUBJECT_PATTERN}\\s+(?:shall|must|will)\\s+(.+)$`, 'i'),
+    new RegExp(`^(?:upon|on)\\s+(.+?),\\s*(?:the\\s+)?${SUBJECT_PATTERN}\\s+(?:shall|must|will)\\s+(.+)$`, 'i')
   ];
   
   for (const pattern of patterns) {
@@ -111,9 +116,9 @@ function matchEvent(text: string): EARSRequirement | null {
  */
 function matchState(text: string): EARSRequirement | null {
   const patterns = [
-    /^while\s+(.+?),\s*(?:the\s+)?(?:system|application|service)\s+(?:shall|must|will)\s+(.+)$/i,
-    /^(?:during|throughout)\s+(.+?),\s*(?:the\s+)?(?:system|application|service)\s+(?:shall|must|will)\s+(.+)$/i,
-    /^as long as\s+(.+?),\s*(?:the\s+)?(?:system|application|service)\s+(?:shall|must|will)\s+(.+)$/i
+    new RegExp(`^while\\s+(.+?),\\s*(?:the\\s+)?${SUBJECT_PATTERN}\\s+(?:shall|must|will)\\s+(.+)$`, 'i'),
+    new RegExp(`^(?:during|throughout)\\s+(.+?),\\s*(?:the\\s+)?${SUBJECT_PATTERN}\\s+(?:shall|must|will)\\s+(.+)$`, 'i'),
+    new RegExp(`^as long as\\s+(.+?),\\s*(?:the\\s+)?${SUBJECT_PATTERN}\\s+(?:shall|must|will)\\s+(.+)$`, 'i')
   ];
   
   for (const pattern of patterns) {
@@ -137,8 +142,8 @@ function matchState(text: string): EARSRequirement | null {
  */
 function matchOptional(text: string): EARSRequirement | null {
   const patterns = [
-    /^where\s+(.+?),\s*(?:the\s+)?(?:system|application|service)\s+(?:shall|must|will)\s+(.+)$/i,
-    /^in case(?:s)?\s+(?:where\s+)?(.+?),\s*(?:the\s+)?(?:system|application|service)\s+(?:shall|must|will)\s+(.+)$/i
+    new RegExp(`^where\\s+(.+?),\\s*(?:the\\s+)?${SUBJECT_PATTERN}\\s+(?:shall|must|will)\\s+(.+)$`, 'i'),
+    new RegExp(`^in case(?:s)?\\s+(?:where\\s+)?(.+?),\\s*(?:the\\s+)?${SUBJECT_PATTERN}\\s+(?:shall|must|will)\\s+(.+)$`, 'i')
   ];
   
   for (const pattern of patterns) {
@@ -162,8 +167,8 @@ function matchOptional(text: string): EARSRequirement | null {
  */
 function matchUnwanted(text: string): EARSRequirement | null {
   const patterns = [
-    /^if\s+(.+?),\s*then\s+(?:the\s+)?(?:system|application|service)\s+(?:shall|must|will)\s+(.+)$/i,
-    /^(?:in the event that|should)\s+(.+?),\s*(?:the\s+)?(?:system|application|service)\s+(?:shall|must|will)\s+(.+)$/i
+    new RegExp(`^if\\s+(.+?),\\s*then\\s+(?:the\\s+)?${SUBJECT_PATTERN}\\s+(?:shall|must|will)\\s+(.+)$`, 'i'),
+    new RegExp(`^(?:in the event that|should)\\s+(.+?),\\s*(?:the\\s+)?${SUBJECT_PATTERN}\\s+(?:shall|must|will)\\s+(.+)$`, 'i')
   ];
   
   for (const pattern of patterns) {
@@ -187,7 +192,7 @@ function matchUnwanted(text: string): EARSRequirement | null {
  * Example: "When [event], while [state], the system shall [action]"
  */
 function matchComplex(text: string): EARSRequirement | null {
-  const complexPattern = /^((?:when|while|where|if).+?(?:,\s*(?:and|while|where|when)\s+.+?)*),\s*(?:the\s+)?(?:system|application|service)\s+(?:shall|must|will)\s+(.+)$/i;
+  const complexPattern = new RegExp(`^((?:when|while|where|if).+?(?:,\\s*(?:and|while|where|when)\\s+.+?)*),\\s*(?:the\\s+)?${SUBJECT_PATTERN}\\s+(?:shall|must|will)\\s+(.+)$`, 'i');
   const match = text.match(complexPattern);
   
   if (!match) {

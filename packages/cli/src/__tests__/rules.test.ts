@@ -1,6 +1,6 @@
 /**
  * Rules command tests
- * Tests the specsafe rules command with list, add, remove, update subcommands
+ * Tests the specsafe rules command with list, add, remove, info subcommands
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Command } from 'commander';
@@ -91,7 +91,7 @@ describe('CLI rules command', () => {
       const args = addCmd!.registeredArguments;
       expect(args).toHaveLength(1);
       expect(args[0].required).toBe(true);
-      expect(args[0]._name || args[0].name).toBe('agent');
+      expect(args[0].name()).toBe('agent');
     });
   });
 
@@ -102,7 +102,7 @@ describe('CLI rules command', () => {
       const args = removeCmd!.registeredArguments;
       expect(args).toHaveLength(1);
       expect(args[0].required).toBe(true);
-      expect(args[0]._name || args[0].name).toBe('agent');
+      expect(args[0].name()).toBe('agent');
     });
   });
 });

@@ -8,7 +8,7 @@ import type { AgentDefinition, GeneratedFile, GenerateOptions } from '../types.j
 import { getRequiredAgentDefinition } from '../registry.js';
 
 export class GeminiCliAdapter extends BaseAgentAdapter {
-  agent: AgentDefinition = getRequiredAgentDefinition('gemini-cli');
+  readonly agent: AgentDefinition = getRequiredAgentDefinition('gemini-cli');
 
   async generateConfig(projectDir: string, options?: GenerateOptions): Promise<GeneratedFile[]> {
     const files: GeneratedFile[] = [];

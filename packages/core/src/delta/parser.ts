@@ -103,8 +103,12 @@ export class DeltaParser {
 
         // Accumulate requirement text
         if (line && !line.startsWith('#') && !line.startsWith('**Priority:**')) {
-          // Exclude bold headers like **Scenarios:** from being treated as list items
-          if ((line.startsWith('-') || line.startsWith('*')) && !line.match(/^\*\*\w+:/)) {
+          // Skip bold headers like **Scenarios:** entirely
+          if (line.match(/^\*\*\w+:/)) {
+            continue;
+          }
+          
+          if (line.startsWith('-') || line.startsWith('*')) {
             // Scenario or list item
             currentRequirement.scenarios = currentRequirement.scenarios || [];
             currentRequirement.scenarios.push(line.replace(/^[-*]\s+/, ''));

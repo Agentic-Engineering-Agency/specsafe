@@ -8,7 +8,7 @@ import type { AgentDefinition, GeneratedFile, GenerateOptions } from '../types.j
 import { getRequiredAgentDefinition } from '../registry.js';
 
 export class CursorAdapter extends BaseAgentAdapter {
-  agent: AgentDefinition = getRequiredAgentDefinition('cursor');
+  readonly agent: AgentDefinition = getRequiredAgentDefinition('cursor');
 
   async generateConfig(projectDir: string, options?: GenerateOptions): Promise<GeneratedFile[]> {
     const files: GeneratedFile[] = [];
