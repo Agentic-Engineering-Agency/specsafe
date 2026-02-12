@@ -110,9 +110,9 @@ describe('detectInstalledTools', () => {
     expect(result).toContain('claude-code');
   });
 
-  it('should detect crush when .crush directory exists', () => {
+  it('should detect crush when .opencode directory exists', () => {
     (existsSync as unknown as ReturnType<typeof vi.fn>).mockImplementation((path: string) => {
-      return path === '.crush';
+      return path === '.opencode';
     });
     
     const result = detectInstalledTools();
@@ -120,9 +120,9 @@ describe('detectInstalledTools', () => {
     expect(result).toContain('crush');
   });
 
-  it('should detect crush when CRUSH.md exists', () => {
+  it('should detect crush when .opencode/commands directory exists', () => {
     (existsSync as unknown as ReturnType<typeof vi.fn>).mockImplementation((path: string) => {
-      return path === 'CRUSH.md';
+      return path === '.opencode/commands';
     });
     
     const result = detectInstalledTools();

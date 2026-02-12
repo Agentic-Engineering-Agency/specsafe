@@ -33,8 +33,8 @@
     },
     "crush": {
       "version": "1.0.0",
-      "source": "rules/crush/CRUSH.md",
-      "files": ["CRUSH.md"]
+      "source": "rules/crush/",
+      "files": [".opencode/commands/specsafe.md", ".opencode/commands/spec.md", ".opencode/commands/validate.md"]
     }
   }
 }

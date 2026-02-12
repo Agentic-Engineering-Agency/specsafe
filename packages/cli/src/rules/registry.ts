@@ -45,7 +45,7 @@ export const AVAILABLE_RULES: ToolDefinition[] = [
   {
     name: 'crush',
     description: 'Crush (formerly OpenCode) by Charmbracelet',
-    files: ['CRUSH.md'],
+    files: ['.opencode/commands/specsafe.md', '.opencode/commands/spec.md', '.opencode/commands/validate.md'],
   },
 ];
 
