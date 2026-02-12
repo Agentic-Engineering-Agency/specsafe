@@ -5,7 +5,7 @@ import { writeFile, mkdir, readFile } from 'fs/promises';
 import { join } from 'path';
 import { generateDeltaTemplate } from '@specsafe/core';
 import { input, confirm } from '@inquirer/prompts';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 
 export const deltaCommand = new Command('delta')
   .description('Create a new delta spec for an existing spec (brownfield changes)')
@@ -16,6 +16,12 @@ export const deltaCommand = new Command('delta')
     const spinner = ora('Creating delta spec...').start();
 
     try {
+      // Validate specId to prevent path traversal
+      if (!/^[A-Za-z0-9_-]+$/.test(specId)) {
+        spinner.fail(chalk.red('Invalid spec ID. Use only alphanumeric characters, hyphens, and underscores.'));
+        process.exit(1);
+      }
+
       // Validate base spec exists
       const baseSpecPath = join('specs/active', `${specId}.md`);
       try {
@@ -67,7 +73,7 @@ export const deltaCommand = new Command('delta')
         spinner.start('Opening in editor...');
         try {
           const editor = process.env.EDITOR || 'nano';
-          execSync(`${editor} "${deltaPath}"`, { stdio: 'inherit' });
+          execFileSync(editor, [deltaPath], { stdio: 'inherit' });
           spinner.stop();
         } catch (err) {
           spinner.warn(chalk.yellow('Could not open editor. Edit the file manually.'));

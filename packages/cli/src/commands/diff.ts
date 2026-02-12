@@ -13,6 +13,12 @@ export const diffCommand = new Command('diff')
     const spinner = ora('Loading delta specs...').start();
 
     try {
+      // Validate specId to prevent path traversal
+      if (!/^[A-Za-z0-9_-]+$/.test(specId)) {
+        spinner.fail(chalk.red('Invalid spec ID. Use only alphanumeric characters, hyphens, and underscores.'));
+        process.exit(1);
+      }
+
       // Load base spec
       const baseSpecPath = join('specs/active', `${specId}.md`);
       let baseContent: string;
@@ -51,7 +57,7 @@ export const diffCommand = new Command('diff')
       for (const file of deltaFiles) {
         const deltaPath = join(deltasDir, file);
         const deltaContent = await readFile(deltaPath, 'utf-8');
-        const deltaId = file.replace('.md', '');
+        const deltaId = file.replace(/\.md$/, '');
 
         console.log(chalk.blue(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`));
         console.log(chalk.blue.bold(`📄 ${deltaId}`));

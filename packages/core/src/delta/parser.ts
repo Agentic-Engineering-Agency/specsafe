@@ -48,8 +48,8 @@ export class DeltaParser {
         continue;
       }
 
-      // Reset section on other headers
-      if (line.startsWith('##') && !line.match(/^##\s+(ADDED|MODIFIED|REMOVED)/i)) {
+      // Reset section on other headers (only ## not ###)
+      if (line.match(/^##(?!#)/) && !line.match(/^##\s+(ADDED|MODIFIED|REMOVED)/i)) {
         this.saveCurrentRequirement(currentRequirement, currentSection, added, modified);
         currentSection = 'none';
         currentRequirement = null;
@@ -103,7 +103,8 @@ export class DeltaParser {
 
         // Accumulate requirement text
         if (line && !line.startsWith('#') && !line.startsWith('**Priority:**')) {
-          if (line.startsWith('-') || line.startsWith('*')) {
+          // Exclude bold headers like **Scenarios:** from being treated as list items
+          if ((line.startsWith('-') || line.startsWith('*')) && !line.match(/^\*\*\w+:/)) {
             // Scenario or list item
             currentRequirement.scenarios = currentRequirement.scenarios || [];
             currentRequirement.scenarios.push(line.replace(/^[-*]\s+/, ''));
