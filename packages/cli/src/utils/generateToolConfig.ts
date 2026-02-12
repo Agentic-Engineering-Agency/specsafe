@@ -184,15 +184,51 @@ async function generateZedConfig(projectDir: string): Promise<void> {
   await writeFile(configPath, JSON.stringify(zedSettingsContent, null, 2));
 }
 
+// Skill content for Claude Code slash commands
+const claudeSkillSpecsafeContent = `---
+name: specsafe
+description: Show SpecSafe project status and workflow guidance
+---
+
+You are in a SpecSafe project using spec-driven development.
+
+Read PROJECT_STATE.md and provide:
+1. Summary of active specs and their current stages
+2. Which specs need attention
+3. Recommended next actions based on the project state
+4. Brief reminder of the SDD workflow (SPEC → TEST → CODE → QA → COMPLETE)
+`;
+
+const claudeSkillSpecContent = `---
+name: spec
+description: Show details for a specific spec by ID
+argument-hint: "[spec-id]"
+---
+
+Read the spec file from specs/active/$ARGUMENTS.md and show:
+- Requirements
+- Scenarios/acceptance criteria
+- Current stage
+- Implementation files referenced
+
+If no argument provided, list available specs.
+`;
+
+const claudeSkillValidateContent = `---
+name: validate
+description: Validate current implementation against active spec
+---
+
+Check if the current code changes satisfy the requirements in the active spec.
+Point out any gaps or issues that need to be addressed before completing.
+`;
+
 async function generateClaudeCodeConfig(projectDir: string): Promise<void> {
+  // Create CLAUDE.md project context file
   const configPath = `${projectDir}/CLAUDE.md`;
   
-  if (existsSync(configPath)) {
-    console.log(chalk.yellow('⚠ CLAUDE.md already exists, skipping'));
-    return;
-  }
-  
-  const claudeContent = `# SpecSafe Project — Claude Code Configuration
+  if (!existsSync(configPath)) {
+    const claudeContent = `# SpecSafe Project — Claude Code Configuration
 
 You are working on a SpecSafe project using spec-driven development (SDD).
 
@@ -235,9 +271,66 @@ You are working on a SpecSafe project using spec-driven development (SDD).
 - \`specsafe code <id>\` — Start implementation, move to CODE stage
 - \`specsafe qa <id>\` — Run QA validation, move to QA stage
 - \`specsafe complete <id>\` — Complete spec, move to COMPLETE stage
+
+## Claude Code Skills
+
+This project includes Claude Code skills for slash commands:
+- \`/specsafe\` — Show project status and workflow guidance
+- \`/spec <id>\` — Show details for a specific spec
+- \`/validate\` — Validate implementation against active spec
 `;
+    
+    await writeFile(configPath, claudeContent);
+    console.log(chalk.green('✓ Created CLAUDE.md'));
+  } else {
+    console.log(chalk.yellow('⚠ CLAUDE.md already exists, skipping'));
+  }
+
+  // Create .claude/skills/ directory with SKILL.md files for slash commands
+  const skillsDir = `${projectDir}/.claude/skills`;
   
-  await writeFile(configPath, claudeContent);
+  if (!existsSync(skillsDir)) {
+    await mkdir(skillsDir, { recursive: true });
+  }
+
+  // Create specsafe skill
+  const specsafeSkillDir = `${skillsDir}/specsafe`;
+  const specsafeSkillPath = `${specsafeSkillDir}/SKILL.md`;
+  if (!existsSync(specsafeSkillPath)) {
+    if (!existsSync(specsafeSkillDir)) {
+      await mkdir(specsafeSkillDir, { recursive: true });
+    }
+    await writeFile(specsafeSkillPath, claudeSkillSpecsafeContent);
+    console.log(chalk.green('✓ Created .claude/skills/specsafe/SKILL.md'));
+  } else {
+    console.log(chalk.yellow('⚠ .claude/skills/specsafe/SKILL.md already exists, skipping'));
+  }
+
+  // Create spec skill
+  const specSkillDir = `${skillsDir}/spec`;
+  const specSkillPath = `${specSkillDir}/SKILL.md`;
+  if (!existsSync(specSkillPath)) {
+    if (!existsSync(specSkillDir)) {
+      await mkdir(specSkillDir, { recursive: true });
+    }
+    await writeFile(specSkillPath, claudeSkillSpecContent);
+    console.log(chalk.green('✓ Created .claude/skills/spec/SKILL.md'));
+  } else {
+    console.log(chalk.yellow('⚠ .claude/skills/spec/SKILL.md already exists, skipping'));
+  }
+
+  // Create validate skill
+  const validateSkillDir = `${skillsDir}/validate`;
+  const validateSkillPath = `${validateSkillDir}/SKILL.md`;
+  if (!existsSync(validateSkillPath)) {
+    if (!existsSync(validateSkillDir)) {
+      await mkdir(validateSkillDir, { recursive: true });
+    }
+    await writeFile(validateSkillPath, claudeSkillValidateContent);
+    console.log(chalk.green('✓ Created .claude/skills/validate/SKILL.md'));
+  } else {
+    console.log(chalk.yellow('⚠ .claude/skills/validate/SKILL.md already exists, skipping'));
+  }
 }
 
 async function generateCrushConfig(projectDir: string): Promise<void> {

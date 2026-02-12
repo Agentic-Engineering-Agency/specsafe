@@ -137,6 +137,102 @@ describe('generateToolConfig', () => {
     });
   });
 
+  describe('claude-code', () => {
+    it('should create CLAUDE.md file', async () => {
+      await generateToolConfig('claude-code', projectDir);
+
+      expect(writeFile).toHaveBeenCalledWith(
+        expect.stringContaining('CLAUDE.md'),
+        expect.stringContaining('SpecSafe Project')
+      );
+    });
+
+    it('should create .claude/skills directory', async () => {
+      await generateToolConfig('claude-code', projectDir);
+
+      expect(mkdir).toHaveBeenCalledWith(
+        expect.stringContaining('.claude/skills'),
+        { recursive: true }
+      );
+    });
+
+    it('should create specsafe skill file', async () => {
+      await generateToolConfig('claude-code', projectDir);
+
+      expect(mkdir).toHaveBeenCalledWith(
+        expect.stringContaining('.claude/skills/specsafe'),
+        { recursive: true }
+      );
+      expect(writeFile).toHaveBeenCalledWith(
+        expect.stringContaining('specsafe/SKILL.md'),
+        expect.stringContaining('name: specsafe')
+      );
+    });
+
+    it('should create spec skill file', async () => {
+      await generateToolConfig('claude-code', projectDir);
+
+      expect(mkdir).toHaveBeenCalledWith(
+        expect.stringContaining('.claude/skills/spec'),
+        { recursive: true }
+      );
+      expect(writeFile).toHaveBeenCalledWith(
+        expect.stringContaining('spec/SKILL.md'),
+        expect.stringContaining('name: spec')
+      );
+    });
+
+    it('should create validate skill file', async () => {
+      await generateToolConfig('claude-code', projectDir);
+
+      expect(mkdir).toHaveBeenCalledWith(
+        expect.stringContaining('.claude/skills/validate'),
+        { recursive: true }
+      );
+      expect(writeFile).toHaveBeenCalledWith(
+        expect.stringContaining('validate/SKILL.md'),
+        expect.stringContaining('name: validate')
+      );
+    });
+
+    it('should skip if CLAUDE.md already exists', async () => {
+      (existsSync as unknown as ReturnType<typeof vi.fn>).mockImplementation((path: string) =>
+        path.includes('CLAUDE.md')
+      );
+
+      await generateToolConfig('claude-code', projectDir);
+
+      // Should still create skills even if CLAUDE.md exists
+      expect(mkdir).toHaveBeenCalledWith(
+        expect.stringContaining('.claude/skills'),
+        { recursive: true }
+      );
+    });
+
+    it('should skip skill files if they already exist', async () => {
+      (existsSync as unknown as ReturnType<typeof vi.fn>).mockImplementation((path: string) => {
+        if (path.includes('SKILL.md')) {
+          return true;
+        }
+        return false;
+      });
+
+      await generateToolConfig('claude-code', projectDir);
+
+      // CLAUDE.md should still be created
+      expect(writeFile).toHaveBeenCalledWith(
+        expect.stringContaining('CLAUDE.md'),
+        expect.any(String)
+      );
+
+      // Skill files should NOT be written since they already exist
+      expect(writeFile).not.toHaveBeenCalledWith(
+        expect.stringContaining('SKILL.md'),
+        expect.any(String)
+      );
+    });
+  });
+
   describe('unknown tool', () => {
     it('should throw error for unknown tool', async () => {
       await expect(generateToolConfig('unknown', projectDir)).rejects.toThrow('Unknown tool: unknown');
