@@ -38,7 +38,7 @@ describe('Agent System', () => {
       const claudeEntry = getAgent('claude-code');
       
       expect(claudeEntry).toBeDefined();
-      expect(claudeEntry?.agent.id).toBe('claude-code');
+      expect(claudeEntry?.id).toBe('claude-code');
       expect(claudeEntry?.adapter).toBeDefined();
       expect(typeof claudeEntry?.adapter.generateConfig).toBe('function');
     });
