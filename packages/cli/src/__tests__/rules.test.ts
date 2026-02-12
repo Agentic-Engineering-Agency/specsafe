@@ -163,7 +163,7 @@ describe('Rules Registry', () => {
     const { AVAILABLE_RULES } = await import('../rules/registry.js');
     const crush = AVAILABLE_RULES.find((t) => t.name === 'crush');
     expect(crush).toBeDefined();
-    expect(crush?.files).toContain('CRUSH.md');
+    expect(crush?.files).toContain('.opencode/commands/specsafe.md');
   });
 
   describe('detectTool', () => {

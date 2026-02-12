@@ -337,52 +337,62 @@ This project includes Claude Code skills for slash commands:
 }
 
 async function generateCrushConfig(projectDir: string): Promise<void> {
-  const configPath = `${projectDir}/CRUSH.md`;
+  // OpenCode/Crush uses .opencode/commands/ for custom commands
+  const commandsDir = `${projectDir}/.opencode/commands`;
   
-  if (existsSync(configPath)) {
-    console.log(chalk.yellow('⚠ CRUSH.md already exists, skipping'));
-    return;
+  if (!existsSync(commandsDir)) {
+    await mkdir(commandsDir, { recursive: true });
   }
-  
-  const crushContent = `# SpecSafe Project — Crush Configuration
 
-You are working on a SpecSafe project using spec-driven development (SDD).
+  // Create specsafe command
+  const specsafeCmdPath = `${commandsDir}/specsafe.md`;
+  if (!existsSync(specsafeCmdPath)) {
+    const specsafeContent = `Show SpecSafe project status and workflow guidance
 
-## Project Context
-
-**PROJECT_STATE.md** — Always read this file first. It contains:
-- Active specs and their current stages
-- Which spec is being worked on  
-- Overall project status
-
-**Specs directory** — \`specs/active/*.md\` contains detailed spec files with:
-- Requirements (must be satisfied)
-- Scenarios (acceptance criteria)
-- Current stage (SPEC → TEST → CODE → QA → COMPLETE)
-
-## Spec-Driven Development Workflow
-
-1. **SPEC stage**: Spec defines WHAT to build
-2. **TEST stage**: Tests define HOW to verify
-3. **CODE stage**: Implementation satisfies tests
-4. **QA stage**: Validate against scenarios
-5. **COMPLETE**: Feature done
-
-## Rules
-
-- Always check PROJECT_STATE.md before changes
-- Use SpecSafe CLI to advance stages
-- Never modify PROJECT_STATE.md directly
-- Tests define requirements — don't skip them
-- Reference spec IDs in commits
-
-## CLI Commands
-
-- \`specsafe status\` — Project status
-- \`specsafe spec|test|code|qa|complete <id>\` — Stage transitions
+Read PROJECT_STATE.md and provide:
+1. Summary of active specs and their current stages
+2. Which specs need attention
+3. Recommended next actions based on the project state
+4. Brief reminder of the SDD workflow (SPEC → TEST → CODE → QA → COMPLETE)
 `;
-  
-  await writeFile(configPath, crushContent);
+    await writeFile(specsafeCmdPath, specsafeContent);
+    console.log(chalk.green('✓ Created .opencode/commands/specsafe.md'));
+  } else {
+    console.log(chalk.yellow('⚠ .opencode/commands/specsafe.md already exists, skipping'));
+  }
+
+  // Create spec command
+  const specCmdPath = `${commandsDir}/spec.md`;
+  if (!existsSync(specCmdPath)) {
+    const specContent = `Show details for a specific spec by ID
+
+Read the spec file from specs/active/$SPEC_ID.md and show:
+- Requirements
+- Scenarios/acceptance criteria
+- Current stage
+- Implementation files referenced
+
+If no SPEC_ID provided, list available specs.
+`;
+    await writeFile(specCmdPath, specContent);
+    console.log(chalk.green('✓ Created .opencode/commands/spec.md'));
+  } else {
+    console.log(chalk.yellow('⚠ .opencode/commands/spec.md already exists, skipping'));
+  }
+
+  // Create validate command
+  const validateCmdPath = `${commandsDir}/validate.md`;
+  if (!existsSync(validateCmdPath)) {
+    const validateContent = `Validate current implementation against active spec
+
+Check if the current code changes satisfy the requirements in the active spec.
+Point out any gaps or issues that need to be addressed before completing.
+`;
+    await writeFile(validateCmdPath, validateContent);
+    console.log(chalk.green('✓ Created .opencode/commands/validate.md'));
+  } else {
+    console.log(chalk.yellow('⚠ .opencode/commands/validate.md already exists, skipping'));
+  }
 }
 
 /**
