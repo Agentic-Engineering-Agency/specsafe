@@ -382,9 +382,9 @@ After specification:
 - Do NOT proceed to TEST stage until requirements are complete
 `;
 
-// 3. specsafe-test - Create tests from scenarios
-const claudeSkillTestContent = `---
-name: specsafe-test
+// 3. specsafe-test-create - Create tests from scenarios
+const claudeSkillTestCreateContent = `---
+name: specsafe-test-create
 description: Create tests from scenarios. Moves spec from SPEC to TEST stage.
 disable-model-invocation: true
 ---
@@ -479,34 +479,73 @@ After test generation:
 - Do NOT write implementation code at this stage
 `;
 
-// 4. specsafe-dev - Development guidance mode
-const claudeSkillDevContent = `---
-name: specsafe-dev
-description: Development guidance mode. Implements code to pass tests. Moves spec from TEST to CODE stage.
+// 4. specsafe-test-apply - Apply and run tests against implementation
+const claudeSkillTestApplyContent = `---
+name: specsafe-test-apply
+description: Run tests against implementation and verify they pass. Loops back on failure.
 disable-model-invocation: true
 ---
 
-Development guidance mode - implement code to pass tests (TEST → CODE stage).
+Apply and run tests against implementation (CODE → QA stage).
 
 **When to use:**
-- Tests are generated and failing
-- Ready to write implementation
-- Following TDD cycle (RED → GREEN → REFACTOR)
+- Implementation is complete
+- Ready to verify against tests
+- Running the test suite to check pass/fail
 
 **Input**: The spec ID (e.g., SPEC-20260211-001)
 
 **Steps**
 
-1. **Validate test state**
+1. **Validate implementation state**
 
    Check \`specs/active/<spec-id>.md\`:
-   - Status must be TEST stage
-   - Test files exist
-   - Tests are currently failing
+   - Status should be CODE stage
+   - Implementation files exist
+   - Tests exist and are ready to run
 
-   Run tests to confirm:
-   \`\`\`bash
-   pnpm test  # or npm test / yarn test
+2. **Run the test suite**
+
+   Execute tests for this spec:
+   ```bash
+   pnpm test <spec-id>  # or npm test -- <spec-id>
+   ```
+
+3. **Analyze results**
+
+   **If ALL tests PASS:**
+   - ✅ Implementation is complete
+   - Suggest: \`/specsafe:done <id>\` to mark complete
+   
+   **If ANY tests FAIL:**
+   - ❌ Show specific failure messages
+   - Identify which requirements are not met
+   - Suggest fixes or return to implementation
+   - **CRITICAL: Do not proceed to done until all tests pass**
+
+4. **Loop back on failure**
+
+   If tests fail:
+   - Display failure details
+   - Identify gaps between spec and implementation
+   - Suggest \`/specsafe:test-apply <id>\` to retry after fixes
+   - Update PROJECT_STATE.md with findings
+
+**Output**
+
+After test run:
+- ✅ All pass → Ready for \`/specsafe:done\`
+- ❌ Some fail → Back to implementation
+- 📊 Test results summary with pass/fail counts
+
+**Guardrails**
+- ALL tests must pass before marking done
+- Never ignore failing tests
+- Each failure maps to a specific requirement gap
+- Loop back to implementation until tests pass
+- This is the quality gate - do not bypass it`;
+
+// 5. specsafe-verify - Run tests, loop back on failure (alias/shortcut)
    \`\`\`
 
 2. **Read requirements**
@@ -1022,8 +1061,8 @@ This project includes Claude Code skills for slash commands:
   await createSkill('specsafe', claudeSkillSpecsafeContent);
   await createSkill('specsafe-new', claudeSkillNewContent);
   await createSkill('specsafe-spec', claudeSkillSpecContent);
-  await createSkill('specsafe-test', claudeSkillTestContent);
-  await createSkill('specsafe-dev', claudeSkillDevContent);
+  await createSkill('specsafe-test-create', claudeSkillTestCreateContent);
+  await createSkill('specsafe-test-apply', claudeSkillTestApplyContent);
   await createSkill('specsafe-verify', claudeSkillVerifyContent);
   await createSkill('specsafe-done', claudeSkillDoneContent);
   await createSkill('specsafe-explore', claudeSkillExploreContent);
