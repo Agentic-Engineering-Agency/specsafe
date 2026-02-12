@@ -210,9 +210,7 @@ describe('generateToolConfig', () => {
     });
 
     it('should skip skill files if they already exist', async () => {
-      let callCount = 0;
       (existsSync as unknown as ReturnType<typeof vi.fn>).mockImplementation((path: string) => {
-        // Only return true for skill files after their parent directory check
         if (path.includes('SKILL.md')) {
           return true;
         }
@@ -221,9 +219,15 @@ describe('generateToolConfig', () => {
 
       await generateToolConfig('claude-code', projectDir);
 
-      // Should create CLAUDE.md and the skills directory
+      // CLAUDE.md should still be created
       expect(writeFile).toHaveBeenCalledWith(
         expect.stringContaining('CLAUDE.md'),
+        expect.any(String)
+      );
+
+      // Skill files should NOT be written since they already exist
+      expect(writeFile).not.toHaveBeenCalledWith(
+        expect.stringContaining('SKILL.md'),
         expect.any(String)
       );
     });
