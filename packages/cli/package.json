@@ -1,6 +1,6 @@
 {
   "name": "@specsafe/cli",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "CLI for SpecSafe TDD framework",
   "type": "module",
   "engines": {

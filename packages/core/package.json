@@ -1,6 +1,6 @@
 {
   "name": "@specsafe/core",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Core types and workflow engine for SpecSafe",
   "type": "module",
   "engines": {
