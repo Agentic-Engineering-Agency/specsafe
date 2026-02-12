@@ -113,6 +113,10 @@ Additional context, links, or references.
 `;
 }
 
+/**
+ * Generate a README file explaining the delta spec format
+ * @returns Markdown content for delta spec documentation
+ */
 export function generateDeltaReadme(): string {
   return `# Delta Specs
 
