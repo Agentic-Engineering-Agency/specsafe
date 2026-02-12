@@ -1,20 +1,46 @@
-Pre-Spec Exploration and Research Mode
+Pre-spec exploration and research
 
-Guide the user through pre-spec research and validation before committing to a full specification.
+You are conducting preliminary exploration before committing to a full spec. This helps validate ideas and reduce unknowns.
 
-**Activities:**
-- Define the problem being solved
-- Identify target users and their needs
-- Research existing solutions and competitors
-- Evaluate technology options with pros/cons
-- Estimate effort (S/M/L/XL)
-- Identify risks and constraints
+1. **Exploration Prompts**
+   Guide user through discovery:
+   - What problem are we solving?
+   - Who are the primary users?
+   - What are the existing solutions/competitors?
+   - What are the technical constraints?
+   - What are the unknowns or risks?
 
-**Output:** Create `specs/exploration/FEATURE-NAME.md` with:
-- Problem statement and hypothesis
-- User research findings
-- Technology evaluation matrix
-- Effort estimate and rationale
-- Recommendation: proceed, research more, or park idea
+2. **Research Tasks**
+   Based on user input, help with:
+   - Technology evaluation (pros/cons of options)
+   - API documentation review
+   - Similar feature analysis
+   - Feasibility assessment
+   - Effort estimation (T-shirt sizes: S, M, L, XL)
 
-**Decision Gate:** Recommend whether to proceed to `/specsafe:new` or gather more information.
+3. **Exploration Outputs**
+   Document findings in:
+   - `specs/exploration/FEATURE-NAME.md` — Research notes
+   - Include: findings, recommendations, open questions
+   - Attach relevant links, references
+
+4. **Decision Gate**
+   After exploration, help user decide:
+   - Proceed to `specsafe-new` for full spec creation
+   - Needs more research (schedule follow-up)
+   - Deprioritize/park the idea
+
+5. **Spike Code** (Optional)
+   If technical validation needed:
+   - Create spike branch
+   - Write minimal proof-of-concept
+   - Document learnings, then discard or keep
+
+6. **Summary**
+   Provide concise recommendation:
+   - Go/No-go decision
+   - Key risks identified
+   - Suggested approach
+   - Next steps
+
+Ask: "What would you like to explore?"

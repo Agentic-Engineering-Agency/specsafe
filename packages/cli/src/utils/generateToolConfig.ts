@@ -1071,59 +1071,46 @@ This project includes Claude Code skills for slash commands:
 async function generateCrushConfig(projectDir: string): Promise<void> {
   // OpenCode/Crush uses .opencode/commands/ for custom commands
   const commandsDir = `${projectDir}/.opencode/commands`;
-  
+
   if (!existsSync(commandsDir)) {
     await mkdir(commandsDir, { recursive: true });
   }
 
-  // Create specsafe command
-  const specsafeCmdPath = `${commandsDir}/specsafe.md`;
-  if (!existsSync(specsafeCmdPath)) {
-    const specsafeContent = `Show SpecSafe project status and workflow guidance
+  // Helper to copy command file from rules/crush/ to .opencode/commands/
+  async function copyCommandFile(filename: string): Promise<void> {
+    const sourcePath = `${projectDir}/rules/crush/${filename}`;
+    const destPath = `${commandsDir}/${filename}`;
 
-Read PROJECT_STATE.md and provide:
-1. Summary of active specs and their current stages
-2. Which specs need attention
-3. Recommended next actions based on the project state
-4. Brief reminder of the SDD workflow (SPEC → TEST → CODE → QA → COMPLETE)
-`;
-    await writeFile(specsafeCmdPath, specsafeContent);
-    console.log(chalk.green('✓ Created .opencode/commands/specsafe.md'));
-  } else {
-    console.log(chalk.yellow('⚠ .opencode/commands/specsafe.md already exists, skipping'));
+    if (!existsSync(destPath)) {
+      const { readFile } = await import('fs/promises');
+      try {
+        const content = await readFile(sourcePath, 'utf-8');
+        await writeFile(destPath, content);
+        console.log(chalk.green(`✓ Created .opencode/commands/${filename}`));
+      } catch (error) {
+        console.log(chalk.yellow(`⚠ Source file rules/crush/${filename} not found, skipping`));
+      }
+    } else {
+      console.log(chalk.yellow(`⚠ .opencode/commands/${filename} already exists, skipping`));
+    }
   }
 
-  // Create spec command
-  const specCmdPath = `${commandsDir}/spec.md`;
-  if (!existsSync(specCmdPath)) {
-    const specContent = `Show details for a specific spec by ID
+  // Copy all 10 SpecSafe OpenCode commands
+  const commandFiles = [
+    'specsafe.md',        // Show SpecSafe project status
+    'spec.md',            // Show details for a specific spec
+    'validate.md',        // Validate current implementation
+    'specsafe-new.md',    // Create new spec with PRD
+    'specsafe-spec.md',   // Generate detailed spec from PRD
+    'specsafe-test.md',   // Create tests from scenarios
+    'specsafe-dev.md',    // Development guidance mode
+    'specsafe-verify.md', // Run tests, loop back on fail
+    'specsafe-done.md',   // Mark complete, archive spec
+    'specsafe-explore.md' // Pre-spec exploration
+  ];
 
-Read the spec file from specs/active/$SPEC_ID.md and show:
-- Requirements
-- Scenarios/acceptance criteria
-- Current stage
-- Implementation files referenced
-
-If no SPEC_ID provided, list available specs.
-`;
-    await writeFile(specCmdPath, specContent);
-    console.log(chalk.green('✓ Created .opencode/commands/spec.md'));
-  } else {
-    console.log(chalk.yellow('⚠ .opencode/commands/spec.md already exists, skipping'));
-  }
-
-  // Create validate command
-  const validateCmdPath = `${commandsDir}/validate.md`;
-  if (!existsSync(validateCmdPath)) {
-    const validateContent = `Validate current implementation against active spec
-
-Check if the current code changes satisfy the requirements in the active spec.
-Point out any gaps or issues that need to be addressed before completing.
-`;
-    await writeFile(validateCmdPath, validateContent);
-    console.log(chalk.green('✓ Created .opencode/commands/validate.md'));
-  } else {
-    console.log(chalk.yellow('⚠ .opencode/commands/validate.md already exists, skipping'));
+  for (const filename of commandFiles) {
+    await copyCommandFile(filename);
   }
 }
 

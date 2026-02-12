@@ -1,40 +1,51 @@
 {
-  "version": "0.4.0",
+  "version": "1.0.0",
   "tools": {
     "cursor": {
-      "version": "0.4.0",
+      "version": "1.0.0",
       "source": "rules/cursor/.cursorrules",
       "files": [".cursorrules"]
     },
     "continue": {
-      "version": "0.4.0",
+      "version": "1.0.0",
       "source": "rules/continue/",
-      "files": [".continue/config.yaml", ".continue/prompts/specsafe.md", ".continue/prompts/spec.md", ".continue/prompts/validate.md", ".continue/prompts/specsafe-explore.md", ".continue/prompts/specsafe-new.md", ".continue/prompts/specsafe-spec.md", ".continue/prompts/specsafe-test-create.md", ".continue/prompts/specsafe-test-apply.md", ".continue/prompts/specsafe-verify.md", ".continue/prompts/specsafe-done.md"]
+      "files": [".continue/config.yaml", ".continue/prompts/specsafe.md", ".continue/prompts/spec.md", ".continue/prompts/validate.md"]
     },
     "aider": {
-      "version": "0.4.0",
+      "version": "1.0.0",
       "source": ["rules/aider/.aider.conf.yml", "rules/aider/.aiderignore"],
       "files": [".aider.conf.yml", ".aiderignore"]
     },
     "zed": {
-      "version": "0.4.0",
+      "version": "1.0.0",
       "source": "rules/zed/settings.json",
       "files": [".zed/settings.json"]
     },
     "git-hooks": {
-      "version": "0.4.0",
+      "version": "1.0.0",
       "source": "rules/git-hooks/pre-commit",
       "files": [".githooks/pre-commit"]
     },
     "claude-code": {
-      "version": "0.4.0",
+      "version": "1.0.0",
       "source": "rules/claude-code/CLAUDE.md",
       "files": ["CLAUDE.md"]
     },
     "crush": {
-      "version": "0.4.0",
+      "version": "1.0.0",
       "source": "rules/crush/",
-      "files": [".opencode/commands/specsafe.md", ".opencode/commands/spec.md", ".opencode/commands/validate.md", ".opencode/commands/specsafe-explore.md", ".opencode/commands/specsafe-new.md", ".opencode/commands/specsafe-spec.md", ".opencode/commands/specsafe-test-create.md", ".opencode/commands/specsafe-test-apply.md", ".opencode/commands/specsafe-verify.md", ".opencode/commands/specsafe-done.md"]
+      "files": [
+        ".opencode/commands/specsafe.md",
+        ".opencode/commands/spec.md",
+        ".opencode/commands/validate.md",
+        ".opencode/commands/specsafe-new.md",
+        ".opencode/commands/specsafe-spec.md",
+        ".opencode/commands/specsafe-test.md",
+        ".opencode/commands/specsafe-dev.md",
+        ".opencode/commands/specsafe-verify.md",
+        ".opencode/commands/specsafe-done.md",
+        ".opencode/commands/specsafe-explore.md"
+      ]
     }
   }
 }

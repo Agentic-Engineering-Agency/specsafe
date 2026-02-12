@@ -1,35 +1,49 @@
-Verify Implementation and Iterate Until Tests Pass
+Run tests and iterate until all pass
 
-Run tests and iterate until implementation is correct.
+You are responsible for verifying implementation against the spec through automated testing.
 
-**Step 1: Run Test Suite**
-```bash
-npm test -- SPEC-ID
-```
+1. **Pre-Flight Check**
+   - Read `specs/active/SPEC-ID.md` for expected behavior
+   - Verify test files exist in `src/__tests__/SPEC-ID/`
+   - Check current PROJECT_STATE stage (should be CODE or QA)
 
-**Step 2: Analyze Failures**
-For each failing test:
-- Identify the failing assertion
-- Map to the specific requirement
-- Determine: bug vs. test expectation issue
+2. **Test Execution**
+   Run appropriate test commands:
+   ```bash
+   # Run all tests for this spec
+   npm test -- SPEC-ID
+   
+   # Or with coverage
+   npm test -- SPEC-ID --coverage
+   ```
 
-**Step 3: Fix Iteratively**
-- **Golden rule:** Fix the code, not the test (unless confirmed wrong)
-- Make targeted fixes
-- Re-run tests
-- Iterate: `Run → Analyze → Fix → Run` until all pass
+3. **Failure Analysis**
+   For each failing test:
+   - Identify the failing assertion
+   - Map failure to specific requirement
+   - Determine: implementation bug or test expectation issue?
+   - If bug: fix the code, not the test
+   - If test is wrong: discuss with user before modifying
 
-**Step 4: Validation**
-- Check coverage meets spec requirements
-- Run full suite for regressions
-- Verify against acceptance criteria
+4. **Iteration Loop**
+   Repeat until all tests pass:
+   ```
+   Run tests → Analyze failures → Fix code → Run tests
+   ```
 
-**Step 5: Report**
-- Pass rate percentage
-- Coverage percentage
-- Any remaining issues or concerns
+5. **Coverage Check**
+   - Verify coverage meets spec requirements (if specified)
+   - Identify untested code paths
+   - Suggest additional tests if gaps exist
 
-**Update State:**
-- Update PROJECT_STATE.md: TEST-APPLY → VERIFY stage
+6. **Completion**
+   When all tests pass:
+   - Update `PROJECT_STATE.md`: move to QA stage
+   - Generate test report summary
+   - Suggest manual testing areas
 
-Ask: "Should I run verification for [SPEC-ID]?" if not specified.
+7. **Regression Prevention**
+   - Run full test suite to check for regressions
+   - Flag any unrelated test failures
+
+Report: Pass rate, coverage %, any remaining issues.
