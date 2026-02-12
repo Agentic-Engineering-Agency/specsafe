@@ -1,4 +1,4 @@
-import { writeFile, mkdir } from 'fs/promises';
+import { writeFile, mkdir, chmod } from 'fs/promises';
 import { existsSync } from 'fs';
 import chalk from 'chalk';
 
@@ -244,15 +244,15 @@ const zedSettingsContent = {
       },
     },
     workflow: {
-      stages: ['EXPLORE', 'NEW', 'SPEC', 'TEST-CREATE', 'TEST-APPLY', 'VERIFY', 'COMPLETE'],
+      stages: ['EXPLORE', 'NEW', 'SPEC', 'TEST-CREATE', 'TEST-APPLY', 'VERIFY', 'DONE'],
       transitions: {
         EXPLORE: ['NEW'],
         NEW: ['SPEC'],
         SPEC: ['TEST-CREATE'],
         'TEST-CREATE': ['TEST-APPLY'],
         'TEST-APPLY': ['VERIFY'],
-        VERIFY: ['COMPLETE', 'TEST-APPLY'],
-        COMPLETE: [],
+        VERIFY: ['DONE', 'TEST-APPLY'],
+        DONE: [],
       },
     },
   },
@@ -624,8 +624,7 @@ export async function generateGitHooks(projectDir: string): Promise<void> {
   await writeFile(preCommitPath, preCommitContent);
 
   try {
-    const { exec } = await import('child_process');
-    exec(`chmod +x ${preCommitPath}`);
+    await chmod(preCommitPath, 0o755);
     console.log(chalk.green('\u2713 Created .githooks/pre-commit'));
   } catch {
     console.log(chalk.yellow('\u26a0 Could not make pre-commit executable'));

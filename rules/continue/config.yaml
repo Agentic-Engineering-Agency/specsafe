@@ -8,12 +8,6 @@ schema: v1
 
 # Prompt files for spec-driven development (invokable as /commands)
 prompts:
-  # Original commands
-  - uses: file://prompts/specsafe.md
-  - uses: file://prompts/spec.md
-  - uses: file://prompts/validate.md
-  
-  # New v0.4.0 OpenSpec-style workflow commands
   - uses: file://prompts/specsafe-explore.md
   - uses: file://prompts/specsafe-new.md
   - uses: file://prompts/specsafe-spec.md
@@ -26,5 +20,6 @@ prompts:
 context:
   include:
     - PROJECT_STATE.md
-    - specs/active/*.md
     - specs/drafts/*.md
+    - specs/active/*.md
+    - specs/exploration/*.md

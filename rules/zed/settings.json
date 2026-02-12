@@ -1,7 +1,4 @@
 {
-  "name": "specsafe-zed",
-  "version": "0.4.0",
-  "description": "SpecSafe rules for Zed Editor — OpenSpec workflow",
   "assistant": {
     "default_model": {
       "provider": "anthropic",
@@ -12,15 +9,120 @@
   "context_servers": {
     "specsafe": {
       "command": "cat",
-      "args": ["PROJECT_STATE.md"]
+      "args": [
+        "PROJECT_STATE.md"
+      ]
     }
   },
   "agent": {
-    "default_profile": "specsafe",
-    "profiles": {
+    "name": "SpecSafe",
+    "description": "Spec-driven development assistant for OpenSpec-style workflow",
+    "context": {
+      "files": [
+        "PROJECT_STATE.md",
+        "specsafe.config.json"
+      ],
+      "directories": [
+        "specs/active",
+        "specs/drafts"
+      ]
+    },
+    "commands": {
+      "specsafe:explore": {
+        "description": "Pre-spec exploration and research",
+        "prompt": "Conduct preliminary exploration. Guide problem definition, research technology options, estimate effort, document findings in specs/exploration/.",
+        "context": [
+          "PROJECT_STATE.md"
+        ]
+      },
+      "specsafe:new": {
+        "description": "Initialize spec with PRD",
+        "prompt": "Create a new spec with PRD. Generate SPEC-YYYYMMDD-NNN, create PRD, recommend tech stack. Output to specs/drafts/.",
+        "context": [
+          "PROJECT_STATE.md"
+        ]
+      },
+      "specsafe:spec": {
+        "description": "Generate detailed spec from PRD",
+        "prompt": "Read PRD and create comprehensive spec with FR-XXX, TR-XXX, Given/When/Then scenarios. Move to specs/active/.",
+        "context": [
+          "PROJECT_STATE.md",
+          "specs/drafts/*.md"
+        ]
+      },
+      "specsafe:test-create": {
+        "description": "Create tests from spec scenarios",
+        "prompt": "Generate test suite from spec. Create test files mapping scenarios to test cases.",
+        "context": [
+          "PROJECT_STATE.md",
+          "specs/active/*.md"
+        ]
+      },
+      "specsafe:test-apply": {
+        "description": "Apply tests — development mode",
+        "prompt": "Guide implementation following Plan → Implement → Test → Commit. Never modify tests to pass.",
+        "context": [
+          "PROJECT_STATE.md",
+          "specs/active/*.md",
+          "src/__tests__/**/*.test.ts"
+        ]
+      },
+      "specsafe:verify": {
+        "description": "Run tests and iterate until pass",
+        "prompt": "Run test suite, analyze failures, fix code (not tests), iterate. Report pass rate and coverage.",
+        "context": [
+          "PROJECT_STATE.md",
+          "specs/active/*.md",
+          "src/__tests__/**/*.test.ts"
+        ]
+      },
+      "specsafe:done": {
+        "description": "Complete and archive spec",
+        "prompt": "Verify checklist, run final tests, archive spec. Generate completion summary.",
+        "context": [
+          "PROJECT_STATE.md",
+          "specs/active/*.md"
+        ]
+      },
       "specsafe": {
-        "name": "SpecSafe OpenSpec",
-        "prompt": "You are a SpecSafe v0.4.0 assistant using the OpenSpec workflow.\n\n7 Commands:\n- specsafe:new — Create spec with PRD + BRD\n- specsafe:spec — Flesh out detailed spec\n- specsafe:test-create — Generate tests from scenarios\n- specsafe:test-apply — Run tests, loop on failure\n- specsafe:verify — Verify implementation completeness\n- specsafe:done — Mark complete, archive\n- specsafe:explore — Pre-spec spike/research\n\nPRD: Problem Statement, User Stories, Acceptance Criteria, Technical Requirements\nBRD: Business Justification, Success Metrics, Stakeholders, Timeline\n\nCRITICAL: NEVER use 'test' or 'dev' — use 'test-create' and 'test-apply'"
+        "description": "Show project status",
+        "prompt": "Read PROJECT_STATE.md and show active specs, stages, and recommended next actions.",
+        "context": [
+          "PROJECT_STATE.md"
+        ]
+      }
+    },
+    "workflow": {
+      "stages": [
+        "EXPLORE",
+        "NEW",
+        "SPEC",
+        "TEST-CREATE",
+        "TEST-APPLY",
+        "VERIFY",
+        "DONE"
+      ],
+      "transitions": {
+        "EXPLORE": [
+          "NEW"
+        ],
+        "NEW": [
+          "SPEC"
+        ],
+        "SPEC": [
+          "TEST-CREATE"
+        ],
+        "TEST-CREATE": [
+          "TEST-APPLY"
+        ],
+        "TEST-APPLY": [
+          "VERIFY"
+        ],
+        "VERIFY": [
+          "DONE",
+          "TEST-APPLY"
+        ],
+        "DONE": []
       }
     }
   }

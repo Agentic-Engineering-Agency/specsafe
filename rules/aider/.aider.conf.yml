@@ -6,6 +6,7 @@
 read:
   - PROJECT_STATE.md
   - README.md
+  - CONVENTIONS.md
 
 # Convention: 7 OpenSpec Commands
 # - specsafe:new — Create spec with PRD + BRD

@@ -24,6 +24,4 @@ Format: `SPEC-YYYYMMDD-NNN` (e.g., SPEC-20260211-001)
 
 **Output:**
 - File: `specs/drafts/SPEC-ID.md`
-- Update PROJECT_STATE.md (status: DRAFT)
-
-**Always confirm with user before writing files.**
+- Update PROJECT_STATE.md (status: NEW)

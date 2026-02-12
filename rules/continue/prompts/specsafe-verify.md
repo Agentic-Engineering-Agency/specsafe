@@ -12,4 +12,4 @@ Verify that implementation satisfies all spec requirements:
 4. Check code quality and documentation
 5. Confirm success metrics from BRD
 
-Update PROJECT_STATE.md (status: QA → COMPLETE).
+Update PROJECT_STATE.md (status: QA → DONE).

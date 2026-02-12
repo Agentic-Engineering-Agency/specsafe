@@ -39,7 +39,7 @@ You are generating test suites based on the active spec's scenarios and requirem
 
 5. **Output**
    - Generate all test files
-   - Create `tests/SPEC-ID/README.md` with test run instructions
+   - Create `src/__tests__/SPEC-ID/README.md` with test run instructions
    - Update `PROJECT_STATE.md`: move spec to TEST-CREATE stage
    - Report: number of tests created, coverage expectations
 
