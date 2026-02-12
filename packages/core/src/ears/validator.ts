@@ -62,6 +62,13 @@ export function validateRequirements(spec: Spec): EARSValidationResult {
 
 /**
  * Validate a single requirement text
+ * 
+ * Note: A requirement is considered compliant (isCompliant = true) ONLY if it both:
+ * 1. Matches an EARS pattern with sufficient confidence, AND
+ * 2. Has zero quality issues (no ambiguous words, vague terms, etc.)
+ * 
+ * @param text - The requirement text to validate
+ * @returns Validation result with compliance status, issues, and suggestions
  */
 export function validateRequirement(text: string): RequirementValidation {
   const earsRequirement = parseEARSRequirement(text);

@@ -102,6 +102,12 @@ describe('Agent System', () => {
       expect(entry).toBeUndefined();
     });
 
+    it('should return undefined for agents without adapters', () => {
+      // windsurf is defined but has no adapter registered yet
+      const entry = getAgent('windsurf');
+      expect(entry).toBeUndefined();
+    });
+
     it('should generate config files', async () => {
       const claudeEntry = getAgent('claude-code');
       if (!claudeEntry) {

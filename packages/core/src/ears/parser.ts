@@ -278,6 +278,10 @@ function matchComplex(text: string): EARSRequirement | null {
 
 /**
  * Check if a requirement text contains any EARS keywords
+ * 
+ * Note: This is a permissive heuristic designed to detect potential EARS patterns.
+ * It may produce false positives and should be used as an initial filter rather than
+ * a strict validator.
  */
 export function hasEARSKeywords(text: string): boolean {
   const keywords = /\b(when|while|where|if\s+.+\s+then|system\s+shall|shall|must|will)\b/i;
