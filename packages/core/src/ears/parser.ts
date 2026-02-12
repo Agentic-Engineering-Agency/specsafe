@@ -200,35 +200,59 @@ function matchComplex(text: string): EARSRequirement | null {
   // Parse individual triggers
   const conditions: { type: 'event' | 'state' | 'optional'; value: string }[] = [];
   
-  // Split by "and", "while", "where", "when" (keeping the keyword)
-  const triggerParts = triggersText.split(/,?\s+(and|while|where|when)\s+/i);
+  // Split by "and", "while", "where", "when", "if" (keeping the keyword)
+  const triggerParts = triggersText.split(/,?\s+(and|while|where|when|if)\s+/i);
   
   let currentKeyword = '';
+  let lastKeywordType: 'event' | 'state' | 'optional' | null = null;
+  
   for (let i = 0; i < triggerParts.length; i++) {
     const part = triggerParts[i].trim();
     
-    if (/^(and|while|where|when)$/i.test(part)) {
-      currentKeyword = part.toLowerCase();
+    if (/^(and|while|where|when|if)$/i.test(part)) {
+      const keyword = part.toLowerCase();
+      // 'and' continues with the previous keyword type
+      if (keyword !== 'and') {
+        currentKeyword = keyword;
+      }
       continue;
     }
     
     // First part might not have a keyword if it starts with one
     if (i === 0) {
-      if (/^when\s+/i.test(part)) {
+      if (/^if\s+/i.test(part)) {
+        conditions.push({ type: 'optional', value: part.replace(/^if\s+/i, '').trim() });
+        lastKeywordType = 'optional';
+      } else if (/^when\s+/i.test(part)) {
         conditions.push({ type: 'event', value: part.replace(/^when\s+/i, '').trim() });
+        lastKeywordType = 'event';
       } else if (/^while\s+/i.test(part)) {
         conditions.push({ type: 'state', value: part.replace(/^while\s+/i, '').trim() });
+        lastKeywordType = 'state';
       } else if (/^where\s+/i.test(part)) {
         conditions.push({ type: 'optional', value: part.replace(/^where\s+/i, '').trim() });
+        lastKeywordType = 'optional';
       }
     } else {
-      // Use the current keyword
-      if (currentKeyword === 'when') {
-        conditions.push({ type: 'event', value: part });
+      // Use the current keyword (or last type if 'and')
+      let conditionType: 'event' | 'state' | 'optional' | null = null;
+      
+      if (currentKeyword === 'if') {
+        conditionType = 'optional';
+      } else if (currentKeyword === 'when') {
+        conditionType = 'event';
       } else if (currentKeyword === 'while') {
-        conditions.push({ type: 'state', value: part });
+        conditionType = 'state';
       } else if (currentKeyword === 'where') {
-        conditions.push({ type: 'optional', value: part });
+        conditionType = 'optional';
+      } else if (currentKeyword === '' && lastKeywordType) {
+        // Handle 'and' by using last keyword type
+        conditionType = lastKeywordType;
+      }
+      
+      if (conditionType) {
+        conditions.push({ type: conditionType, value: part });
+        lastKeywordType = conditionType;
       }
     }
   }

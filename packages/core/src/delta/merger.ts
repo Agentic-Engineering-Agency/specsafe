@@ -35,8 +35,8 @@ export class SemanticMerger {
     // Sort removals by startLine descending to avoid stale indices
     const removalsToProcess = deltaSpec.removed
       .map(id => ({ id, req: requirementMap.get(id) }))
-      .filter(item => item.req !== undefined)
-      .sort((a, b) => (b.req!.startLine || 0) - (a.req!.startLine || 0));
+      .filter((item): item is { id: string; req: ParsedRequirement } => item.req !== undefined)
+      .sort((a, b) => b.req.startLine - a.req.startLine);
 
     // Apply REMOVED requirements
     for (const { id, req } of removalsToProcess) {
@@ -71,8 +71,10 @@ export class SemanticMerger {
     // Sort modifications by startLine descending to avoid stale indices
     const modificationsToProcess = deltaSpec.modified
       .map(modReq => ({ modReq, oldReq: requirementMap.get(modReq.id) }))
-      .filter(item => item.oldReq !== undefined)
-      .sort((a, b) => (b.oldReq!.startLine || 0) - (a.oldReq!.startLine || 0));
+      .filter((item): item is { modReq: typeof deltaSpec.modified[0]; oldReq: ParsedRequirement } => 
+        item.oldReq !== undefined
+      )
+      .sort((a, b) => b.oldReq.startLine - a.oldReq.startLine);
 
     // Apply MODIFIED requirements
     for (const { modReq, oldReq } of modificationsToProcess) {

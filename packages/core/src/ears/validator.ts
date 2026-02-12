@@ -102,11 +102,12 @@ export function validateRequirement(text: string): RequirementValidation {
     }
   }
   
-  // Check for vague terms
+  // Check for vague terms (precompiled with word boundaries to avoid false positives)
   const vagueTerms = ['appropriate', 'adequate', 'reasonable', 'efficient', 'user-friendly', 'as needed'];
-  for (const term of vagueTerms) {
-    if (new RegExp(term, 'i').test(text)) {
-      issues.push(`Contains vague term: "${term}" - specify measurable criteria`);
+  const vagueTermPatterns = vagueTerms.map(term => new RegExp(`\\b${term}\\b`, 'i'));
+  for (let i = 0; i < vagueTerms.length; i++) {
+    if (vagueTermPatterns[i].test(text)) {
+      issues.push(`Contains vague term: "${vagueTerms[i]}" - specify measurable criteria`);
     }
   }
   
@@ -159,9 +160,16 @@ export function getEARSScore(spec: Spec): number {
 
 /**
  * Check if a spec meets minimum EARS compliance threshold
+ * @param spec - The spec to check
+ * @param threshold - Minimum score (0-100)
+ * @param precomputedScore - Optional pre-computed score to avoid re-validation
  */
-export function meetsEARSThreshold(spec: Spec, threshold: number = 80): boolean {
-  const score = getEARSScore(spec);
+export function meetsEARSThreshold(
+  spec: Spec, 
+  threshold: number = 80,
+  precomputedScore?: number
+): boolean {
+  const score = precomputedScore !== undefined ? precomputedScore : getEARSScore(spec);
   return score >= threshold;
 }
 
