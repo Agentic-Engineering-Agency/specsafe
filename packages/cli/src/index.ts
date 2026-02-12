@@ -19,13 +19,17 @@ import { listCommand } from './commands/list.js';
 import { archiveCommand } from './commands/archive.js';
 import { doctorCommand } from './commands/doctor.js';
 import { rulesCommand } from './commands/rules.js';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const packageJson = require('../package.json');
 
 const program = new Command();
 
 program
   .name('specsafe')
   .description('SpecSafe - Test-Driven Development framework for AI-assisted software engineering')
-  .version('0.1.0');
+  .version(packageJson.version);
 
 // Add commands
 program.addCommand(initCommand);
