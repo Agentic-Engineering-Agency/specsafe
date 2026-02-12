@@ -182,16 +182,16 @@ describe('generateToolConfig', () => {
       );
     });
 
-    it('should create validate skill file', async () => {
+    it('should create verify skill file', async () => {
       await generateToolConfig('claude-code', projectDir);
 
       expect(mkdir).toHaveBeenCalledWith(
-        expect.stringContaining('.claude/skills/specsafe-validate'),
+        expect.stringContaining('.claude/skills/specsafe-verify'),
         { recursive: true }
       );
       expect(writeFile).toHaveBeenCalledWith(
-        expect.stringContaining('specsafe-validate/SKILL.md'),
-        expect.stringContaining('name: specsafe-validate')
+        expect.stringContaining('specsafe-verify/SKILL.md'),
+        expect.stringContaining('name: specsafe-verify')
       );
     });
 
