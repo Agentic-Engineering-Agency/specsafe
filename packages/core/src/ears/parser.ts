@@ -63,8 +63,7 @@ export function parseEARSRequirement(text: string): EARSRequirement {
  */
 function matchUbiquitous(text: string): EARSRequirement | null {
   const patterns = [
-    /^(?:the\s+)?(?:system|application|service|software|product)\s+(?:shall|must|will)\s+(.+)$/i,
-    /^(?:the\s+)?system\s+shall\s+(.+)$/i
+    /^(?:the\s+)?(?:system|application|service|software|product)\s+(?:shall|must|will)\s+(.+)$/i
   ];
   
   for (const pattern of patterns) {
@@ -265,10 +264,10 @@ export function extractRequirements(text: string): string[] {
   
   for (const line of lines) {
     const trimmed = line.trim();
-    // Look for lines that look like requirements
-    if (trimmed && (
-      /(?:system|application|service)\s+(?:shall|must|will)/i.test(trimmed) ||
-      /^(?:when|while|where|if)\s+/i.test(trimmed)
+    // Look for lines that look like requirements (must have EARS action clause)
+    if (trimmed && /(?:shall|must|will)/i.test(trimmed) && (
+      /(?:system|application|service)/i.test(trimmed) ||
+      /(?:when|while|where|if)\s+/i.test(trimmed)
     )) {
       requirements.push(trimmed.replace(/^[-*•]\s*/, '')); // Remove bullet points
     }
