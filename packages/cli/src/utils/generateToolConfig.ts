@@ -201,7 +201,7 @@ Read PROJECT_STATE.md and provide:
 `;
 
 const claudeSkillSpecContent = `---
-name: spec
+name: specsafe-spec
 description: Show details for a specific spec by ID
 argument-hint: "[spec-id]"
 disable-model-invocation: true
@@ -217,7 +217,7 @@ If no argument provided, list available specs.
 `;
 
 const claudeSkillValidateContent = `---
-name: validate
+name: specsafe-validate
 description: Validate current implementation against active spec
 disable-model-invocation: true
 ---
@@ -310,29 +310,29 @@ This project includes Claude Code skills for slash commands:
   }
 
   // Create spec skill
-  const specSkillDir = `${skillsDir}/spec`;
+  const specSkillDir = `${skillsDir}/specsafe-spec`;
   const specSkillPath = `${specSkillDir}/SKILL.md`;
   if (!existsSync(specSkillPath)) {
     if (!existsSync(specSkillDir)) {
       await mkdir(specSkillDir, { recursive: true });
     }
     await writeFile(specSkillPath, claudeSkillSpecContent);
-    console.log(chalk.green('✓ Created .claude/skills/spec/SKILL.md'));
+    console.log(chalk.green('✓ Created .claude/skills/specsafe-spec/SKILL.md'));
   } else {
-    console.log(chalk.yellow('⚠ .claude/skills/spec/SKILL.md already exists, skipping'));
+    console.log(chalk.yellow('⚠ .claude/skills/specsafe-spec/SKILL.md already exists, skipping'));
   }
 
   // Create validate skill
-  const validateSkillDir = `${skillsDir}/validate`;
+  const validateSkillDir = `${skillsDir}/specsafe-validate`;
   const validateSkillPath = `${validateSkillDir}/SKILL.md`;
   if (!existsSync(validateSkillPath)) {
     if (!existsSync(validateSkillDir)) {
       await mkdir(validateSkillDir, { recursive: true });
     }
     await writeFile(validateSkillPath, claudeSkillValidateContent);
-    console.log(chalk.green('✓ Created .claude/skills/validate/SKILL.md'));
+    console.log(chalk.green('✓ Created .claude/skills/specsafe-validate/SKILL.md'));
   } else {
-    console.log(chalk.yellow('⚠ .claude/skills/validate/SKILL.md already exists, skipping'));
+    console.log(chalk.yellow('⚠ .claude/skills/specsafe-validate/SKILL.md already exists, skipping'));
   }
 }
 

@@ -173,12 +173,12 @@ describe('generateToolConfig', () => {
       await generateToolConfig('claude-code', projectDir);
 
       expect(mkdir).toHaveBeenCalledWith(
-        expect.stringContaining('.claude/skills/spec'),
+        expect.stringContaining('.claude/skills/specsafe-spec'),
         { recursive: true }
       );
       expect(writeFile).toHaveBeenCalledWith(
-        expect.stringContaining('spec/SKILL.md'),
-        expect.stringContaining('name: spec')
+        expect.stringContaining('specsafe-spec/SKILL.md'),
+        expect.stringContaining('name: specsafe-spec')
       );
     });
 
@@ -186,12 +186,12 @@ describe('generateToolConfig', () => {
       await generateToolConfig('claude-code', projectDir);
 
       expect(mkdir).toHaveBeenCalledWith(
-        expect.stringContaining('.claude/skills/validate'),
+        expect.stringContaining('.claude/skills/specsafe-validate'),
         { recursive: true }
       );
       expect(writeFile).toHaveBeenCalledWith(
-        expect.stringContaining('validate/SKILL.md'),
-        expect.stringContaining('name: validate')
+        expect.stringContaining('specsafe-validate/SKILL.md'),
+        expect.stringContaining('name: specsafe-validate')
       );
     });
 
