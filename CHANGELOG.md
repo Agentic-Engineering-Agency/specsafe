@@ -99,3 +99,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Claude Code skills now appear as slash commands (/specsafe, /spec, /validate)
+
+## [0.3.5] - 2026-02-11
+
+### Fixed
+- Renamed Claude Code skills to /specsafe-spec and /specsafe-validate to avoid name conflicts
