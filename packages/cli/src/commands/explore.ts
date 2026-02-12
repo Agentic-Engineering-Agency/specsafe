@@ -2,8 +2,6 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
 import { input, editor, select, confirm } from '@inquirer/prompts';
-import { mkdir, writeFile } from 'fs/promises';
-import { join } from 'path';
 
 interface ExplorationResult {
   idea: string;
@@ -215,40 +213,6 @@ export const exploreCommand = new Command('explore')
       }
 
       console.log(chalk.blue('\n' + '━'.repeat(60)));
-
-      // Persist exploration results to disk
-      const explorationDir = join('specs', 'exploration');
-      await mkdir(explorationDir, { recursive: true });
-      const fileSlug = explorationTopic
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '') || 'exploration';
-      const timestamp = new Date().toISOString().slice(0, 10);
-      const explorationPath = join(explorationDir, `${timestamp}-${fileSlug}.md`);
-      const explorationContent = `# Exploration: ${explorationTopic}
-
-**Date:** ${new Date().toISOString()}
-**Focus:** ${options.template}
-**Recommendation:** ${result.recommendation.toUpperCase()}
-
-## Approach
-
-${result.approach}
-
-## Pros
-${result.pros.map(p => `- ${p}`).join('\n') || '- None listed'}
-
-## Cons
-${result.cons.map(c => `- ${c}`).join('\n') || '- None listed'}
-
-## Alternatives
-${result.alternatives.map(a => `- ${a}`).join('\n') || '- None listed'}
-
-## Next Steps
-${result.nextSteps.map(s => `- ${s}`).join('\n') || '- None listed'}
-`;
-      await writeFile(explorationPath, explorationContent, 'utf-8');
-      console.log(chalk.gray(`  💾 Saved exploration notes: ${explorationPath}`));
 
       // Offer to create spec if recommended
       if (result.recommendation === 'proceed') {

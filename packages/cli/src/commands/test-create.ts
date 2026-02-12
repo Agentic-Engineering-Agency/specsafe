@@ -8,7 +8,7 @@ import { mkdir, writeFile, readFile, access } from 'fs/promises';
 import { join } from 'path';
 import { input, confirm, select } from '@inquirer/prompts';
 
-export const testCreateCommand = new Command('test-create')
+export const testCommand = new Command('test')
   .description('Generate tests from spec scenarios (SPEC → TEST)')
   .argument('<id>', 'Spec ID')
   .option('-n, --dry-run', 'Preview changes without writing files')
@@ -76,7 +76,7 @@ export const testCreateCommand = new Command('test-create')
             id: `SC-${scenarios.length + 1}`,
             given: match[2].trim(),
             when: match[3].trim(),
-            thenOutcome: match[4].trim()
+            then: match[4].trim()
           });
         }
       }

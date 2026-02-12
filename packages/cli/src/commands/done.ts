@@ -32,8 +32,6 @@ export const doneCommand = new Command('done')
         throw new Error(`Spec '${id}' not found. Run 'specsafe new <name>' to create it first.`);
       }
 
-      const requiredQaFields = ['id', 'specId', 'timestamp', 'recommendation', 'testResults', 'coverage', 'issues', 'notes'];
-
       // Load QA report from file if provided
       let qaReport: QAReport;
       if (options.report) {
@@ -41,7 +39,8 @@ export const doneCommand = new Command('done')
         const parsedReport = JSON.parse(reportContent);
         
         // Validate required fields
-        const missingFields = requiredQaFields.filter(field => !(field in parsedReport));
+        const requiredFields = ['id', 'specId', 'timestamp', 'recommendation', 'testResults', 'coverage', 'issues'];
+        const missingFields = requiredFields.filter(field => !(field in parsedReport));
         if (missingFields.length > 0) {
           throw new Error(`Invalid QA report: missing required fields: ${missingFields.join(', ')}`);
         }
@@ -79,7 +78,8 @@ export const doneCommand = new Command('done')
       }
 
       // Validate required fields are present
-      const missingFields = requiredQaFields.filter(field => !(field in qaReport));
+      const requiredFields = ['id', 'specId', 'timestamp', 'recommendation', 'testResults', 'coverage', 'issues', 'notes'];
+      const missingFields = requiredFields.filter(field => !(field in qaReport));
       if (missingFields.length > 0) {
         throw new Error(`QA report is missing required fields: ${missingFields.join(', ')}`);
       }
