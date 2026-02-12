@@ -2,7 +2,7 @@
 
 /**
  * SpecSafe CLI
- * Command-line interface for the SpecSafe TDD framework
+ * Command-line interface for SpecSafe TDD framework
  * Version 0.4.0 - OpenSpec-style workflow
  */
 
@@ -12,10 +12,8 @@ import { initCommand } from './commands/init.js';
 import { newCommand } from './commands/new.js';
 import { statusCommand } from './commands/status.js';
 import { specCommand } from './commands/spec.js';
-import { testCommand } from './commands/test.js';
 import { testCreateCommand } from './commands/test-create.js';
 import { testApplyCommand } from './commands/test-apply.js';
-import { codeCommand } from './commands/code.js';
 import { qaCommand } from './commands/qa.js';
 import { doneCommand } from './commands/done.js';
 import { completeCommand } from './commands/complete.js';
@@ -43,16 +41,14 @@ program.addCommand(initCommand);
 program.addCommand(newCommand);
 program.addCommand(statusCommand);
 program.addCommand(listCommand);
-program.addCommand(exploreCommand);     // NEW: Pre-spec exploration
+program.addCommand(exploreCommand);     // Pre-spec exploration
 program.addCommand(specCommand);
-program.addCommand(testCommand);
-program.addCommand(testCreateCommand);  // NEW: Generate tests from scenarios
-program.addCommand(testApplyCommand);   // NEW: Run tests, loop on failure
-program.addCommand(codeCommand);
+program.addCommand(testCreateCommand);  // Generate tests from scenarios
+program.addCommand(testApplyCommand);   // Run tests, loop on failure
 program.addCommand(qaCommand);
-program.addCommand(verifyCommand);      // NEW: Test runner with loop
-program.addCommand(doneCommand);        // NEW: Complete + archive
-program.addCommand(completeCommand);    // DEPRECATED: Use 'done' instead
+program.addCommand(verifyCommand);      // Verify implementation
+program.addCommand(doneCommand);        // Complete + archive
+program.addCommand(completeCommand);    // Legacy: Use 'done' instead
 program.addCommand(archiveCommand);
 program.addCommand(doctorCommand);
 program.addCommand(rulesCommand);
@@ -62,10 +58,10 @@ program
   .command('workflow')
   .description('Show the SpecSafe workflow diagram')
   .action(() => {
-    console.log(chalk.blue('\n┌─────────────────────────────────────────────────────────────┐'));
+    console.log(chalk.blue('\n┌─────────────────────────────────────────────────────┐'));
     console.log(chalk.blue('│                    SpecSafe Workflow                        │'));
     console.log(chalk.blue('│                       v0.4.0 - OpenSpec                    │'));
-    console.log(chalk.blue('└─────────────────────────────────────────────────────────────┘\n'));
+    console.log(chalk.blue('└─────────────────────────────────────────────────────┘\n'));
     
     console.log(chalk.white('Pre-Spec:'));
     console.log(chalk.gray('  specsafe explore          → Think through ideas before committing\n'));
@@ -79,7 +75,7 @@ program
     console.log(chalk.gray('       ↓'));
     console.log(chalk.cyan('  specsafe test-apply <id>  → Run tests, loop on failure'));
     console.log(chalk.gray('       ↓ (if tests pass)'));
-    console.log(chalk.cyan('  specsafe qa <id>          → QA validation'));
+    console.log(chalk.cyan('  specsafe verify <id>      → Verify implementation'));
     console.log(chalk.gray('       ↓'));
     console.log(chalk.cyan('  specsafe done <id>        → Complete & archive'));
     console.log();
@@ -90,8 +86,8 @@ program
     console.log(chalk.gray('  specsafe doctor           → Check project health'));
     console.log();
     
-    console.log(chalk.yellow('💡 The verify command is the key differentiator:'));
-    console.log(chalk.yellow('   It runs tests and provides feedback for the dev loop.\n'));
+    console.log(chalk.yellow('💡 The test-apply command is the key differentiator:'));
+    console.log(chalk.yellow('   It runs tests and loops back for the dev-test cycle.\n'));
   });
 
 // Global error handling
