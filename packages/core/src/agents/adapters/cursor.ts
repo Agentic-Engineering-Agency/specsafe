@@ -5,10 +5,10 @@
 
 import { BaseAgentAdapter } from './base.js';
 import type { AgentDefinition, GeneratedFile, GenerateOptions } from '../types.js';
-import { getRequiredAgentDefinition } from '../registry.js';
+import { AGENT_DEFINITIONS } from '../registry.js';
 
 export class CursorAdapter extends BaseAgentAdapter {
-  agent: AgentDefinition = getRequiredAgentDefinition('cursor');
+  agent: AgentDefinition = AGENT_DEFINITIONS.find((a) => a.id === 'cursor')!;
 
   async generateConfig(projectDir: string, options?: GenerateOptions): Promise<GeneratedFile[]> {
     const files: GeneratedFile[] = [];

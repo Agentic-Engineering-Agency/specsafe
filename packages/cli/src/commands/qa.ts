@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { Workflow, ProjectTracker, validateSpecId } from '@specsafe/core';
+import { Workflow, ProjectTracker, validateSpecId, generateEARSReport, getEARSScore } from '@specsafe/core';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { writeFile, mkdir } from 'fs/promises';
@@ -14,7 +14,8 @@ export const qaCommand = new Command('qa')
   .description('Run QA validation (CODE → QA)')
   .argument('<id>', 'Spec ID')
   .option('-o, --output <path>', 'Output path for QA report')
-  .action(async (id: string, options: { output?: string }) => {
+  .option('--ears', 'Validate EARS compliance and generate EARS report')
+  .action(async (id: string, options: { output?: string; ears?: boolean }) => {
     const spinner = ora(`Running QA for ${id}...`).start();
     
     try {
@@ -118,18 +119,48 @@ export const qaCommand = new Command('qa')
       const reportPath = options.output || join('qa-reports', `qa-${id}.json`);
       await writeFile(reportPath, JSON.stringify(qaReport, null, 2));
       
+      // EARS validation if requested
+      let earsScore: number | undefined;
+      let earsReportPath: string | undefined;
+      if (options.ears) {
+        spinner.text = `Validating EARS compliance for ${id}...`;
+        const spec = workflow.getSpec(id)!;
+        earsScore = getEARSScore(spec);
+        const earsReport = generateEARSReport(spec);
+        earsReportPath = join('qa-reports', `ears-${id}.md`);
+        await writeFile(earsReportPath, earsReport);
+      }
+      
       // Persist state
       await tracker.addSpec(workflow.getSpec(id)!);
       
       if (qaReport.recommendation === 'GO') {
         spinner.succeed(chalk.green(`✅ QA passed for ${id}`));
         console.log(chalk.blue(`  Report: ${reportPath}`));
+        
+        if (options.ears && earsScore !== undefined) {
+          console.log(chalk.blue(`  EARS Report: ${earsReportPath}`));
+          if (earsScore >= 90) {
+            console.log(chalk.green(`  EARS Score: ${earsScore}/100 ✅`));
+          } else if (earsScore >= 70) {
+            console.log(chalk.yellow(`  EARS Score: ${earsScore}/100 ⚠️`));
+          } else {
+            console.log(chalk.red(`  EARS Score: ${earsScore}/100 ❌`));
+          }
+        }
+        
         console.log(chalk.green('Ready for completion!'));
         console.log(chalk.blue(`  Run: specsafe complete ${id} --report ${reportPath}`));
       } else {
         spinner.warn(chalk.yellow(`⚠️ QA issues found for ${id}`));
         const issueDescs = qaReport.issues.map(i => i.description);
         console.log(chalk.red(`  Issues: ${issueDescs.join(', ')}`));
+        
+        if (options.ears && earsScore !== undefined) {
+          console.log(chalk.blue(`  EARS Report: ${earsReportPath}`));
+          console.log(chalk.yellow(`  EARS Score: ${earsScore}/100`));
+        }
+        
         console.log(chalk.blue('Fix issues and re-run: specsafe qa <id>'));
       }
     } catch (error: any) {

@@ -5,10 +5,10 @@
 
 import { BaseAgentAdapter } from './base.js';
 import type { AgentDefinition, GeneratedFile, GenerateOptions } from '../types.js';
-import { getRequiredAgentDefinition } from '../registry.js';
+import { AGENT_DEFINITIONS } from '../registry.js';
 
 export class CopilotAdapter extends BaseAgentAdapter {
-  agent: AgentDefinition = getRequiredAgentDefinition('copilot');
+  agent: AgentDefinition = AGENT_DEFINITIONS.find((a) => a.id === 'copilot')!;
 
   async generateConfig(projectDir: string, options?: GenerateOptions): Promise<GeneratedFile[]> {
     const files: GeneratedFile[] = [];

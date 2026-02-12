@@ -23,6 +23,9 @@ import { doctorCommand } from './commands/doctor.js';
 import { rulesCommand } from './commands/rules.js';
 import { verifyCommand } from './commands/verify.js';
 import { exploreCommand } from './commands/explore.js';
+import { deltaCommand } from './commands/delta.js';
+import { applyCommand } from './commands/apply.js';
+import { diffCommand } from './commands/diff.js';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
@@ -52,6 +55,11 @@ program.addCommand(completeCommand);    // DEPRECATED: Use 'done' instead
 program.addCommand(archiveCommand);
 program.addCommand(doctorCommand);
 program.addCommand(rulesCommand);
+
+// Delta spec commands (brownfield)
+program.addCommand(deltaCommand);       // Create delta spec
+program.addCommand(applyCommand);       // Apply delta specs
+program.addCommand(diffCommand);        // Preview delta changes
 
 // Workflow command group
 program

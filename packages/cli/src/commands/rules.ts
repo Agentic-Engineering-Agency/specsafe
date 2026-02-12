@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { writeFile, readFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
-import { join, dirname } from 'path';
+import { join } from 'path';
 import {
   getSupportedAgents,
   getAgent,
@@ -13,12 +13,8 @@ import {
 
 /**
  * Load installed agents from config
- * 
- * Note: JSON.parse yields `unknown` values. This function assumes the config
- * is well-formed and casts to the expected Map type. Malformed configs may
- * result in runtime errors downstream.
  */
-async function loadInstalledAgents(cwd: string = process.cwd()): Promise<Map<string, { enabled: boolean }>> {
+async function loadInstalledAgents(cwd: string = process.cwd()): Promise<Map<string, any>> {
   const configPath = join(cwd, 'specsafe.config.json');
   try {
     const content = await readFile(configPath, 'utf-8');
@@ -63,38 +59,16 @@ async function removeAgentConfig(
   cwd: string = process.cwd()
 ): Promise<void> {
   const configPath = join(cwd, 'specsafe.config.json');
-  
-  let config: Record<string, unknown>;
   try {
     const content = await readFile(configPath, 'utf-8');
-    config = JSON.parse(content);
+    const config = JSON.parse(content);
+    
+    if (config.agents && config.agents[agentId]) {
+      delete config.agents[agentId];
+      await writeFile(configPath, JSON.stringify(config, null, 2));
+    }
   } catch {
     // Config doesn't exist or is malformed
-    return;
-  }
-  
-  if (config.agents && (config.agents as Record<string, unknown>)[agentId]) {
-    delete (config.agents as Record<string, unknown>)[agentId];
-    await writeFile(configPath, JSON.stringify(config, null, 2));
-  }
-}
-
-/**
- * Display agent information (shared helper for info command)
- */
-function displayAgentInfo(agentDef: AgentDefinition, cwd: string = process.cwd()): void {
-  console.log(chalk.bold(`\n${agentDef.name}\n`));
-  console.log(chalk.gray(`ID: ${agentDef.id}`));
-  console.log(chalk.gray(`Config Directory: ${agentDef.configDir || 'N/A'}`));
-  console.log(chalk.gray(`Command Directory: ${agentDef.commandDir || 'N/A'}`));
-  console.log(chalk.gray(`File Extension: ${agentDef.fileExtension}`));
-  console.log(chalk.gray(`Command Format: ${agentDef.commandFormat}`));
-  
-  console.log('\n' + chalk.blue('Detection Files:'));
-  for (const file of agentDef.detectionFiles) {
-    const exists = existsSync(join(cwd, file));
-    const status = exists ? chalk.green('✓') : chalk.gray('✗');
-    console.log(`  ${status} ${file}`);
   }
 }
 
@@ -158,8 +132,7 @@ export const rulesCommand = new Command('rules')
 
         const agentEntry = getAgent(agentId);
         if (!agentEntry) {
-          console.error(chalk.red(`Error: Agent "${agentId}" has no adapter registered.`));
-          console.log(chalk.gray('This agent is defined but not yet implemented.'));
+          console.error(chalk.red(`Error: Agent "${agentId}" not registered`));
           process.exit(1);
         }
 
@@ -185,10 +158,12 @@ export const rulesCommand = new Command('rules')
           // Write files
           for (const file of allFiles) {
             const filePath = join(projectDir, file.path);
-            const fileDir = dirname(filePath);
+            const fileDir = join(filePath, '..');
 
-            // Create directory (mkdir recursive is idempotent)
-            await mkdir(fileDir, { recursive: true });
+            // Create directory if needed
+            if (!existsSync(fileDir)) {
+              await mkdir(fileDir, { recursive: true });
+            }
 
             // Check if file exists
             if (existsSync(filePath) && !options.force) {
@@ -230,14 +205,6 @@ export const rulesCommand = new Command('rules')
           process.exit(1);
         }
 
-        // Check if agent is actually installed
-        const installedAgents = await loadInstalledAgents();
-        if (!installedAgents.has(agentId)) {
-          console.warn(chalk.yellow(`Warning: Agent "${agentId}" is not configured in this project.`));
-          console.log(chalk.gray('Nothing to remove.'));
-          process.exit(0);
-        }
-
         const spinner = ora(`Removing ${agentId} configuration...`).start();
 
         try {
@@ -261,24 +228,25 @@ export const rulesCommand = new Command('rules')
         const agentEntry = getAgent(agentId);
         
         if (!agentEntry) {
-          // Fallback to agent definition if no adapter available
-          const agentDef = AGENT_DEFINITIONS.find(def => def.id === agentId);
-          
-          if (!agentDef) {
-            console.error(chalk.red(`Error: Unknown agent "${agentId}"`));
-            const supported = getSupportedAgents();
-            console.log(chalk.gray(`\nAvailable agents: ${supported.join(', ')}`));
-            process.exit(1);
-          }
-          
-          // Show metadata using shared helper
-          displayAgentInfo(agentDef);
-          console.log('\n' + chalk.yellow('⚠ No adapter available for this agent'));
-          return;
+          console.error(chalk.red(`Error: Unknown agent "${agentId}"`));
+          const supported = getSupportedAgents();
+          console.log(chalk.gray(`\nAvailable agents: ${supported.join(', ')}`));
+          process.exit(1);
         }
 
-        // Show metadata using shared helper
-        displayAgentInfo(agentEntry);
+        console.log(chalk.bold(`\n${agentEntry.name}\n`));
+        console.log(chalk.gray(`ID: ${agentEntry.id}`));
+        console.log(chalk.gray(`Config Directory: ${agentEntry.configDir || 'N/A'}`));
+        console.log(chalk.gray(`Command Directory: ${agentEntry.commandDir || 'N/A'}`));
+        console.log(chalk.gray(`File Extension: ${agentEntry.fileExtension}`));
+        console.log(chalk.gray(`Command Format: ${agentEntry.commandFormat}`));
+        
+        console.log('\n' + chalk.blue('Detection Files:'));
+        for (const file of agentEntry.detectionFiles) {
+          const exists = existsSync(join(process.cwd(), file));
+          const status = exists ? chalk.green('✓') : chalk.gray('✗');
+          console.log(`  ${status} ${file}`);
+        }
 
         console.log('\n' + chalk.blue('Instructions:'));
         console.log(agentEntry.adapter.getInstructions());

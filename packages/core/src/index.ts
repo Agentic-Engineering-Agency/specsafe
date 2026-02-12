@@ -35,6 +35,15 @@ export type {
   ProjectMetrics
 } from './types.js';
 
+// Delta types
+export type {
+  DeltaSpec,
+  DeltaRequirement,
+  MergeResult,
+  MergeConflict,
+  MergeStats
+} from './delta/types.js';
+
 // Workflow engine
 export { Workflow } from './workflow.js';
 
@@ -43,6 +52,11 @@ export { ProjectTracker } from './tracker.js';
 
 // Validation utilities
 export { validateSpecId } from './validation.js';
+
+// Delta system
+export { DeltaParser } from './delta/parser.js';
+export { SemanticMerger } from './delta/merger.js';
+export { generateDeltaTemplate, generateDeltaReadme } from './templates/delta-template.js';
 
 // Agent system
 export type {
@@ -61,3 +75,24 @@ export {
   getAgentDefinition,
   AGENT_DEFINITIONS,
 } from './agents/index.js';
+
+// EARS system
+export type {
+  EARSType,
+  EARSRequirement,
+  EARSValidationResult,
+  RequirementValidation,
+} from './ears/index.js';
+
+export {
+  parseEARSRequirement,
+  hasEARSKeywords,
+  extractRequirements,
+  validateRequirements,
+  validateRequirement,
+  getEARSScore,
+  meetsEARSThreshold,
+  generateEARSReport,
+  generateEARSTemplate,
+  generateEARSExamples,
+} from './ears/index.js';

@@ -1,9 +1,9 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { writeFile, mkdir, access, chmod } from 'fs/promises';
+import { writeFile, mkdir, access } from 'fs/promises';
 import { existsSync } from 'fs';
-import { join, dirname } from 'path';
+import { join } from 'path';
 import { 
   ProjectTracker, 
   getSupportedAgents, 
@@ -65,10 +65,12 @@ async function generateAgentConfigs(
       // Write files
       for (const file of allFiles) {
         const filePath = join(projectDir, file.path);
-        const fileDir = dirname(filePath);
+        const fileDir = join(filePath, '..');
 
-        // Create directory (mkdir recursive is idempotent, no need to check existsSync)
-        await mkdir(fileDir, { recursive: true });
+        // Create directory if needed
+        if (!existsSync(fileDir)) {
+          await mkdir(fileDir, { recursive: true });
+        }
 
         // Skip if file exists
         if (existsSync(filePath)) {
@@ -107,16 +109,7 @@ export const initCommand = new Command('init')
       let selectedAgents: string[] = [];
 
       if (options.agent && options.agent.length > 0) {
-        // Agents specified via CLI flag - validate each one
-        const supportedAgents = getSupportedAgents();
-        const invalidAgents = options.agent.filter(id => !supportedAgents.includes(id));
-        
-        if (invalidAgents.length > 0) {
-          console.error(chalk.red(`Error: Invalid agent(s): ${invalidAgents.join(', ')}`));
-          console.log(chalk.gray(`\nSupported agents: ${supportedAgents.join(', ')}`));
-          process.exit(1);
-        }
-        
+        // Agents specified via CLI flag
         selectedAgents = options.agent;
         console.log(chalk.blue(`Using agents from CLI: ${selectedAgents.join(', ')}`));
       } else {
@@ -137,14 +130,12 @@ export const initCommand = new Command('init')
         }
 
         if (selectedAgents.length === 0) {
-          // Prompt user to select - only show agents with registered adapters
-          const agentChoices = AGENT_DEFINITIONS
-            .filter((agent) => getAgent(agent.id) !== undefined)
-            .map((agent) => ({
-              name: agent.name,
-              value: agent.id,
-              checked: detectedAgents.includes(agent.id),
-            }));
+          // Prompt user to select
+          const agentChoices = AGENT_DEFINITIONS.map((agent) => ({
+            name: agent.name,
+            value: agent.id,
+            checked: detectedAgents.includes(agent.id),
+          }));
 
           selectedAgents = await checkbox({
             message: 'Which AI coding agents do you use?',
@@ -160,8 +151,7 @@ export const initCommand = new Command('init')
             });
 
             if (useAll) {
-              // Filter to only agents that have registered adapters
-              selectedAgents = getSupportedAgents().filter(id => getAgent(id) !== undefined);
+              selectedAgents = getSupportedAgents();
             }
           }
         }
@@ -187,14 +177,14 @@ export const initCommand = new Command('init')
 
       spinner.start('Creating project structure...');
 
-      // Create directory structure (relative to projectDir)
-      await mkdir(join(projectDir, 'specs/active'), { recursive: true });
-      await mkdir(join(projectDir, 'specs/completed'), { recursive: true });
-      await mkdir(join(projectDir, 'specs/archive'), { recursive: true });
-      await mkdir(join(projectDir, 'specs/drafts'), { recursive: true });
-      await mkdir(join(projectDir, 'specs/exploration'), { recursive: true });
-      await mkdir(join(projectDir, 'src'), { recursive: true });
-      await mkdir(join(projectDir, 'tests'), { recursive: true });
+      // Create directory structure
+      await mkdir('specs/active', { recursive: true });
+      await mkdir('specs/completed', { recursive: true });
+      await mkdir('specs/archive', { recursive: true });
+      await mkdir('specs/drafts', { recursive: true });
+      await mkdir('specs/exploration', { recursive: true });
+      await mkdir('src', { recursive: true });
+      await mkdir('tests', { recursive: true });
 
       // Create PROJECT_STATE.md
       const tracker = new ProjectTracker(projectDir);
@@ -235,7 +225,7 @@ export const initCommand = new Command('init')
 
 ## 9. Notes & References
 `;
-      await writeFile(join(projectDir, 'specs/template.md'), template);
+      await writeFile('specs/template.md', template);
 
       // Create config file with selected agents
       const agentsConfig: Record<string, { enabled: boolean }> = {};
@@ -254,7 +244,7 @@ export const initCommand = new Command('init')
           enabled: useGitHooks,
         },
       };
-      await writeFile(join(projectDir, 'specsafe.config.json'), JSON.stringify(config, null, 2));
+      await writeFile('specsafe.config.json', JSON.stringify(config, null, 2));
 
       spinner.text = 'Generating agent configurations...';
 
@@ -264,7 +254,9 @@ export const initCommand = new Command('init')
       // Generate git hooks if enabled
       if (useGitHooks) {
         const hooksDir = join(projectDir, '.githooks');
-        await mkdir(hooksDir, { recursive: true });
+        if (!existsSync(hooksDir)) {
+          await mkdir(hooksDir, { recursive: true });
+        }
         
         const preCommitPath = join(hooksDir, 'pre-commit');
         if (!existsSync(preCommitPath)) {
@@ -289,8 +281,6 @@ echo "Pre-commit checks passed"
 exit 0
 `;
           await writeFile(preCommitPath, preCommitContent);
-          // Make the hook executable
-          await chmod(preCommitPath, 0o755);
           console.log(chalk.green('  ✓ Created .githooks/pre-commit'));
         }
       }
@@ -317,8 +307,7 @@ exit 0
         for (const agentId of selectedAgents.slice(0, 3)) {
           const agentEntry = getAgent(agentId);
           if (agentEntry) {
-            // Use regex for whole-word replacement
-            const cmdFormat = agentEntry.commandFormat.replace(/\bcommand\b/, 'specsafe');
+            const cmdFormat = agentEntry.commandFormat.replace('command', 'specsafe');
             console.log(`  ${agentEntry.name}: ${cmdFormat}`);
           }
         }

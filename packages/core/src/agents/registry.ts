@@ -79,7 +79,6 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
     commandDir: '.opencode/commands',
     fileExtension: '.md',
     commandFormat: '/command',
-    // Note: Crush shares the same .opencode structure as OpenCode - they are compatible
     detectionFiles: ['.opencode/commands'],
   },
   {
@@ -172,9 +171,7 @@ export function getSupportedAgents(): string[] {
 }
 
 /**
- * Check if an agent ID is supported (static check against AGENT_DEFINITIONS)
- * Note: This checks if the agent is defined, not if it has an adapter registered.
- * Use getAgent() to check if an adapter is available at runtime.
+ * Check if an agent ID is supported
  */
 export function isValidAgent(id: string): boolean {
   return AGENT_DEFINITIONS.some((a) => a.id === id);
@@ -185,19 +182,6 @@ export function isValidAgent(id: string): boolean {
  */
 export function getAgentDefinition(id: string): AgentDefinition | undefined {
   return AGENT_DEFINITIONS.find((a) => a.id === id);
-}
-
-/**
- * Get agent definition by ID with error if not found
- * Use this when you expect the agent to exist (e.g., in adapters)
- * @throws Error if agent definition is not found
- */
-export function getRequiredAgentDefinition(id: string): AgentDefinition {
-  const definition = AGENT_DEFINITIONS.find((a) => a.id === id);
-  if (!definition) {
-    throw new Error(`Agent definition not found: ${id}. This is a configuration error.`);
-  }
-  return definition;
 }
 
 /**

@@ -5,10 +5,10 @@
 
 import { BaseAgentAdapter } from './base.js';
 import type { AgentDefinition, GeneratedFile, GenerateOptions } from '../types.js';
-import { getRequiredAgentDefinition } from '../registry.js';
+import { AGENT_DEFINITIONS } from '../registry.js';
 
 export class GeminiCliAdapter extends BaseAgentAdapter {
-  agent: AgentDefinition = getRequiredAgentDefinition('gemini-cli');
+  agent: AgentDefinition = AGENT_DEFINITIONS.find((a) => a.id === 'gemini-cli')!;
 
   async generateConfig(projectDir: string, options?: GenerateOptions): Promise<GeneratedFile[]> {
     const files: GeneratedFile[] = [];
@@ -76,7 +76,6 @@ Files created:
    - gemini /specsafe - Check status
    - gemini /specsafe-explore - Start exploration
    - gemini /specsafe-new - Create spec
-   - gemini /specsafe-spec - Generate detailed spec
    - gemini /specsafe-test-create - Generate tests
    - gemini /specsafe-test-apply - Implement
    - gemini /specsafe-verify - Verify tests
