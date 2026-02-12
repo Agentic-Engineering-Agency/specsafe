@@ -1,16 +1,76 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
+import { writeFile, readFile, mkdir } from 'fs/promises';
+import { existsSync } from 'fs';
+import { join } from 'path';
 import {
-  getAllTools,
-  detectTool,
-  loadInstalledTools,
-  saveToolConfig,
-  removeToolConfig,
-  isValidTool,
-  getTool,
-} from '../rules/index.js';
-import { downloadRules, updateRules, removeRules, getRulesVersion } from '../rules/downloader.js';
+  getSupportedAgents,
+  getAgent,
+  AGENT_DEFINITIONS,
+  type AgentDefinition,
+} from '@specsafe/core';
+
+/**
+ * Load installed agents from config
+ */
+async function loadInstalledAgents(cwd: string = process.cwd()): Promise<Map<string, any>> {
+  const configPath = join(cwd, 'specsafe.config.json');
+  try {
+    const content = await readFile(configPath, 'utf-8');
+    const config = JSON.parse(content);
+    return new Map(Object.entries(config.agents || {}));
+  } catch {
+    return new Map();
+  }
+}
+
+/**
+ * Save agent configuration
+ */
+async function saveAgentConfig(
+  agentId: string,
+  config: { enabled: boolean },
+  cwd: string = process.cwd()
+): Promise<void> {
+  const configPath = join(cwd, 'specsafe.config.json');
+  let existingConfig: Record<string, unknown> = {};
+
+  try {
+    const content = await readFile(configPath, 'utf-8');
+    existingConfig = JSON.parse(content);
+  } catch {
+    // Config doesn't exist yet
+  }
+
+  existingConfig.agents = {
+    ...((existingConfig.agents as Record<string, unknown> | undefined) || {}),
+    [agentId]: config,
+  };
+
+  await writeFile(configPath, JSON.stringify(existingConfig, null, 2));
+}
+
+/**
+ * Remove agent configuration
+ */
+async function removeAgentConfig(
+  agentId: string,
+  cwd: string = process.cwd()
+): Promise<void> {
+  const configPath = join(cwd, 'specsafe.config.json');
+  try {
+    const content = await readFile(configPath, 'utf-8');
+    const config = JSON.parse(content);
+    
+    if (config.agents && config.agents[agentId]) {
+      delete config.agents[agentId];
+      await writeFile(configPath, JSON.stringify(config, null, 2));
+    }
+  } catch {
+    // Config doesn't exist or is malformed
+  }
+}
 
 /**
  * Rules command - manage AI coding assistant integrations
@@ -19,163 +79,176 @@ export const rulesCommand = new Command('rules')
   .description('Manage AI coding assistant rules and integrations')
   .addCommand(
     new Command('list')
-      .description('List available and installed rules')
+      .description('List available and installed agents')
       .action(async () => {
-        const spinner = ora('Loading rules...').start();
+        const spinner = ora('Loading agents...').start();
 
         try {
-          const allTools = getAllTools();
-          const installedTools = await loadInstalledTools();
-          const installedMap = new Map(installedTools.map((t) => [t.name, t]));
-
+          const installedAgents = await loadInstalledAgents();
+          
           spinner.stop();
 
-          console.log(chalk.bold('\n📋 Available Rules:\n'));
+          console.log(chalk.bold('\n📋 Available Agents:\n'));
 
-          for (const tool of allTools) {
-            const isInstalled = installedMap.has(tool.name);
-            const isDetected = await detectTool(tool.name);
+          for (const agentDef of AGENT_DEFINITIONS) {
+            const agentEntry = getAgent(agentDef.id);
+            const isInstalled = installedAgents.has(agentDef.id);
+            const isDetected = agentEntry ? await agentEntry.adapter.detect(process.cwd()) : false;
+            
             const status = isInstalled
               ? chalk.green('[installed]')
               : isDetected
                 ? chalk.yellow('[detected]')
                 : chalk.gray('[available]');
 
-            console.log(`  ${status} ${chalk.cyan(tool.name.padEnd(12))} ${tool.description}`);
-            
-            if (isInstalled) {
-              const installed = installedMap.get(tool.name)!;
-              console.log(`             ${chalk.gray(`v${installed.version}`)}`);
-            }
+            console.log(`  ${status} ${chalk.cyan(agentDef.id.padEnd(15))} ${agentDef.name}`);
             
             if (isDetected && !isInstalled) {
-              console.log(`             ${chalk.gray(`Config files found: ${tool.files.join(', ')}`)}`);
+              console.log(`             ${chalk.gray(`Detected: ${agentDef.detectionFiles[0]}`)}`);
             }
           }
 
-          console.log(chalk.gray(`\n${allTools.length} tools available`));
-          console.log(chalk.gray(`\nUse 'specsafe rules add <tool>' to install rules`));
+          console.log(chalk.gray(`\n${AGENT_DEFINITIONS.length} agents available`));
+          console.log(chalk.gray(`\nUse 'specsafe rules add <agent>' to install agent configs`));
         } catch (error: any) {
-          spinner.fail(chalk.red(`Failed to list rules: ${error.message}`));
+          spinner.fail(chalk.red(`Failed to list agents: ${error.message}`));
           process.exit(1);
         }
       })
   )
   .addCommand(
     new Command('add')
-      .description('Download and install rules for a tool')
-      .argument('<tool>', 'Tool name (cursor, continue, aider, zed, git-hooks)')
-      .action(async (toolName: string) => {
-        if (!isValidTool(toolName)) {
-          console.error(chalk.red(`Error: Unknown tool "${toolName}"`));
-          console.log(chalk.gray(`\nAvailable tools: ${getAllTools().map((t) => t.name).join(', ')}`));
+      .description('Install configuration for an agent')
+      .argument('<agent>', 'Agent ID (claude-code, cursor, copilot, etc.)')
+      .option('--force', 'Overwrite existing files')
+      .action(async (agentId: string, options: { force?: boolean }) => {
+        const supportedAgents = getSupportedAgents();
+        
+        if (!supportedAgents.includes(agentId)) {
+          console.error(chalk.red(`Error: Unknown agent "${agentId}"`));
+          console.log(chalk.gray(`\nAvailable agents: ${supportedAgents.join(', ')}`));
           process.exit(1);
         }
 
-        const tool = getTool(toolName)!;
-        const spinner = ora(`Installing ${toolName} rules...`).start();
+        const agentEntry = getAgent(agentId);
+        if (!agentEntry) {
+          console.error(chalk.red(`Error: Agent "${agentId}" not registered`));
+          process.exit(1);
+        }
+
+        const spinner = ora(`Installing ${agentEntry.name} configuration...`).start();
 
         try {
-          const result = await downloadRules(toolName);
+          const projectDir = process.cwd();
+          
+          // Generate config files
+          const configFiles = await agentEntry.adapter.generateConfig(projectDir, {
+            force: options.force,
+          });
 
-          if (result.success) {
-            // Save to config
-            const version = await getRulesVersion(toolName);
-            await saveToolConfig(toolName, { enabled: true, version });
-            spinner.succeed(chalk.green(result.message));
-            
-            console.log(chalk.gray(`\nCreated files:`));
-            for (const file of tool.files) {
-              console.log(chalk.gray(`  • ${file}`));
+          // Generate command files
+          const commandFiles = await agentEntry.adapter.generateCommands(projectDir, {
+            force: options.force,
+          });
+
+          const allFiles = [...configFiles, ...commandFiles];
+          let created = 0;
+          let skipped = 0;
+
+          // Write files
+          for (const file of allFiles) {
+            const filePath = join(projectDir, file.path);
+            const fileDir = join(filePath, '..');
+
+            // Create directory if needed
+            if (!existsSync(fileDir)) {
+              await mkdir(fileDir, { recursive: true });
             }
-          } else {
-            spinner.fail(chalk.red(result.message));
-            process.exit(1);
+
+            // Check if file exists
+            if (existsSync(filePath) && !options.force) {
+              skipped++;
+              continue;
+            }
+
+            // Write file
+            await writeFile(filePath, file.content);
+            created++;
           }
+
+          // Save to config
+          await saveAgentConfig(agentId, { enabled: true });
+
+          spinner.succeed(chalk.green(`Installed ${agentEntry.name} configuration`));
+          
+          console.log(chalk.gray(`\nFiles: ${created} created, ${skipped} skipped`));
+          
+          // Show instructions
+          console.log('\n' + chalk.blue('Usage Instructions:'));
+          console.log(agentEntry.adapter.getInstructions());
+          
         } catch (error: any) {
-          spinner.fail(chalk.red(`Failed to install ${toolName} rules: ${error.message}`));
+          spinner.fail(chalk.red(`Failed to install ${agentId}: ${error.message}`));
           process.exit(1);
         }
       })
   )
   .addCommand(
     new Command('remove')
-      .description('Remove rules for a tool')
-      .argument('<tool>', 'Tool name to remove')
-      .action(async (toolName: string) => {
-        if (!isValidTool(toolName)) {
-          console.error(chalk.red(`Error: Unknown tool "${toolName}"`));
+      .description('Remove configuration for an agent')
+      .argument('<agent>', 'Agent ID to remove')
+      .action(async (agentId: string) => {
+        const supportedAgents = getSupportedAgents();
+        
+        if (!supportedAgents.includes(agentId)) {
+          console.error(chalk.red(`Error: Unknown agent "${agentId}"`));
           process.exit(1);
         }
 
-        const spinner = ora(`Removing ${toolName} rules...`).start();
+        const spinner = ora(`Removing ${agentId} configuration...`).start();
 
         try {
-          const result = await removeRules(toolName);
-
-          if (result.success) {
-            // Remove from config
-            await removeToolConfig(toolName);
-            spinner.succeed(chalk.green(result.message));
-          } else {
-            spinner.fail(chalk.red(result.message));
-            process.exit(1);
-          }
+          // Remove from config
+          await removeAgentConfig(agentId);
+          
+          spinner.succeed(chalk.green(`Removed ${agentId} from configuration`));
+          console.log(chalk.gray('\nNote: Config files were not deleted. Remove them manually if needed.'));
+          
         } catch (error: any) {
-          spinner.fail(chalk.red(`Failed to remove ${toolName} rules: ${error.message}`));
+          spinner.fail(chalk.red(`Failed to remove ${agentId}: ${error.message}`));
           process.exit(1);
         }
       })
   )
   .addCommand(
-    new Command('update')
-      .description('Update all installed rules to the latest version')
-      .action(async () => {
-        const spinner = ora('Checking installed rules...').start();
-
-        try {
-          const installedTools = await loadInstalledTools();
-
-          if (installedTools.length === 0) {
-            spinner.stop();
-            console.log(chalk.yellow('No rules installed. Run "specsafe rules add <tool>" first.'));
-            return;
-          }
-
-          spinner.text = `Updating ${installedTools.length} rule set(s)...`;
-
-          const results = await Promise.all(
-            installedTools.map(async (tool) => {
-              const result = await updateRules(tool.name);
-              return { ...result, toolName: tool.name };
-            })
-          );
-
-          spinner.stop();
-
-          let successCount = 0;
-          let failCount = 0;
-
-          for (const result of results) {
-            if (result.success) {
-              console.log(chalk.green(`✓ ${result.message}`));
-              const version = await getRulesVersion(result.toolName);
-              await saveToolConfig(result.toolName, { enabled: true, version });
-              successCount++;
-            } else {
-              console.log(chalk.red(`✗ ${result.message}`));
-              failCount++;
-            }
-          }
-
-          console.log(chalk.gray(`\nUpdated ${successCount} tool(s)`));
-          if (failCount > 0) {
-            console.log(chalk.red(`${failCount} update(s) failed`));
-            process.exit(1);
-          }
-        } catch (error: any) {
-          spinner.fail(chalk.red(`Failed to update rules: ${error.message}`));
+    new Command('info')
+      .description('Show information about an agent')
+      .argument('<agent>', 'Agent ID')
+      .action(async (agentId: string) => {
+        const agentEntry = getAgent(agentId);
+        
+        if (!agentEntry) {
+          console.error(chalk.red(`Error: Unknown agent "${agentId}"`));
+          const supported = getSupportedAgents();
+          console.log(chalk.gray(`\nAvailable agents: ${supported.join(', ')}`));
           process.exit(1);
         }
+
+        console.log(chalk.bold(`\n${agentEntry.name}\n`));
+        console.log(chalk.gray(`ID: ${agentEntry.id}`));
+        console.log(chalk.gray(`Config Directory: ${agentEntry.configDir || 'N/A'}`));
+        console.log(chalk.gray(`Command Directory: ${agentEntry.commandDir || 'N/A'}`));
+        console.log(chalk.gray(`File Extension: ${agentEntry.fileExtension}`));
+        console.log(chalk.gray(`Command Format: ${agentEntry.commandFormat}`));
+        
+        console.log('\n' + chalk.blue('Detection Files:'));
+        for (const file of agentEntry.detectionFiles) {
+          const exists = existsSync(join(process.cwd(), file));
+          const status = exists ? chalk.green('✓') : chalk.gray('✗');
+          console.log(`  ${status} ${file}`);
+        }
+
+        console.log('\n' + chalk.blue('Instructions:'));
+        console.log(agentEntry.adapter.getInstructions());
       })
   );

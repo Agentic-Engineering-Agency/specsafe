@@ -1,16 +1,98 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { writeFile, mkdir } from 'fs/promises';
-import { ProjectTracker } from '@specsafe/core';
+import { writeFile, mkdir, access } from 'fs/promises';
+import { existsSync } from 'fs';
+import { join } from 'path';
+import { 
+  ProjectTracker, 
+  getSupportedAgents, 
+  getAgent, 
+  AGENT_DEFINITIONS 
+} from '@specsafe/core';
 import { checkbox, select, confirm, input } from '@inquirer/prompts';
-import { detectInstalledTools, availableTools } from '../utils/detectTools.js';
-import { generateToolConfig, generateGitHooks } from '../utils/generateToolConfig.js';
+
+/**
+ * Detect which agents are already configured in the project
+ */
+async function detectConfiguredAgents(projectDir: string): Promise<string[]> {
+  const detected: string[] = [];
+  
+  for (const agentDef of AGENT_DEFINITIONS) {
+    for (const file of agentDef.detectionFiles) {
+      const filePath = join(projectDir, file);
+      try {
+        await access(filePath);
+        detected.push(agentDef.id);
+        break; // Found one file, that's enough
+      } catch {
+        // File doesn't exist, continue
+      }
+    }
+  }
+  
+  return detected;
+}
+
+/**
+ * Generate configurations for selected agents
+ */
+async function generateAgentConfigs(
+  agents: string[],
+  projectDir: string,
+  projectName: string
+): Promise<void> {
+  for (const agentId of agents) {
+    const agentEntry = getAgent(agentId);
+    if (!agentEntry) {
+      console.warn(chalk.yellow(`Warning: Agent ${agentId} not found in registry`));
+      continue;
+    }
+
+    try {
+      // Generate main config files
+      const configFiles = await agentEntry.adapter.generateConfig(projectDir, {
+        projectName,
+      });
+
+      // Generate command files
+      const commandFiles = await agentEntry.adapter.generateCommands(projectDir, {
+        projectName,
+      });
+
+      const allFiles = [...configFiles, ...commandFiles];
+
+      // Write files
+      for (const file of allFiles) {
+        const filePath = join(projectDir, file.path);
+        const fileDir = join(filePath, '..');
+
+        // Create directory if needed
+        if (!existsSync(fileDir)) {
+          await mkdir(fileDir, { recursive: true });
+        }
+
+        // Skip if file exists
+        if (existsSync(filePath)) {
+          console.log(chalk.yellow(`  ⚠ ${file.path} already exists, skipping`));
+          continue;
+        }
+
+        // Write file
+        await writeFile(filePath, file.content);
+        console.log(chalk.green(`  ✓ Created ${file.path}`));
+      }
+    } catch (error: any) {
+      console.error(chalk.red(`  ✗ Failed to generate ${agentId} config: ${error.message}`));
+    }
+  }
+}
 
 export const initCommand = new Command('init')
   .description('Initialize a new SpecSafe project')
   .argument('[name]', 'Project name', 'my-project')
-  .action(async (defaultName: string) => {
+  .option('--agent <agents...>', 'AI coding agents to configure (can be repeated)')
+  .action(async (defaultName: string, options: { agent?: string[] }) => {
     const spinner = ora('Initializing SpecSafe project...').start();
 
     try {
@@ -21,22 +103,62 @@ export const initCommand = new Command('init')
         default: defaultName,
       });
 
-      // 1. Detect existing tools
-      const detectedTools = detectInstalledTools();
+      const projectDir = process.cwd();
 
-      // 2. Prompt user to confirm/select tools
-      const toolChoices = availableTools.map((tool) => ({
-        name: tool.displayName + (detectedTools.includes(tool.name) ? ' (detected)' : ''),
-        value: tool.name,
-        checked: detectedTools.includes(tool.name),
-      }));
+      // 1. Determine which agents to configure
+      let selectedAgents: string[] = [];
 
-      const selectedTools = await checkbox({
-        message: 'Which AI coding assistants do you use?',
-        choices: toolChoices,
-      });
+      if (options.agent && options.agent.length > 0) {
+        // Agents specified via CLI flag
+        selectedAgents = options.agent;
+        console.log(chalk.blue(`Using agents from CLI: ${selectedAgents.join(', ')}`));
+      } else {
+        // Auto-detect or prompt
+        const detectedAgents = await detectConfiguredAgents(projectDir);
 
-      // 3. Prompt for test framework
+        if (detectedAgents.length > 0) {
+          console.log(chalk.green(`Detected agents: ${detectedAgents.join(', ')}`));
+          
+          const useDetected = await confirm({
+            message: 'Use detected agents?',
+            default: true,
+          });
+
+          if (useDetected) {
+            selectedAgents = detectedAgents;
+          }
+        }
+
+        if (selectedAgents.length === 0) {
+          // Prompt user to select
+          const agentChoices = AGENT_DEFINITIONS.map((agent) => ({
+            name: agent.name,
+            value: agent.id,
+            checked: detectedAgents.includes(agent.id),
+          }));
+
+          selectedAgents = await checkbox({
+            message: 'Which AI coding agents do you use?',
+            choices: agentChoices,
+            required: false,
+          });
+
+          // Default to all if none selected
+          if (selectedAgents.length === 0) {
+            const useAll = await confirm({
+              message: 'No agents selected. Generate configs for all supported agents?',
+              default: false,
+            });
+
+            if (useAll) {
+              selectedAgents = getSupportedAgents();
+            }
+          }
+        }
+      }
+
+      // 2. Prompt for test framework
+      spinner.stop();
       const testFramework = await select({
         message: 'Select testing framework:',
         choices: [
@@ -47,7 +169,7 @@ export const initCommand = new Command('init')
         default: 'vitest',
       });
 
-      // 4. Prompt for git hooks
+      // 3. Prompt for git hooks
       const useGitHooks = await confirm({
         message: 'Enable git hooks for spec validation?',
         default: true,
@@ -59,11 +181,13 @@ export const initCommand = new Command('init')
       await mkdir('specs/active', { recursive: true });
       await mkdir('specs/completed', { recursive: true });
       await mkdir('specs/archive', { recursive: true });
+      await mkdir('specs/drafts', { recursive: true });
+      await mkdir('specs/exploration', { recursive: true });
       await mkdir('src', { recursive: true });
       await mkdir('tests', { recursive: true });
 
       // Create PROJECT_STATE.md
-      const tracker = new ProjectTracker(process.cwd());
+      const tracker = new ProjectTracker(projectDir);
       await tracker.initialize(name);
 
       // Create spec template
@@ -103,42 +227,70 @@ export const initCommand = new Command('init')
 `;
       await writeFile('specs/template.md', template);
 
-      // Create config file with selected tools
-      const toolsConfig: Record<string, { enabled: boolean }> = {};
-      for (const tool of selectedTools) {
-        toolsConfig[tool] = { enabled: true };
+      // Create config file with selected agents
+      const agentsConfig: Record<string, { enabled: boolean }> = {};
+      for (const agentId of selectedAgents) {
+        agentsConfig[agentId] = { enabled: true };
       }
 
       const config = {
         project: name,
         version: '1.0.0',
-        stages: ['spec', 'test', 'code', 'qa', 'complete'],
+        stages: ['explore', 'draft', 'spec', 'test-create', 'test-apply', 'verify', 'complete'],
         testFramework,
         language: 'typescript',
-        tools: toolsConfig,
+        agents: agentsConfig,
         gitHooks: {
           enabled: useGitHooks,
         },
       };
       await writeFile('specsafe.config.json', JSON.stringify(config, null, 2));
 
-      spinner.text = 'Generating tool configurations...';
+      spinner.text = 'Generating agent configurations...';
 
-      // Generate tool configs for selected tools
-      for (const tool of selectedTools) {
-        await generateToolConfig(tool, '.');
-      }
+      // Generate configs for selected agents
+      await generateAgentConfigs(selectedAgents, projectDir, name);
 
       // Generate git hooks if enabled
       if (useGitHooks) {
-        await generateGitHooks('.');
+        const hooksDir = join(projectDir, '.githooks');
+        if (!existsSync(hooksDir)) {
+          await mkdir(hooksDir, { recursive: true });
+        }
+        
+        const preCommitPath = join(hooksDir, 'pre-commit');
+        if (!existsSync(preCommitPath)) {
+          const preCommitContent = `#!/bin/bash
+# SpecSafe pre-commit hook v1.0
+set -e
+
+echo "Running SpecSafe pre-commit checks..."
+
+# Check PROJECT_STATE.md exists
+if [ ! -f "PROJECT_STATE.md" ]; then
+    echo "PROJECT_STATE.md not found."
+    exit 1
+fi
+
+# Run specsafe doctor if available
+if command -v specsafe >/dev/null 2>&1; then
+    specsafe doctor --silent || true
+fi
+
+echo "Pre-commit checks passed"
+exit 0
+`;
+          await writeFile(preCommitPath, preCommitContent);
+          console.log(chalk.green('  ✓ Created .githooks/pre-commit'));
+        }
       }
 
       spinner.succeed(chalk.green(`Initialized SpecSafe project: ${name}`));
 
       console.log('\n' + chalk.blue('Generated configurations:'));
-      for (const tool of selectedTools) {
-        console.log(chalk.green(`  ✓ ${tool} configuration`));
+      for (const agentId of selectedAgents) {
+        const agentDef = AGENT_DEFINITIONS.find((a) => a.id === agentId);
+        console.log(chalk.green(`  ✓ ${agentDef?.name || agentId}`));
       }
       if (useGitHooks) {
         console.log(chalk.green('  ✓ Git hooks enabled'));
@@ -149,10 +301,21 @@ export const initCommand = new Command('init')
       console.log('  1. specsafe new <spec-name>  - Create a new spec');
       console.log('  2. specsafe status             - View project status');
       console.log('  3. Edit specs/active/ to define requirements');
+      
+      if (selectedAgents.length > 0) {
+        console.log('\n' + chalk.blue('Agent commands:'));
+        for (const agentId of selectedAgents.slice(0, 3)) {
+          const agentEntry = getAgent(agentId);
+          if (agentEntry) {
+            const cmdFormat = agentEntry.commandFormat.replace('command', 'specsafe');
+            console.log(`  ${agentEntry.name}: ${cmdFormat}`);
+          }
+        }
+      }
     } catch (error: any) {
       spinner.fail(chalk.red(`Failed to initialize: ${error.message}`));
       if (error.message.includes('EEXIST')) {
-        console.log(chalk.gray("💡 Tip: Directory already exists. Use 'specsafe init <name>' to create elsewhere."));
+        console.log(chalk.gray("💡 Tip: Directory already exists."));
       }
       if (error.message.includes('User force closed')) {
         console.log(chalk.gray('💡 Tip: Init was cancelled by user.'));
