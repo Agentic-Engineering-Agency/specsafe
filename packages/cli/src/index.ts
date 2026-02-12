@@ -13,6 +13,8 @@ import { newCommand } from './commands/new.js';
 import { statusCommand } from './commands/status.js';
 import { specCommand } from './commands/spec.js';
 import { testCommand } from './commands/test.js';
+import { testCreateCommand } from './commands/test-create.js';
+import { testApplyCommand } from './commands/test-apply.js';
 import { codeCommand } from './commands/code.js';
 import { qaCommand } from './commands/qa.js';
 import { doneCommand } from './commands/done.js';
@@ -44,6 +46,8 @@ program.addCommand(listCommand);
 program.addCommand(exploreCommand);     // NEW: Pre-spec exploration
 program.addCommand(specCommand);
 program.addCommand(testCommand);
+program.addCommand(testCreateCommand);  // NEW: Generate tests from scenarios
+program.addCommand(testApplyCommand);   // NEW: Run tests, loop on failure
 program.addCommand(codeCommand);
 program.addCommand(qaCommand);
 program.addCommand(verifyCommand);      // NEW: Test runner with loop
@@ -67,15 +71,13 @@ program
     console.log(chalk.gray('  specsafe explore          → Think through ideas before committing\n'));
     
     console.log(chalk.white('Development Cycle:'));
-    console.log(chalk.cyan('  specsafe new [feature]    → Create spec with PRD'));
+    console.log(chalk.cyan('  specsafe new [feature]    → Create spec with PRD + BRD'));
     console.log(chalk.gray('       ↓'));
-    console.log(chalk.cyan('  specsafe spec <id>        → Refine requirements from PRD'));
+    console.log(chalk.cyan('  specsafe spec <id>        → Flesh out detailed spec'));
     console.log(chalk.gray('       ↓'));
-    console.log(chalk.cyan('  specsafe test <id>        → Generate tests from scenarios'));
+    console.log(chalk.cyan('  specsafe test-create <id> → Generate tests from scenarios'));
     console.log(chalk.gray('       ↓'));
-    console.log(chalk.cyan('  specsafe code <id>        → Start implementation'));
-    console.log(chalk.gray('       ↓'));
-    console.log(chalk.cyan('  specsafe verify <id>      → Run tests, loop if fail (KEY!)'));
+    console.log(chalk.cyan('  specsafe test-apply <id>  → Run tests, loop on failure'));
     console.log(chalk.gray('       ↓ (if tests pass)'));
     console.log(chalk.cyan('  specsafe qa <id>          → QA validation'));
     console.log(chalk.gray('       ↓'));
