@@ -102,7 +102,7 @@ describe('CLI Command Registration', () => {
     });
 
     it('spec command should have description', () => {
-      expect(specCommand.description()).toContain('SPEC');
+      expect(specCommand.description()).toContain('spec');
     });
 
     it('test command should have description', () => {

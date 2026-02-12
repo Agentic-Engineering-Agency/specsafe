@@ -31,7 +31,7 @@ export class ScenarioParser {
     return requirements;
   }
 
-  private parseScenarios(text: string, startIndex: number): Scenario[] {
+  parseScenarios(text: string, startIndex: number = 0): Scenario[] {
     const scenarios: Scenario[] = [];
     
     // Find scenario table after requirement, bounded by next requirement or end of text
