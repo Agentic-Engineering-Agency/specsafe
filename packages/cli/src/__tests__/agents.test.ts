@@ -98,9 +98,11 @@ describe('Agent System', () => {
 
     it('should generate config files', async () => {
       const claudeEntry = getAgent('claude-code');
-      expect(claudeEntry).toBeDefined();
+      if (!claudeEntry) {
+        throw new Error('claude-code adapter not found');
+      }
       
-      const files = await claudeEntry!.adapter.generateConfig('/tmp/test', {});
+      const files = await claudeEntry.adapter.generateConfig('/tmp/test', {});
       
       expect(files).toBeInstanceOf(Array);
       expect(files.length).toBeGreaterThan(0);
@@ -110,9 +112,11 @@ describe('Agent System', () => {
 
     it('should generate command files', async () => {
       const claudeEntry = getAgent('claude-code');
-      expect(claudeEntry).toBeDefined();
+      if (!claudeEntry) {
+        throw new Error('claude-code adapter not found');
+      }
       
-      const files = await claudeEntry!.adapter.generateCommands('/tmp/test', {});
+      const files = await claudeEntry.adapter.generateCommands('/tmp/test', {});
       
       expect(files).toBeInstanceOf(Array);
       expect(files.length).toBeGreaterThan(0);
@@ -120,9 +124,11 @@ describe('Agent System', () => {
 
     it('should provide usage instructions', () => {
       const claudeEntry = getAgent('claude-code');
-      expect(claudeEntry).toBeDefined();
+      if (!claudeEntry) {
+        throw new Error('claude-code adapter not found');
+      }
       
-      const instructions = claudeEntry!.adapter.getInstructions();
+      const instructions = claudeEntry.adapter.getInstructions();
       
       expect(instructions).toBeDefined();
       expect(typeof instructions).toBe('string');
@@ -133,28 +139,32 @@ describe('Agent System', () => {
   describe('File Generation', () => {
     it('should generate valid file paths for Claude Code', async () => {
       const entry = getAgent('claude-code');
-      const configFiles = await entry!.adapter.generateConfig('/tmp/test');
+      if (!entry) throw new Error('claude-code adapter not found');
+      const configFiles = await entry.adapter.generateConfig('/tmp/test');
       
       expect(configFiles.some((f) => f.path === 'CLAUDE.md')).toBe(true);
     });
 
     it('should generate valid file paths for Cursor', async () => {
       const entry = getAgent('cursor');
-      const configFiles = await entry!.adapter.generateConfig('/tmp/test');
+      if (!entry) throw new Error('cursor adapter not found');
+      const configFiles = await entry.adapter.generateConfig('/tmp/test');
       
       expect(configFiles.some((f) => f.path === '.cursorrules')).toBe(true);
     });
 
     it('should generate valid file paths for Copilot', async () => {
       const entry = getAgent('copilot');
-      const configFiles = await entry!.adapter.generateConfig('/tmp/test');
+      if (!entry) throw new Error('copilot adapter not found');
+      const configFiles = await entry.adapter.generateConfig('/tmp/test');
       
       expect(configFiles.some((f) => f.path === '.github/copilot-instructions.md')).toBe(true);
     });
 
     it('should generate command files for Claude Code', async () => {
       const entry = getAgent('claude-code');
-      const commandFiles = await entry!.adapter.generateCommands('/tmp/test');
+      if (!entry) throw new Error('claude-code adapter not found');
+      const commandFiles = await entry.adapter.generateCommands('/tmp/test');
       
       const commandNames = commandFiles.map((f) => f.path);
       expect(commandNames.some((p) => p.includes('specsafe'))).toBe(true);
