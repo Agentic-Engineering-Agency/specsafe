@@ -89,3 +89,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Claude Code integration: create SKILL.md files in .claude/skills/ for slash commands (/specsafe, /spec, /validate)
+
+## [0.3.3] - 2026-02-11
+
+### Fixed
+- CLI version now reads from package.json (was hardcoded to 0.1.0)
