@@ -8,7 +8,7 @@ import type { AgentDefinition, GeneratedFile, GenerateOptions } from '../types.j
 import { getRequiredAgentDefinition } from '../registry.js';
 
 export class CopilotAdapter extends BaseAgentAdapter {
-  agent: AgentDefinition = getRequiredAgentDefinition('copilot');
+  readonly agent: AgentDefinition = getRequiredAgentDefinition('copilot');
 
   async generateConfig(projectDir: string, options?: GenerateOptions): Promise<GeneratedFile[]> {
     const files: GeneratedFile[] = [];
@@ -110,6 +110,7 @@ File created:
    - @workspace /specsafe - Check status
    - @workspace /specsafe-explore - Start exploration
    - @workspace /specsafe-new - Create spec
+   - @workspace /specsafe-spec - Review/refine spec
    - @workspace /specsafe-test-create - Generate tests
    - @workspace /specsafe-test-apply - Implement
    - @workspace /specsafe-verify - Verify tests

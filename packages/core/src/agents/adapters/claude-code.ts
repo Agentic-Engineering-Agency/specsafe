@@ -8,7 +8,7 @@ import type { AgentDefinition, GeneratedFile, GenerateOptions } from '../types.j
 import { getRequiredAgentDefinition } from '../registry.js';
 
 export class ClaudeCodeAdapter extends BaseAgentAdapter {
-  agent: AgentDefinition = getRequiredAgentDefinition('claude-code');
+  readonly agent: AgentDefinition = getRequiredAgentDefinition('claude-code');
 
   async generateConfig(projectDir: string, options?: GenerateOptions): Promise<GeneratedFile[]> {
     const files: GeneratedFile[] = [];

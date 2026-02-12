@@ -8,7 +8,7 @@ import type { AgentDefinition, GeneratedFile, GenerateOptions } from '../types.j
 import { getRequiredAgentDefinition } from '../registry.js';
 
 export class OpenCodeAdapter extends BaseAgentAdapter {
-  agent: AgentDefinition = getRequiredAgentDefinition('opencode');
+  readonly agent: AgentDefinition = getRequiredAgentDefinition('opencode');
 
   async generateConfig(projectDir: string, options?: GenerateOptions): Promise<GeneratedFile[]> {
     const files: GeneratedFile[] = [];

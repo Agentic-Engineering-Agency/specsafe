@@ -1,10 +1,14 @@
 /**
+ * Delta Spec Template
+ * Template for creating delta specs (brownfield changes)
+ */
+
+/**
  * Generate a delta spec template
  * @param deltaId - Delta spec identifier
  * @param baseSpecId - Base spec this delta applies to
  * @param author - Author name
  * @param date - Optional date for testability (defaults to today)
- * @returns Delta spec template content
  */
 export function generateDeltaTemplate(
   deltaId: string, 
@@ -23,30 +27,85 @@ export function generateDeltaTemplate(
 
 ---
 
+## Change Summary
+
+What is changing and why?
+
+---
+
 ## ADDED Requirements
+
+New requirements being added to the spec.
 
 ### FR-NEW-1
 **Priority:** P1
 
 [Requirement text here]
 
-- Scenario: [description]
+**Scenarios:**
+- Given [context]
+- When [action]
+- Then [outcome]
 
 ---
 
 ## MODIFIED Requirements
+
+Existing requirements being changed.
 
 ### FR-EXISTING-1
 **Priority:** P0
 
 [New requirement text] ← (was [old requirement text])
 
+**Scenarios:**
+- [Updated scenarios]
+
 ---
 
 ## REMOVED Requirements
 
+Requirements being removed (just list IDs).
+
 - FR-OLD-1
 - FR-OLD-2
+
+---
+
+## Impact Analysis
+
+### Affected Components
+- Component 1
+- Component 2
+
+### Breaking Changes
+- [ ] Yes
+- [x] No
+
+### Migration Required
+- [ ] Yes
+- [x] No
+
+If yes, describe migration path:
+
+---
+
+## Testing Strategy
+
+### Tests to Add
+-
+
+### Tests to Update
+-
+
+### Tests to Remove
+-
+
+---
+
+## Notes
+
+Additional context, links, or references.
 
 ---
 
@@ -63,10 +122,77 @@ export function generateDeltaReadme(): string {
 
 Delta specs describe **incremental changes** to existing specs (brownfield projects).
 
+## Format
+
+Delta specs use three sections:
+
+### ADDED Requirements
+New requirements being added. Each requirement includes:
+- **ID**: Unique requirement ID (e.g., FR-NEW-1)
+- **Priority**: P0, P1, or P2
+- **Text**: Requirement description
+- **Scenarios**: Given/When/Then scenarios
+
+### MODIFIED Requirements
+Existing requirements being changed. Use the notation:
+\`\`\`
+[New text] ← (was [old text])
+\`\`\`
+
+### REMOVED Requirements
+Requirements being removed. Just list the IDs:
+\`\`\`
+- FR-OLD-1
+- FR-OLD-2
+\`\`\`
+
 ## Workflow
 
 1. **Create Delta**: \`specsafe delta <spec-id>\`
+   - Opens a template for the delta spec
+   - Edit to describe changes
+
 2. **Preview Changes**: \`specsafe diff <spec-id>\`
+   - Shows what would change
+   - Identifies conflicts
+
 3. **Apply Delta**: \`specsafe apply <spec-id>\`
+   - Merges changes into base spec
+   - Creates backup before applying
+
+## Best Practices
+
+- Keep deltas focused (one feature/fix at a time)
+- Include clear change justification
+- Document breaking changes
+- Update tests alongside requirements
+- Review conflicts before applying
+
+## Example
+
+\`\`\`markdown
+## ADDED Requirements
+
+### FR-AUTH-3
+**Priority:** P0
+
+Users must be able to reset their password via email verification.
+
+**Scenarios:**
+- Given user is on login page
+- When user clicks "Forgot Password"
+- Then system sends reset link to registered email
+
+## MODIFIED Requirements
+
+### FR-AUTH-1
+**Priority:** P0
+
+Users must authenticate using email and password with 2FA enabled ← (was Users must authenticate using email and password)
+
+## REMOVED Requirements
+
+- FR-AUTH-OLD-1
+\`\`\`
 `;
 }

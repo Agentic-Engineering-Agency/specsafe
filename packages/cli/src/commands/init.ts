@@ -4,6 +4,7 @@ import ora from 'ora';
 import { writeFile, mkdir, access, chmod } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join, dirname } from 'path';
+import { execSync } from 'child_process';
 import { 
   ProjectTracker, 
   getSupportedAgents, 
@@ -67,7 +68,7 @@ async function generateAgentConfigs(
         const filePath = join(projectDir, file.path);
         const fileDir = dirname(filePath);
 
-        // Create directory (mkdir recursive is idempotent, no need to check existsSync)
+        // Create directory if needed (mkdir recursive is idempotent, no need to check existsSync)
         await mkdir(fileDir, { recursive: true });
 
         // Skip if file exists
@@ -137,14 +138,12 @@ export const initCommand = new Command('init')
         }
 
         if (selectedAgents.length === 0) {
-          // Prompt user to select - only show agents with registered adapters
-          const agentChoices = AGENT_DEFINITIONS
-            .filter((agent) => getAgent(agent.id) !== undefined)
-            .map((agent) => ({
-              name: agent.name,
-              value: agent.id,
-              checked: detectedAgents.includes(agent.id),
-            }));
+          // Prompt user to select
+          const agentChoices = AGENT_DEFINITIONS.map((agent) => ({
+            name: agent.name,
+            value: agent.id,
+            checked: detectedAgents.includes(agent.id),
+          }));
 
           selectedAgents = await checkbox({
             message: 'Which AI coding agents do you use?',
@@ -291,7 +290,13 @@ exit 0
           await writeFile(preCommitPath, preCommitContent);
           // Make the hook executable
           await chmod(preCommitPath, 0o755);
-          console.log(chalk.green('  ✓ Created .githooks/pre-commit'));
+          // Configure git to use .githooks directory
+          try {
+            execSync('git config --local core.hooksPath .githooks', { cwd: projectDir });
+            console.log(chalk.green('  ✓ Created .githooks/pre-commit'));
+          } catch (err) {
+            console.log(chalk.yellow('  ⚠ Created .githooks/pre-commit (run: git config --local core.hooksPath .githooks)'));
+          }
         }
       }
 

@@ -190,7 +190,6 @@ export function getAgentDefinition(id: string): AgentDefinition | undefined {
 /**
  * Get agent definition by ID with error if not found
  * Use this when you expect the agent to exist (e.g., in adapters)
- * @throws Error if agent definition is not found
  */
 export function getRequiredAgentDefinition(id: string): AgentDefinition {
   const definition = AGENT_DEFINITIONS.find((a) => a.id === id);

@@ -23,6 +23,9 @@ import { doctorCommand } from './commands/doctor.js';
 import { rulesCommand } from './commands/rules.js';
 import { verifyCommand } from './commands/verify.js';
 import { exploreCommand } from './commands/explore.js';
+import { deltaCommand } from './commands/delta.js';
+import { applyCommand } from './commands/apply.js';
+import { diffCommand } from './commands/diff.js';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
@@ -53,6 +56,11 @@ program.addCommand(archiveCommand);
 program.addCommand(doctorCommand);
 program.addCommand(rulesCommand);
 
+// Delta spec commands (brownfield)
+program.addCommand(deltaCommand);       // Create delta spec
+program.addCommand(applyCommand);       // Apply delta specs
+program.addCommand(diffCommand);        // Preview delta changes
+
 // Workflow command group
 program
   .command('workflow')
@@ -78,6 +86,12 @@ program
     console.log(chalk.cyan('  specsafe qa <id>          → QA validation'));
     console.log(chalk.gray('       ↓'));
     console.log(chalk.cyan('  specsafe done <id>        → Complete & archive'));
+    console.log();
+    
+    console.log(chalk.white('Brownfield Changes (Delta Specs):'));
+    console.log(chalk.cyan('  specsafe delta <id>       → Create delta spec for changes'));
+    console.log(chalk.cyan('  specsafe diff <id>        → Preview delta changes'));
+    console.log(chalk.cyan('  specsafe apply <id>       → Apply delta to base spec'));
     console.log();
     
     console.log(chalk.white('Utility Commands:'));
