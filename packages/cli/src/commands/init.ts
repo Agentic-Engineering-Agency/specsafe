@@ -1,9 +1,9 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { writeFile, mkdir, access } from 'fs/promises';
+import { writeFile, mkdir, access, chmod } from 'fs/promises';
 import { existsSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { 
   ProjectTracker, 
   getSupportedAgents, 
@@ -109,7 +109,16 @@ export const initCommand = new Command('init')
       let selectedAgents: string[] = [];
 
       if (options.agent && options.agent.length > 0) {
-        // Agents specified via CLI flag
+        // Agents specified via CLI flag - validate each one
+        const supportedAgents = getSupportedAgents();
+        const invalidAgents = options.agent.filter(id => !supportedAgents.includes(id));
+        
+        if (invalidAgents.length > 0) {
+          console.error(chalk.red(`Error: Invalid agent(s): ${invalidAgents.join(', ')}`));
+          console.log(chalk.gray(`\nSupported agents: ${supportedAgents.join(', ')}`));
+          process.exit(1);
+        }
+        
         selectedAgents = options.agent;
         console.log(chalk.blue(`Using agents from CLI: ${selectedAgents.join(', ')}`));
       } else {
@@ -177,14 +186,14 @@ export const initCommand = new Command('init')
 
       spinner.start('Creating project structure...');
 
-      // Create directory structure
-      await mkdir('specs/active', { recursive: true });
-      await mkdir('specs/completed', { recursive: true });
-      await mkdir('specs/archive', { recursive: true });
-      await mkdir('specs/drafts', { recursive: true });
-      await mkdir('specs/exploration', { recursive: true });
-      await mkdir('src', { recursive: true });
-      await mkdir('tests', { recursive: true });
+      // Create directory structure (relative to projectDir)
+      await mkdir(join(projectDir, 'specs/active'), { recursive: true });
+      await mkdir(join(projectDir, 'specs/completed'), { recursive: true });
+      await mkdir(join(projectDir, 'specs/archive'), { recursive: true });
+      await mkdir(join(projectDir, 'specs/drafts'), { recursive: true });
+      await mkdir(join(projectDir, 'specs/exploration'), { recursive: true });
+      await mkdir(join(projectDir, 'src'), { recursive: true });
+      await mkdir(join(projectDir, 'tests'), { recursive: true });
 
       // Create PROJECT_STATE.md
       const tracker = new ProjectTracker(projectDir);

@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { readFile, writeFile, readdir, copyFile, mkdir } from 'fs/promises';
+import { readFile, writeFile, readdir, copyFile, mkdir, unlink } from 'fs/promises';
 import { join } from 'path';
 import { DeltaParser, SemanticMerger } from '@specsafe/core';
 import { confirm } from '@inquirer/prompts';
@@ -73,13 +73,16 @@ export const applyCommand = new Command('apply')
               if (!proceed) {
                 process.exit(1);
               }
+              spinner.start('Continuing with other deltas...');
               continue;
             }
+            spinner.start('Continuing...');
           }
           
           deltaSpecs.push(deltaSpec);
         } catch (err: any) {
           spinner.warn(chalk.yellow(`Failed to parse ${deltaId}: ${err.message}`));
+          spinner.start('Continuing...');
           continue;
         }
       }
@@ -168,13 +171,15 @@ export const applyCommand = new Command('apply')
       // Write merged content
       await writeFile(baseSpecPath, currentContent);
 
-      // Archive applied deltas
+      // Archive applied deltas (only those that were successfully applied)
       const archiveDir = join('specs', 'deltas', 'applied');
       await mkdir(archiveDir, { recursive: true });
-      for (const file of deltaFiles) {
-        const deltaPath = join(deltasDir, file);
-        const archivePath = join(archiveDir, file);
+      for (const deltaSpec of deltaSpecs) {
+        const deltaFile = `${deltaSpec.id}.md`;
+        const deltaPath = join(deltasDir, deltaFile);
+        const archivePath = join(archiveDir, deltaFile);
         await copyFile(deltaPath, archivePath);
+        await unlink(deltaPath); // Remove original after archiving
       }
 
       spinner.succeed(chalk.green(`Successfully applied ${deltaSpecs.length} delta spec(s) to ${specId}`));
