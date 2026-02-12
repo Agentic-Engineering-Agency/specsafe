@@ -92,10 +92,52 @@ const zedSettingsContent = {
     },
     version: '2',
   },
+
   context_servers: {
     specsafe: {
       command: 'cat',
       args: ['PROJECT_STATE.md'],
+      env: {},
+    },
+  },
+
+  lsp: {
+    specsafe: {
+      command: 'specsafe',
+      args: ['status', '--json'],
+    },
+  },
+
+  agent: {
+    name: 'SpecSafe',
+    description: 'Spec-driven development assistant for OpenSpec-style workflow',
+
+    context: {
+      files: ['PROJECT_STATE.md', 'specsafe.config.json'],
+      directories: ['specs/active'],
+    },
+
+    commands: {
+      'specsafe:explore': {
+        description: 'Pre-spec exploration and research',
+        prompt:
+          'Conduct preliminary exploration before committing to a full spec. Guide problem definition, research technology options, estimate effort, and document findings in specs/exploration/FEATURE-NAME.md. Recommend proceed to spec creation or need more research.',
+        context: ['PROJECT_STATE.md'],
+      },
+
+      'specsafe:new': {
+        description: 'Initialize spec with PRD',
+        prompt:
+          'Create a new spec with Product Requirements Document. Generate spec ID (SPEC-YYYYMMDD-NNN), create PRD with problem statement, requirements, scenarios, recommend tech stack, and define rules. Output to specs/active/SPEC-ID.md and update PROJECT_STATE.md (status: DRAFT). Confirm with user before writing.',
+        context: ['PROJECT_STATE.md'],
+      },
+
+      'specsafe:spec': {
+        description: 'Generate detailed spec from PRD',
+        prompt:
+          'Read PRD from specs/active/SPEC-ID.md and create comprehensive implementation-ready specification. Include functional requirements (FR-XXX), technical requirements (TR-XXX), Given/When/Then scenarios, acceptance criteria, and architecture notes. Write to specs/active/SPEC-ID.md and update PROJECT_STATE.md (DRAFT → SPEC).',
+        context: ['PROJECT_STATE.md', 'specs/active/*.md'],
+      },
     },
   },
 };
@@ -362,7 +404,7 @@ Flesh out a detailed specification from the initial PRD (SPEC stage refinement).
    - Requirements count by priority
    - Scenarios defined
    - Estimated total effort
-   - Next command: \`/specsafe:test <id>\`
+   - Next command: \`/specsafe:test-create <id>\`
 
 **Output**
 
@@ -373,7 +415,7 @@ After specification:
 - ✅ Test strategy defined
 - ✅ Implementation plan with estimates
 - 📋 Status: SPEC (ready for TEST stage)
-- 📋 Prompt: "Ready to generate tests? Run \`/specsafe:test <id>\`"
+- 📋 Prompt: "Ready to generate tests? Run \`/specsafe:test-create <id>\`"
 
 **Guardrails**
 - Requirements must have clear acceptance criteria
@@ -459,7 +501,7 @@ Generate tests from spec scenarios (SPEC → TEST stage).
    - Number of tests created
    - Test file locations
    - Coverage target
-   - Next command: \`/specsafe:dev <id>\`
+   - Next command: \`/specsafe:test-apply <id>\`
 
 **Output**
 
@@ -468,7 +510,7 @@ After test generation:
 - ✅ Scenarios converted to test cases
 - ✅ Test utilities/helpers created
 - ✅ Status: TEST stage
-- 📋 Prompt: "Tests are ready. Run \`/specsafe:dev <id>\` to implement"
+- 📋 Prompt: "Tests are ready. Run \`/specsafe:test-apply <id>\` to implement"
 
 **Guardrails**
 - All tests must initially FAIL (TDD principle)
@@ -507,9 +549,9 @@ Apply and run tests against implementation (CODE → QA stage).
 2. **Run the test suite**
 
    Execute tests for this spec:
-   ```bash
+   \`\`\`bash
    pnpm test <spec-id>  # or npm test -- <spec-id>
-   ```
+   \`\`\`
 
 3. **Analyze results**
 
@@ -545,107 +587,14 @@ After test run:
 - Loop back to implementation until tests pass
 - This is the quality gate - do not bypass it`;
 
-// 5. specsafe-verify - Run tests, loop back on failure (alias/shortcut)
-   \`\`\`
-
-2. **Read requirements**
-
-   Review spec for implementation guidance:
-   - Requirements with acceptance criteria
-   - Technical approach section
-   - Architecture decisions
-   - Integration points
-
-3. **Implement to pass tests**
-
-   Follow TDD cycle:
-   
-   **RED**: Confirm tests fail
-   \`\`\`bash
-   pnpm test
-   # Should see failing tests
-   \`\`\`
-   
-   **GREEN**: Write minimal code to pass tests
-   - Start with simplest implementation
-   - Don't over-engineer
-   - Focus on making tests pass
-   
-   **REFACTOR**: Clean up while keeping tests green
-   - Improve code quality
-   - Extract functions/classes
-   - Add documentation
-   - Run tests after each change
-
-4. **Track progress**
-
-   For each test file:
-   - Run specific test: \`pnpm test <pattern>\`
-   - Fix failing tests one at a time
-   - Verify no regressions
-
-5. **Handle edge cases**
-
-   As tests pass, review:
-   - Edge case coverage
-   - Error handling
-   - Input validation
-   - Performance considerations
-
-6. **Move to CODE stage**
-
-   When all tests pass:
-   \`\`\`bash
-   specsafe code "<spec-id>"
-   \`\`\`
-
-   This:
-   - Updates spec status to CODE
-   - Records implementation files
-   - Updates PROJECT_STATE.md
-
-7. **Show implementation summary**
-
-   Display:
-   - Files created/modified
-   - Test results (all passing)
-   - Coverage metrics
-   - Next command: \`/specsafe:verify <id>\`
-
-**Output**
-
-After development:
-- ✅ Implementation code written
-- ✅ All tests passing
-- ✅ Code follows project conventions
-- ✅ Status: CODE stage
-- 📋 Prompt: "Implementation complete. Run \`/specsafe:verify <id>\` to validate"
-
-**Guardrails**
-- NEVER skip tests to implement faster
-- Write only enough code to pass tests
-- Keep tests passing throughout refactoring
-- Follow existing code style and patterns
-- Commit frequently with meaningful messages
-- Reference spec ID in commits: \`feat(SPEC-001): add user auth\`
-- If tests need changes, discuss with user first
-
-**TDD Reminders**
-- 🔄 RED: Write failing test first
-- 🔄 GREEN: Write code to pass
-- 🔄 REFACTOR: Clean up with tests green
-- 🚫 Never write code without a failing test
-- 🚫 Never skip the refactor phase
-`;
-
 // 5. specsafe-verify - Run tests, loop back on fail
 const claudeSkillVerifyContent = `---
 name: specsafe-verify
-description: Run tests and validate implementation. Loops back to dev if tests fail. Moves spec from CODE to QA stage.
+description: Run tests and validate implementation. Loops back to test-apply if tests fail. Moves spec from CODE to QA stage.
 disable-model-invocation: true
 ---
 
-Run tests and validate implementation (CODE → QA stage). Loops back to dev if tests fail.
+Run tests and validate implementation (CODE → QA stage). Loops back to test-apply if tests fail.
 
 **When to use:**
 - Implementation appears complete
@@ -674,7 +623,7 @@ Run tests and validate implementation (CODE → QA stage). Loops back to dev if 
 3. **Analyze results**
 
    Check for:
-   - ❌ **FAILING TESTS**: Loop back to dev
+   - ❌ **FAILING TESTS**: Loop back to test-apply
    - ⚠️ **LOW COVERAGE**: Flag for improvement
    - ✅ **ALL PASSING**: Proceed to validation
 
@@ -684,7 +633,7 @@ Run tests and validate implementation (CODE → QA stage). Loops back to dev if 
    - Show failing test names
    - Analyze failure patterns
    - Suggest fixes
-   - Prompt: \`/specsafe:dev <id>\` to fix
+   - Prompt: \`/specsafe:test-apply <id>\` to fix
 
    **Do NOT proceed to QA with failing tests**
 
@@ -719,7 +668,7 @@ Run tests and validate implementation (CODE → QA stage). Loops back to dev if 
    - Coverage percentage
    - Requirements satisfaction
    - QA recommendation
-   - Next: \`/specsafe:done <id>\` or back to \`/specsafe:dev <id>\`
+   - Next: \`/specsafe:done <id>\` or back to \`/specsafe:test-apply <id>\`
 
 **Output**
 
@@ -727,7 +676,7 @@ Run tests and validate implementation (CODE → QA stage). Loops back to dev if 
 - ❌ Test failure report
 - 📋 Analysis of failures
 - 🔧 Suggested fixes
-- 📋 Prompt: "Fix issues and run \`/specsafe:dev <id>\` again"
+- 📋 Prompt: "Fix issues and run \`/specsafe:test-apply <id>\` again"
 
 **If tests PASS:**
 - ✅ All tests passing
@@ -953,7 +902,7 @@ You are working on a SpecSafe project using spec-driven development (SDD).
 - Which spec is being worked on
 - Overall project status
 
-**Specs directory** — \\\`specs/active/*.md\\\` contains detailed spec files with:
+**Specs directory** — \`specs/active/*.md\` contains detailed spec files with:
 - Requirements (must be satisfied)
 - Scenarios (acceptance criteria)
 - Current stage (SPEC → TEST → CODE → QA → COMPLETE)
@@ -970,7 +919,7 @@ You are working on a SpecSafe project using spec-driven development (SDD).
 
 ✅ **ALWAYS** read PROJECT_STATE.md before making changes  
 ✅ **ALWAYS** ensure implementation satisfies tests  
-✅ **ALWAYS** use \\\`specsafe\\\` CLI commands to advance stages  
+✅ **ALWAYS** use \`specsafe\` CLI commands to advance stages  
 ✅ **ALWAYS** reference spec ID in commit messages  
 
 ❌ **NEVER** modify PROJECT_STATE.md directly (use CLI)  
@@ -979,13 +928,13 @@ You are working on a SpecSafe project using spec-driven development (SDD).
 
 ## SpecSafe CLI Reference
 
-- \\\`specsafe status\\\` — Show current project status
-- \\\`specsafe new <name>\\\` — Create new spec (NEW → SPEC)
-- \\\`specsafe spec <id>\\\` — View/edit spec details
-- \\\`specsafe test <id>\\\` — Generate tests (SPEC → TEST)
-- \\\`specsafe code <id>\\\` — Start implementation (TEST → CODE)
-- \\\`specsafe qa <id>\\\` — Run QA validation (CODE → QA)
-- \\\`specsafe complete <id>\\\` — Complete spec (QA → COMPLETE)
+- \`specsafe status\` — Show current project status
+- \`specsafe new <name>\` — Create new spec (NEW → SPEC)
+- \`specsafe spec <id>\` — View/edit spec details
+- \`specsafe test <id>\` — Generate tests (SPEC → TEST)
+- \`specsafe code <id>\` — Start implementation (TEST → CODE)
+- \`specsafe qa <id>\` — Run QA validation (CODE → QA)
+- \`specsafe complete <id>\` — Complete spec (QA → COMPLETE)
 
 ## Claude Code Skills (OpenSpec-style)
 
@@ -993,14 +942,14 @@ This project includes Claude Code skills for slash commands:
 
 | Command | Stage | Purpose |
 |---------|-------|---------|
-| \\\`/specsafe:explore\\\` | PRE | Research before formal spec |
-| \\\`/specsafe:new\\\` | NEW → SPEC | Create spec with PRD |
-| \\\`/specsafe:spec\\\` | SPEC | Flesh out detailed spec |
-| \\\`/specsafe:test\\\` | SPEC → TEST | Generate tests from scenarios |
-| \\\`/specsafe:dev\\\` | TEST → CODE | Implement to pass tests |
-| \\\`/specsafe:verify\\\` | CODE → QA | Run tests, loop if fail |
-| \\\`/specsafe:done\\\` | QA → COMPLETE | Mark complete, archive |
-| \\\`/specsafe\\\` | ANY | Show project status |
+| \`/specsafe:explore\` | PRE | Research before formal spec |
+| \`/specsafe:new\` | NEW → SPEC | Create spec with PRD |
+| \`/specsafe:spec\` | SPEC | Flesh out detailed spec |
+| \`/specsafe:test-create\` | SPEC → TEST | Generate tests from scenarios |
+| \`/specsafe:test-apply\` | TEST → CODE | Implement to pass tests |
+| \`/specsafe:verify\` | CODE → QA | Run tests, loop if fail |
+| \`/specsafe:done\` | QA → COMPLETE | Mark complete, archive |
+| \`/specsafe\` | ANY | Show project status |
 
 ## Workflow Example
 
@@ -1015,10 +964,10 @@ This project includes Claude Code skills for slash commands:
 /specsafe:spec SPEC-20260211-001
 
 # 4. Generate tests (TDD - all fail)
-/specsafe:test SPEC-20260211-001
+/specsafe:test-create SPEC-20260211-001
 
 # 5. Implement to pass (RED → GREEN → REFACTOR)
-/specsafe:dev SPEC-20260211-001
+/specsafe:test-apply SPEC-20260211-001
 
 # 6. Verify (loops back if tests fail)
 /specsafe:verify SPEC-20260211-001
@@ -1102,8 +1051,8 @@ async function generateCrushConfig(projectDir: string): Promise<void> {
     'validate.md',        // Validate current implementation
     'specsafe-new.md',    // Create new spec with PRD
     'specsafe-spec.md',   // Generate detailed spec from PRD
-    'specsafe-test.md',   // Create tests from scenarios
-    'specsafe-dev.md',    // Development guidance mode
+    'specsafe-test-create.md',   // Create tests from scenarios
+    'specsafe-test-apply.md',    // Development guidance mode
     'specsafe-verify.md', // Run tests, loop back on fail
     'specsafe-done.md',   // Mark complete, archive spec
     'specsafe-explore.md' // Pre-spec exploration
