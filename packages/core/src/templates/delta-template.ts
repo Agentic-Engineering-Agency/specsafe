@@ -1,8 +1,23 @@
-export function generateDeltaTemplate(deltaId: string, baseSpecId: string, author: string): string {
+/**
+ * Generate a delta spec template
+ * @param deltaId - Delta spec identifier
+ * @param baseSpecId - Base spec this delta applies to
+ * @param author - Author name
+ * @param date - Optional date for testability (defaults to today)
+ * @returns Delta spec template content
+ */
+export function generateDeltaTemplate(
+  deltaId: string, 
+  baseSpecId: string, 
+  author: string,
+  date?: string
+): string {
+  const createdDate = date || new Date().toISOString().split('T')[0];
+  
   return `# Delta Spec: ${deltaId}
 
 **Base Spec:** ${baseSpecId}
-**Created:** ${new Date().toISOString().split('T')[0]}
+**Created:** ${createdDate}
 **Author:** ${author}
 **Description:** Brief description of changes
 
@@ -39,6 +54,10 @@ export function generateDeltaTemplate(deltaId: string, baseSpecId: string, autho
 `;
 }
 
+/**
+ * Generate a README file explaining the delta spec format
+ * @returns Markdown content for delta spec documentation
+ */
 export function generateDeltaReadme(): string {
   return `# Delta Specs
 
