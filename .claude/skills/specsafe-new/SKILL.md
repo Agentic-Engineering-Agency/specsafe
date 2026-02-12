@@ -1,59 +1,77 @@
 ---
 name: specsafe-new
-description: Create a new SpecSafe specification. Use when starting a new feature, fix, or modification following the SpecSafe TDD workflow.
-license: MIT
-metadata:
-  author: Agentic Engineering
-  version: "1.0"
+description: Create a new spec with PRD, tech stack, and rules. Initializes SPEC stage.
+disable-model-invocation: true
 ---
 
-Create a new SpecSafe specification using the SPEC → TEST → CODE → QA → COMPLETE workflow.
+Create a new SpecSafe specification (NEW → SPEC stage).
 
 **When to use:**
 - Starting a new feature
-- Beginning a bug fix with TDD
-- Creating a new project specification
+- Need to define requirements before coding
+- Want to establish tech stack and rules upfront
 
-**Input**: The user's request should include a spec name (kebab-case) OR a description of what they want to build.
+**Input**: Feature name or brief description
 
 **Steps**
 
-1. **If no clear input provided, ask what they want to build**
+1. **Validate project state**
 
-   Ask:
-   > "What spec do you want to create? Describe what you want to build or fix."
+   Check PROJECT_STATE.md exists (run `specsafe init` if not).
+   Review current active specs to avoid conflicts.
 
-   From their description, derive a kebab-case name (e.g., "add user authentication" → `add-user-auth`).
-
-2. **Validate the specsafe project is initialized**
-
-   Check if `specsafe.config.json` exists in the current directory.
-   If not, advise: "Run `specsafe init` first to initialize a SpecSafe project."
-
-3. **Create the spec**
+2. **Create the spec**
 
    ```bash
-   specsafe new "<name>"
+   specsafe new "<feature-name>"
    ```
 
-   This creates a scaffolded spec at `specs/active/SPEC-{DATE}-XXX.md`.
+   This:
+   - Generates a new spec file in `specs/active/`
+   - Assigns a unique SPEC-ID (e.g., SPEC-20260211-001)
+   - Sets status to SPEC stage
+   - Updates PROJECT_STATE.md
 
-4. **Show the spec location and next steps**
+3. **Initialize PRD structure**
 
-   Summarize:
-   - Spec ID and location
-   - Current stage: SPEC
-   - Next: Edit the spec to add requirements
-   - Then: Run `specsafe test` to generate tests and proceed to TEST stage
+   Open the new spec file and populate:
+   - **Purpose (WHY)**: One paragraph explaining why this feature exists
+   - **Scope (WHAT)**: In scope and out of scope sections
+   - **Tech Stack**: Target frameworks, languages, tools
+   - **Rules**: Coding standards, constraints, conventions
+
+4. **Define initial requirements**
+
+   Add to Requirements table:
+   - Functional requirements (what the system must do)
+   - Non-functional requirements (performance, security)
+   - Priority levels (P0=must have, P1=should have, P2=nice to have)
+
+5. **Show next steps**
+
+   Display:
+   - Spec file location
+   - Current stage (SPEC)
+   - Next command: `/specsafe:spec <id>` to flesh out details
 
 **Output**
 
-After creating the spec:
-- Spec ID and file location
-- Reminder to define requirements using SHALL/MUST language
-- Prompt: "Edit the spec file to add requirements and scenarios. Ready to generate tests? Run `specsafe test <id>`"
+After creation:
+- ✅ Spec file created at `specs/active/SPEC-YYYYMMDD-NNN-<feature-name>.md`
+- ✅ Status set to SPEC stage
+- ✅ PROJECT_STATE.md updated
+- 📋 Prompt: "Edit the spec to add requirements, then run `/specsafe:spec <id>`"
 
 **Guardrails**
-- Do NOT proceed without a valid kebab-case name
-- Ensure specsafe project is initialized first
-- If a spec with similar name exists, ask if they want to continue that one instead
+- Feature name should be descriptive (kebab-case recommended)
+- Check for naming conflicts with existing specs
+- Tech stack decisions should reference existing project standards
+- Never start coding without a spec in SPEC or later stage
+
+**Example**
+```
+User: /specsafe:new "user-authentication"
+→ Creates SPEC-20260211-004-user-authentication.md
+→ Status: SPEC
+→ Next: /specsafe:spec SPEC-20260211-004
+```
