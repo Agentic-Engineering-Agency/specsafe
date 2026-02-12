@@ -4,6 +4,7 @@ import ora from 'ora';
 import { writeFile, mkdir, access, chmod } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join, dirname } from 'path';
+import { execSync } from 'child_process';
 import { 
   ProjectTracker, 
   getSupportedAgents, 
@@ -288,7 +289,13 @@ exit 0
           await writeFile(preCommitPath, preCommitContent);
           // Make the hook executable
           await chmod(preCommitPath, 0o755);
-          console.log(chalk.green('  ✓ Created .githooks/pre-commit'));
+          // Configure git to use .githooks directory
+          try {
+            execSync('git config --local core.hooksPath .githooks', { cwd: projectDir });
+            console.log(chalk.green('  ✓ Created .githooks/pre-commit'));
+          } catch (err) {
+            console.log(chalk.yellow('  ⚠ Created .githooks/pre-commit (run: git config --local core.hooksPath .githooks)'));
+          }
         }
       }
 
