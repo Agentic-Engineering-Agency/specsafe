@@ -58,14 +58,14 @@ describe('TypeScriptTestGenerator', () => {
         id: 'SC-1',
         given: 'user is on login page',
         when: 'user enters valid credentials',
-        then: 'user is redirected to dashboard'
+        thenOutcome: 'user is redirected to dashboard'
       };
 
       const scenario2: Scenario = {
         id: 'SC-2',
         given: 'user is on login page',
         when: 'user enters invalid credentials',
-        then: 'error message is displayed'
+        thenOutcome: 'error message is displayed'
       };
 
       const requirement: Requirement = {
@@ -99,7 +99,7 @@ describe('TypeScriptTestGenerator', () => {
         id: 'SC-1',
         given: 'user is logged in',
         when: 'user clicks logout',
-        then: 'session is terminated'
+        thenOutcome: 'session is terminated'
       };
 
       const requirement: Requirement = {
@@ -134,7 +134,7 @@ describe('TypeScriptTestGenerator', () => {
         id: 'SC-1',
         given: 'user is logged in',
         when: 'user clicks logout',
-        then: 'session is terminated'
+        thenOutcome: 'session is terminated'
       };
 
       const requirement: Requirement = {
@@ -170,7 +170,7 @@ describe('TypeScriptTestGenerator', () => {
         id: 'SC-1',
         given: 'test condition',
         when: 'action happens',
-        then: 'result occurs'
+        thenOutcome: 'result occurs'
       };
 
       const requirement: Requirement = {
@@ -203,7 +203,7 @@ describe('TypeScriptTestGenerator', () => {
         id: 'SC-1',
         given: 'test condition',
         when: 'action happens',
-        then: 'result occurs'
+        thenOutcome: 'result occurs'
       };
 
       const requirement: Requirement = {
@@ -250,9 +250,9 @@ THEN: 401 error is returned
       expect(scenarios).toHaveLength(2);
       expect(scenarios[0].given).toBe('user is authenticated');
       expect(scenarios[0].when).toBe('user requests profile');
-      expect(scenarios[0].then).toBe('profile data is returned');
+      expect(scenarios[0].thenOutcome).toBe('profile data is returned');
       expect(scenarios[1].given).toBe('user is not authenticated');
-      expect(scenarios[1].then).toBe('401 error is returned');
+      expect(scenarios[1].thenOutcome).toBe('401 error is returned');
     });
 
     it('should handle mixed case GIVEN/WHEN/THEN', () => {
@@ -267,7 +267,7 @@ Then: a result
       expect(scenarios).toHaveLength(1);
       expect(scenarios[0].given).toBe('a condition');
       expect(scenarios[0].when).toBe('an action');
-      expect(scenarios[0].then).toBe('a result');
+      expect(scenarios[0].thenOutcome).toBe('a result');
     });
 
     it('should return empty array for content without scenarios', () => {
@@ -344,7 +344,7 @@ Then: a result
         id: 'SC-1',
         given: 'condition',
         when: 'action',
-        then: 'then result happens'
+        thenOutcome: 'then result happens'
       };
 
       const requirement: Requirement = {
@@ -378,7 +378,7 @@ Then: a result
         id: 'SC-1',
         given: 'condition',
         when: 'action',
-        then: 'result happens.'
+        thenOutcome: 'result happens.'
       };
 
       const requirement: Requirement = {

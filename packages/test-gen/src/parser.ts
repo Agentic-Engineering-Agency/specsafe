@@ -49,7 +49,7 @@ export class ScenarioParser {
           id: `SC-${index++}`,
           given: given.trim(),
           when: when.trim(),
-          then: then.trim()
+          thenOutcome: then.trim()
         });
       }
     }

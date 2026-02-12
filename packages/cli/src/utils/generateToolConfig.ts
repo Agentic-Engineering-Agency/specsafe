@@ -344,8 +344,7 @@ const zedSettingsContent = {
   
   context_servers: {
     specsafe: {
-      command: "cat",
-      args: ["PROJECT_STATE.md"]
+      command: ["cat", "PROJECT_STATE.md"]
     }
   },
   

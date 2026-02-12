@@ -76,7 +76,7 @@ export const testCreateCommand = new Command('test-create')
             id: `SC-${scenarios.length + 1}`,
             given: match[2].trim(),
             when: match[3].trim(),
-            then: match[4].trim()
+            thenOutcome: match[4].trim()
           });
         }
       }

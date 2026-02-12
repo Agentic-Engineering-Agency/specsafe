@@ -67,10 +67,10 @@ Another requirement
       expect(requirements[0].scenarios).toHaveLength(2);
       expect(requirements[0].scenarios[0].given).toBe('user exists');
       expect(requirements[0].scenarios[0].when).toBe('action is triggered');
-      expect(requirements[0].scenarios[0].then).toBe('result happens');
+      expect(requirements[0].scenarios[0].thenOutcome).toBe('result happens');
       expect(requirements[0].scenarios[1].given).toBe('another user');
       expect(requirements[0].scenarios[1].when).toBe('another action');
-      expect(requirements[0].scenarios[1].then).toBe('another result');
+      expect(requirements[0].scenarios[1].thenOutcome).toBe('another result');
     });
 
     it('should handle scenarios across multiple requirements', () => {

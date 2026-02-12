@@ -106,14 +106,14 @@ echo "🧪 Checking test coverage for CODE stage specs..."
 CODE_SPECS=$(grep -E "^- \[ \] .*Status: CODE" PROJECT_STATE.md 2>/dev/null | grep -oE "SPEC-[0-9]{8}-[0-9]{3}")
 
 if [ -n "$CODE_SPECS" ]; then
-    echo "$CODE_SPECS" | while read -r spec_id; do
+    while read -r spec_id; do
         # Look for corresponding test directory
         if [ ! -d "src/__tests__/$spec_id" ] && [ ! -d "tests/$spec_id" ]; then
             echo -e "${YELLOW}⚠️  $spec_id is in CODE stage but no tests found${NC}"
             echo "   Expected: src/__tests__/$spec_id/ or tests/$spec_id/"
             EXIT_CODE=1
         fi
-    done
+    done <<< "$CODE_SPECS"
 fi
 
 # ============================================
