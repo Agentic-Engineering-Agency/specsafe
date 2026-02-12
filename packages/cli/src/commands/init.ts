@@ -158,7 +158,8 @@ export const initCommand = new Command('init')
             });
 
             if (useAll) {
-              selectedAgents = getSupportedAgents();
+              // Filter to only agents that have registered adapters
+              selectedAgents = getSupportedAgents().filter(id => getAgent(id) !== undefined);
             }
           }
         }
@@ -232,7 +233,7 @@ export const initCommand = new Command('init')
 
 ## 9. Notes & References
 `;
-      await writeFile('specs/template.md', template);
+      await writeFile(join(projectDir, 'specs/template.md'), template);
 
       // Create config file with selected agents
       const agentsConfig: Record<string, { enabled: boolean }> = {};
@@ -251,7 +252,7 @@ export const initCommand = new Command('init')
           enabled: useGitHooks,
         },
       };
-      await writeFile('specsafe.config.json', JSON.stringify(config, null, 2));
+      await writeFile(join(projectDir, 'specsafe.config.json'), JSON.stringify(config, null, 2));
 
       spinner.text = 'Generating agent configurations...';
 

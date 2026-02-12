@@ -59,16 +59,19 @@ async function removeAgentConfig(
   cwd: string = process.cwd()
 ): Promise<void> {
   const configPath = join(cwd, 'specsafe.config.json');
+  
+  let config: Record<string, unknown>;
   try {
     const content = await readFile(configPath, 'utf-8');
-    const config = JSON.parse(content);
-    
-    if (config.agents && config.agents[agentId]) {
-      delete config.agents[agentId];
-      await writeFile(configPath, JSON.stringify(config, null, 2));
-    }
+    config = JSON.parse(content);
   } catch {
     // Config doesn't exist or is malformed
+    return;
+  }
+  
+  if (config.agents && (config.agents as Record<string, unknown>)[agentId]) {
+    delete (config.agents as Record<string, unknown>)[agentId];
+    await writeFile(configPath, JSON.stringify(config, null, 2));
   }
 }
 
@@ -235,10 +238,33 @@ export const rulesCommand = new Command('rules')
         const agentEntry = getAgent(agentId);
         
         if (!agentEntry) {
-          console.error(chalk.red(`Error: Unknown agent "${agentId}"`));
-          const supported = getSupportedAgents();
-          console.log(chalk.gray(`\nAvailable agents: ${supported.join(', ')}`));
-          process.exit(1);
+          // Fallback to agent definition if no adapter available
+          const agentDef = AGENT_DEFINITIONS.find(def => def.id === agentId);
+          
+          if (!agentDef) {
+            console.error(chalk.red(`Error: Unknown agent "${agentId}"`));
+            const supported = getSupportedAgents();
+            console.log(chalk.gray(`\nAvailable agents: ${supported.join(', ')}`));
+            process.exit(1);
+          }
+          
+          // Show metadata but note no adapter available
+          console.log(chalk.bold(`\n${agentDef.name}\n`));
+          console.log(chalk.gray(`ID: ${agentDef.id}`));
+          console.log(chalk.gray(`Config Directory: ${agentDef.configDir || 'N/A'}`));
+          console.log(chalk.gray(`Command Directory: ${agentDef.commandDir || 'N/A'}`));
+          console.log(chalk.gray(`File Extension: ${agentDef.fileExtension}`));
+          console.log(chalk.gray(`Command Format: ${agentDef.commandFormat}`));
+          
+          console.log('\n' + chalk.blue('Detection Files:'));
+          for (const file of agentDef.detectionFiles) {
+            const exists = existsSync(join(process.cwd(), file));
+            const status = exists ? chalk.green('✓') : chalk.gray('✗');
+            console.log(`  ${status} ${file}`);
+          }
+          
+          console.log('\n' + chalk.yellow('⚠ No adapter available for this agent'));
+          return;
         }
 
         console.log(chalk.bold(`\n${agentEntry.name}\n`));
