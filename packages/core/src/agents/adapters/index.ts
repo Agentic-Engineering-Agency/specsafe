@@ -3,6 +3,7 @@
  * Exports all agent adapters and registers them with the registry
  */
 
+import { BaseAgentAdapter } from './base.js';
 import { ClaudeCodeAdapter } from './claude-code.js';
 import { CursorAdapter } from './cursor.js';
 import { CopilotAdapter } from './copilot.js';
@@ -11,46 +12,43 @@ import { OpenCodeAdapter } from './opencode.js';
 import { registerAgent, getAgentDefinition } from '../registry.js';
 
 // Export adapters
+export { BaseAgentAdapter } from './base.js';
 export { ClaudeCodeAdapter } from './claude-code.js';
 export { CursorAdapter } from './cursor.js';
 export { CopilotAdapter } from './copilot.js';
 export { GeminiCliAdapter } from './gemini-cli.js';
 export { OpenCodeAdapter } from './opencode.js';
-export { BaseAgentAdapter } from './base.js';
+
+// Track initialization state
+let initialized = false;
 
 /**
  * Initialize and register all adapters
+ * This function is idempotent - calling it multiple times is safe
  */
 export function initializeAdapters(): void {
-  // Claude Code
-  const claudeCodeDef = getAgentDefinition('claude-code');
-  if (claudeCodeDef) {
-    registerAgent(claudeCodeDef, new ClaudeCodeAdapter());
+  if (initialized) {
+    return;
   }
 
-  // Cursor
-  const cursorDef = getAgentDefinition('cursor');
-  if (cursorDef) {
-    registerAgent(cursorDef, new CursorAdapter());
+  // Define adapters to register as [id, AdapterClass] pairs
+  const adapters: Array<[string, new () => BaseAgentAdapter]> = [
+    ['claude-code', ClaudeCodeAdapter],
+    ['cursor', CursorAdapter],
+    ['copilot', CopilotAdapter],
+    ['gemini-cli', GeminiCliAdapter],
+    ['opencode', OpenCodeAdapter],
+  ];
+
+  // Register each adapter
+  for (const [id, AdapterClass] of adapters) {
+    const definition = getAgentDefinition(id);
+    if (definition) {
+      registerAgent(definition, new AdapterClass());
+    }
   }
 
-  // Copilot
-  const copilotDef = getAgentDefinition('copilot');
-  if (copilotDef) {
-    registerAgent(copilotDef, new CopilotAdapter());
-  }
-
-  // Gemini CLI
-  const geminiCliDef = getAgentDefinition('gemini-cli');
-  if (geminiCliDef) {
-    registerAgent(geminiCliDef, new GeminiCliAdapter());
-  }
-
-  // OpenCode
-  const openCodeDef = getAgentDefinition('opencode');
-  if (openCodeDef) {
-    registerAgent(openCodeDef, new OpenCodeAdapter());
-  }
+  initialized = true;
 }
 
 // Auto-initialize when module is imported
