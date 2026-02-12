@@ -76,6 +76,7 @@ Files created:
    - gemini /specsafe - Check status
    - gemini /specsafe-explore - Start exploration
    - gemini /specsafe-new - Create spec
+   - gemini /specsafe-spec - Generate detailed spec
    - gemini /specsafe-test-create - Generate tests
    - gemini /specsafe-test-apply - Implement
    - gemini /specsafe-verify - Verify tests
