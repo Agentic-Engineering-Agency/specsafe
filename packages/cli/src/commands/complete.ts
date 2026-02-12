@@ -7,11 +7,15 @@ import { join } from 'path';
 import type { QAReport } from '@specsafe/core';
 
 export const completeCommand = new Command('complete')
-  .description('Complete spec (QA → COMPLETE)')
+  .description('Complete spec (QA → COMPLETE) [DEPRECATED: use "done" instead]')
   .argument('<id>', 'Spec ID')
   .option('-r, --report <path>', 'Path to QA report')
   .option('-n, --dry-run', 'Preview changes without writing files')
   .action(async (id: string, options: { report?: string; dryRun?: boolean }) => {
+    // Show deprecation warning
+    console.log(chalk.yellow('\n⚠️  DEPRECATION WARNING: "specsafe complete" is deprecated.'));
+    console.log(chalk.yellow('   Use "specsafe done" instead for complete + archive functionality.\n'));
+    
     const spinner = ora(`Completing ${id}...`).start();
     
     try {

@@ -1,18 +1,30 @@
-# Continue.dev configuration for SpecSafe projects
+# Continue.dev configuration for SpecSafe v0.4.0
+# OpenSpec-Style Workflow Configuration
 # https://docs.continue.dev/reference
 
 name: SpecSafe
-version: 1.0.0
+version: 0.4.0
 schema: v1
 
 # Prompt files for spec-driven development (invokable as /commands)
 prompts:
+  # Original commands
   - uses: file://prompts/specsafe.md
   - uses: file://prompts/spec.md
   - uses: file://prompts/validate.md
+  
+  # New v0.4.0 OpenSpec-style workflow commands
+  - uses: file://prompts/specsafe-explore.md
+  - uses: file://prompts/specsafe-new.md
+  - uses: file://prompts/specsafe-spec.md
+  - uses: file://prompts/specsafe-test.md
+  - uses: file://prompts/specsafe-dev.md
+  - uses: file://prompts/specsafe-verify.md
+  - uses: file://prompts/specsafe-done.md
 
 # Context configuration
 context:
   include:
     - PROJECT_STATE.md
     - specs/active/*.md
+    - specs/drafts/*.md

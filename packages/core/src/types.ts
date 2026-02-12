@@ -16,7 +16,7 @@ export interface Scenario {
   id: string;
   given: string;
   when: string;
-  then: string;
+  thenOutcome: string;
 }
 
 export interface Spec {

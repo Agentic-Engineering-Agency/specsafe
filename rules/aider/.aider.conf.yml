@@ -1,6 +1,6 @@
-# Aider configuration for SpecSafe projects
+# Aider configuration for SpecSafe v0.4.0
+# OpenSpec-Style Workflow Configuration
 # https://aider.chat/docs/config/aider_conf.html
-# Version: 1.0.0
 
 # Always read PROJECT_STATE.md for context
 read:
@@ -13,3 +13,103 @@ aiderignore: .aiderignore
 
 # Don't add .gitignore'd files to aider's scope
 add-gitignore-files: false
+
+# AI Assistant Instructions for SpecSafe Workflow
+assistant_prompt: |
+  You are working on a SpecSafe project using spec-driven development (SDD).
+
+  ## The 7 OpenSpec-Style Commands
+
+  When the user invokes a command, follow the corresponding workflow:
+
+  ### /specsafe:explore — Pre-Spec Exploration
+  - Guide problem definition and user research
+  - Evaluate technology options with pros/cons
+  - Estimate effort (S/M/L/XL)
+  - Document in specs/exploration/FEATURE-NAME.md
+  - Recommend proceed, research more, or park idea
+
+  ### /specsafe:new — Initialize Spec with PRD
+  - Generate spec ID: SPEC-YYYYMMDD-NNN format
+  - Create PRD with problem statement, requirements, scenarios
+  - Recommend tech stack and define rules
+  - Output to specs/drafts/SPEC-ID.md
+  - Update PROJECT_STATE.md (status: DRAFT)
+  - Confirm details with user before writing
+
+  ### /specsafe:spec — Generate Detailed Spec
+  - Read PRD from specs/drafts/SPEC-ID.md
+  - Create comprehensive spec:
+    * Functional Requirements (FR-001, FR-002...)
+    * Technical Requirements (TR-001, TR-002...)
+    * Scenarios (Given/When/Then)
+    * Acceptance Criteria
+    * Architecture Notes
+  - Write to specs/active/SPEC-ID.md
+  - Update PROJECT_STATE.md: DRAFT → SPEC
+  - Ensure every requirement is testable
+
+  ### /specsafe:test — Create Tests from Spec
+  - Read spec scenarios from specs/active/SPEC-ID.md
+  - Generate test files: src/__tests__/SPEC-ID/*.test.ts
+  - Map Given/When/Then to test cases
+  - Include happy path and edge cases
+  - Update PROJECT_STATE.md: SPEC → TEST
+  - Report test count and coverage expectations
+
+  ### /specsafe:dev — Development Mode
+  - Read spec requirements and test expectations
+  - Implement one requirement at a time
+  - Follow cycle: Plan → Implement → Test → Commit
+  - Map every code change to requirement ID
+  - Never modify tests to make them pass
+  - Update PROJECT_STATE.md: TEST → CODE
+  - Ask: "Which requirement next?"
+
+  ### /specsafe:verify — Test & Iterate
+  - Run test suite: npm test -- SPEC-ID
+  - For each failure: identify, map to requirement, fix
+  - Golden rule: Fix code, not tests (unless confirmed wrong)
+  - Iterate until all tests pass
+  - Check coverage meets requirements
+  - Run full suite for regressions
+  - Update PROJECT_STATE.md: CODE → QA
+  - Report: pass rate, coverage %, issues
+
+  ### /specsafe:done — Complete & Archive
+  - Verify completion checklist
+  - Run final test suite
+  - Move specs/active/SPEC-ID.md → specs/archive/SPEC-ID.md
+  - Update PROJECT_STATE.md: move to COMPLETED
+  - Generate completion summary
+  - Suggest next spec from active list
+  - Ask for confirmation before archiving
+
+  ## Critical Rules
+
+  ✅ ALWAYS:
+  - Check PROJECT_STATE.md before making changes
+  - Ensure implementation satisfies tests
+  - Use spec ID in commit messages: feat(SPEC-001): description
+  - Run tests before marking work complete
+  - Fix the code, not the test
+
+  ❌ NEVER:
+  - Skip tests to implement faster
+  - Modify PROJECT_STATE.md directly (use workflow commands)
+  - Break the verify loop by ignoring failures
+  - Modify tests without discussion
+  - Commit code without spec reference
+
+  ## Workflow Diagram
+
+  EXPLORE → NEW → SPEC → TEST → DEV → VERIFY → DONE
+
+# Commit message conventions
+commit-prompt: |
+  Format: type(SPEC-ID): brief description
+  
+  Types: feat, fix, test, docs, refactor, chore
+  Example: feat(SPEC-001): add user authentication
+  
+  Always reference the spec ID in commits.

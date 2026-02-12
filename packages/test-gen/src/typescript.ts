@@ -52,7 +52,7 @@ export class TypeScriptTestGenerator {
   private generateTest(scenario: Scenario): string {
     const testName = this.escapeString(this.scenarioToTestName(scenario));
     const comments = this.options.includeComments
-      ? `  // GIVEN: ${scenario.given}\n  // WHEN: ${scenario.when}\n  // THEN: ${scenario.then}\n`
+      ? `  // GIVEN: ${scenario.given}\n  // WHEN: ${scenario.when}\n  // THEN: ${scenario.thenOutcome}\n`
       : '';
     
     const body = this.options.generatePlaceholders
@@ -64,7 +64,7 @@ export class TypeScriptTestGenerator {
 
   private scenarioToTestName(scenario: Scenario): string {
     // Convert scenario to readable test name, preserving original case
-    return scenario.then
+    return scenario.thenOutcome
       .replace(/^then\s+/i, '')
       .replace(/\.$/, '');
   }
@@ -94,7 +94,7 @@ export class TypeScriptTestGenerator {
         id: `SC-${scenarios.length + 1}`,
         given: match[1].trim(),
         when: match[2].trim(),
-        then: match[3].trim()
+        thenOutcome: match[3].trim()
       });
     }
     

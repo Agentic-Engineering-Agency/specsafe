@@ -39,8 +39,8 @@ const { initCommand } = await import('../commands/init.js');
 const { newCommand } = await import('../commands/new.js');
 const { statusCommand } = await import('../commands/status.js');
 const { specCommand } = await import('../commands/spec.js');
-const { testCommand } = await import('../commands/test.js');
-const { codeCommand } = await import('../commands/code.js');
+const { testCreateCommand } = await import('../commands/test-create.js');
+const { testApplyCommand } = await import('../commands/test-apply.js');
 const { qaCommand } = await import('../commands/qa.js');
 const { completeCommand } = await import('../commands/complete.js');
 const { listCommand } = await import('../commands/list.js');
@@ -53,8 +53,8 @@ describe('CLI Command Registration', () => {
     statusCommand,
     listCommand,
     specCommand,
-    testCommand,
-    codeCommand,
+    testCreateCommand,
+    testApplyCommand,
     qaCommand,
     completeCommand,
     archiveCommand,
@@ -71,8 +71,8 @@ describe('CLI Command Registration', () => {
       'status',
       'list',
       'spec',
-      'test',
-      'code',
+      'test-create',
+      'test-apply',
       'qa',
       'complete',
       'archive',
@@ -102,15 +102,15 @@ describe('CLI Command Registration', () => {
     });
 
     it('spec command should have description', () => {
-      expect(specCommand.description()).toContain('SPEC');
+      expect(specCommand.description()).toContain('spec');
     });
 
-    it('test command should have description', () => {
-      expect(testCommand.description()).toContain('TEST');
+    it('test-create command should have description', () => {
+      expect(testCreateCommand.description()).toContain('Generate tests');
     });
 
-    it('code command should have description', () => {
-      expect(codeCommand.description()).toContain('CODE');
+    it('test-apply command should have description', () => {
+      expect(testApplyCommand.description()).toContain('implementation');
     });
 
     it('qa command should have description', () => {
@@ -134,15 +134,15 @@ describe('CLI Command Registration', () => {
       expect(args[0]._name || args[0].name).toBe('id');
     });
 
-    it('test command should require <id> argument', () => {
-      const args = testCommand.registeredArguments;
+    it('test-create command should require <id> argument', () => {
+      const args = testCreateCommand.registeredArguments;
       expect(args).toHaveLength(1);
       expect(args[0].required).toBe(true);
       expect(args[0]._name || args[0].name).toBe('id');
     });
 
-    it('code command should require <id> argument', () => {
-      const args = codeCommand.registeredArguments;
+    it('test-apply command should require <id> argument', () => {
+      const args = testApplyCommand.registeredArguments;
       expect(args).toHaveLength(1);
       expect(args[0].required).toBe(true);
       expect(args[0]._name || args[0].name).toBe('id');

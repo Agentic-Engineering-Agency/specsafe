@@ -1,6 +1,128 @@
 {
   "name": "specsafe-zed",
-  "version": "1.0.0",
-  "description": "SpecSafe rules for Zed Editor",
-  "note": "This is a placeholder. Full content will be added in a future update."
+  "version": "0.4.0",
+  "description": "SpecSafe v0.4.0 OpenSpec-Style Workflow for Zed Editor",
+  
+  "assistant": {
+    "default_model": {
+      "provider": "anthropic",
+      "model": "claude-3-5-sonnet-latest"
+    },
+    "version": "2"
+  },
+  
+  "context_servers": {
+    "specsafe": {
+      "command": ["cat", "PROJECT_STATE.md"]
+    }
+  },
+  
+  "lsp": {
+    "specsafe": {
+      "command": "specsafe",
+      "args": ["status", "--json"]
+    }
+  },
+  
+  "agent": {
+    "name": "SpecSafe",
+    "description": "Spec-driven development assistant for OpenSpec-style workflow",
+    
+    "context": {
+      "files": [
+        "PROJECT_STATE.md",
+        "specsafe.config.json"
+      ],
+      "directories": [
+        "specs/active",
+        "specs/drafts"
+      ]
+    },
+    
+    "commands": {
+      "specsafe:explore": {
+        "description": "Pre-spec exploration and research",
+        "prompt": "Conduct preliminary exploration before committing to a full spec. Guide problem definition, research technology options, estimate effort, and document findings in specs/exploration/FEATURE-NAME.md. Recommend proceed to spec creation or need more research.",
+        "context": ["PROJECT_STATE.md"]
+      },
+      
+      "specsafe:new": {
+        "description": "Initialize spec with PRD",
+        "prompt": "Create a new spec with Product Requirements Document. Generate spec ID (SPEC-YYYYMMDD-NNN), create PRD with problem statement, requirements, scenarios, recommend tech stack, and define rules. Output to specs/drafts/SPEC-ID.md and update PROJECT_STATE.md (status: DRAFT). Confirm with user before writing.",
+        "context": ["PROJECT_STATE.md"]
+      },
+      
+      "specsafe:spec": {
+        "description": "Generate detailed spec from PRD",
+        "prompt": "Read PRD from specs/drafts/SPEC-ID.md and create comprehensive implementation-ready specification. Include functional requirements (FR-XXX), technical requirements (TR-XXX), Given/When/Then scenarios, acceptance criteria, and architecture notes. Write to specs/active/SPEC-ID.md and update PROJECT_STATE.md (DRAFT → SPEC).",
+        "context": ["PROJECT_STATE.md", "specs/drafts/*.md"]
+      },
+      
+      "specsafe:test": {
+        "description": "Create tests from spec scenarios",
+        "prompt": "Read spec from specs/active/SPEC-ID.md and generate comprehensive test suite. Create test files in src/__tests__/SPEC-ID/ mapping Given/When/Then to test cases. Include happy path and edge cases. Update PROJECT_STATE.md (SPEC → TEST) and report test count.",
+        "context": ["PROJECT_STATE.md", "specs/active/*.md"]
+      },
+      
+      "specsafe:dev": {
+        "description": "Development mode for active spec",
+        "prompt": "Guide implementation for active spec. Read requirements and tests, implement one requirement at a time following Plan → Implement → Test → Commit cycle. Map changes to requirement IDs. Never modify tests to make them pass. Update PROJECT_STATE.md (TEST → CODE). Ask which requirement to tackle next.",
+        "context": ["PROJECT_STATE.md", "specs/active/*.md", "src/__tests__/**/*.test.ts"]
+      },
+      
+      "specsafe:verify": {
+        "description": "Run tests and iterate until pass",
+        "prompt": "Verify implementation by running test suite. Execute npm test -- SPEC-ID, analyze failures, map to requirements, and fix code (not tests). Iterate until all pass. Check coverage, run full suite for regressions. Update PROJECT_STATE.md (CODE → QA). Report pass rate, coverage %, and any issues.",
+        "context": ["PROJECT_STATE.md", "specs/active/*.md", "src/__tests__/**/*.test.ts"]
+      },
+      
+      "specsafe:done": {
+        "description": "Complete and archive spec",
+        "prompt": "Finalize spec after all tests pass. Verify completion checklist, run final test suite, move specs/active/SPEC-ID.md to specs/archive/SPEC-ID.md. Update PROJECT_STATE.md (QA → COMPLETE). Generate completion summary and suggest next spec. Ask for confirmation before archiving.",
+        "context": ["PROJECT_STATE.md", "specs/active/*.md"]
+      },
+      
+      "specsafe": {
+        "description": "Show project status",
+        "prompt": "Read PROJECT_STATE.md and show current active specs, their stages, what needs attention, and recommended next actions. Provide brief SDD workflow reminder (EXPLORE → NEW → SPEC → TEST → DEV → VERIFY → DONE).",
+        "context": ["PROJECT_STATE.md"]
+      }
+    },
+    
+    "rules": {
+      "always": [
+        "Read PROJECT_STATE.md before making changes",
+        "Ensure implementation satisfies tests",
+        "Use spec ID in commit messages: type(SPEC-XXX): description",
+        "Run tests before marking work complete"
+      ],
+      "never": [
+        "Skip tests to implement faster",
+        "Modify PROJECT_STATE.md directly (use commands)",
+        "Break verify loop by ignoring failures",
+        "Modify tests without discussion",
+        "Commit code without spec reference"
+      ]
+    },
+    
+    "workflow": {
+      "stages": ["EXPLORE", "NEW", "SPEC", "TEST", "CODE", "QA", "COMPLETE"],
+      "transitions": {
+        "EXPLORE": ["NEW"],
+        "NEW": ["SPEC"],
+        "SPEC": ["TEST"],
+        "TEST": ["CODE"],
+        "CODE": ["QA"],
+        "QA": ["COMPLETE", "CODE"],
+        "COMPLETE": []
+      }
+    }
+  },
+  
+  "file_types": {
+    "SpecSafe Spec": {
+      "path_suffixes": [".specsafe.md"],
+      "grammar": "markdown"
+    }
+  }
 }

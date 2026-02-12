@@ -66,23 +66,27 @@ describe('generateToolConfig', () => {
       );
     });
 
-    it('should generate config.json', async () => {
+    it('should generate config.yaml', async () => {
       await generateToolConfig('continue', projectDir);
 
       expect(writeFile).toHaveBeenCalledWith(
-        expect.stringContaining('config.json'),
-        expect.stringContaining('customCommands')
+        expect.stringContaining('config.yaml'),
+        expect.stringContaining('prompts')
       );
     });
 
-    it('should skip if config.json already exists', async () => {
+    it('should skip if config.yaml already exists', async () => {
       (existsSync as unknown as ReturnType<typeof vi.fn>).mockImplementation((path: string) =>
-        path.includes('config.json')
+        path.includes('config.yaml')
       );
 
       await generateToolConfig('continue', projectDir);
 
-      expect(writeFile).not.toHaveBeenCalled();
+      // config.yaml skipped, but prompt files are still written
+      const configCalls = (writeFile as unknown as ReturnType<typeof vi.fn>).mock.calls.filter(
+        (call: any[]) => call[0].includes('config.yaml')
+      );
+      expect(configCalls).toHaveLength(0);
     });
   });
 
@@ -96,14 +100,18 @@ describe('generateToolConfig', () => {
       );
     });
 
-    it('should skip if .aider.conf.yml already exists', async () => {
+    it('should skip .aider.conf.yml if it already exists', async () => {
       (existsSync as unknown as ReturnType<typeof vi.fn>).mockImplementation((path: string) =>
         path.includes('.aider.conf.yml')
       );
 
       await generateToolConfig('aider', projectDir);
 
-      expect(writeFile).not.toHaveBeenCalled();
+      // .aider.conf.yml skipped, but .aiderignore may still be written
+      const confCalls = (writeFile as unknown as ReturnType<typeof vi.fn>).mock.calls.filter(
+        (call: any[]) => call[0].includes('.aider.conf.yml')
+      );
+      expect(confCalls).toHaveLength(0);
     });
   });
 
@@ -182,16 +190,16 @@ describe('generateToolConfig', () => {
       );
     });
 
-    it('should create validate skill file', async () => {
+    it('should create verify skill file', async () => {
       await generateToolConfig('claude-code', projectDir);
 
       expect(mkdir).toHaveBeenCalledWith(
-        expect.stringContaining('.claude/skills/specsafe-validate'),
+        expect.stringContaining('.claude/skills/specsafe-verify'),
         { recursive: true }
       );
       expect(writeFile).toHaveBeenCalledWith(
-        expect.stringContaining('specsafe-validate/SKILL.md'),
-        expect.stringContaining('name: specsafe-validate')
+        expect.stringContaining('specsafe-verify/SKILL.md'),
+        expect.stringContaining('name: specsafe-verify')
       );
     });
 
