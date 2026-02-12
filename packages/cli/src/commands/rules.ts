@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { writeFile, readFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import {
   getSupportedAgents,
   getAgent,
@@ -14,7 +14,7 @@ import {
 /**
  * Load installed agents from config
  */
-async function loadInstalledAgents(cwd: string = process.cwd()): Promise<Map<string, any>> {
+async function loadInstalledAgents(cwd: string = process.cwd()): Promise<Map<string, { enabled: boolean }>> {
   const configPath = join(cwd, 'specsafe.config.json');
   try {
     const content = await readFile(configPath, 'utf-8');
@@ -132,7 +132,8 @@ export const rulesCommand = new Command('rules')
 
         const agentEntry = getAgent(agentId);
         if (!agentEntry) {
-          console.error(chalk.red(`Error: Agent "${agentId}" not registered`));
+          console.error(chalk.red(`Error: Agent "${agentId}" has no adapter registered.`));
+          console.log(chalk.gray('This agent is defined but not yet implemented.'));
           process.exit(1);
         }
 
@@ -158,12 +159,10 @@ export const rulesCommand = new Command('rules')
           // Write files
           for (const file of allFiles) {
             const filePath = join(projectDir, file.path);
-            const fileDir = join(filePath, '..');
+            const fileDir = dirname(filePath);
 
-            // Create directory if needed
-            if (!existsSync(fileDir)) {
-              await mkdir(fileDir, { recursive: true });
-            }
+            // Create directory (mkdir recursive is idempotent)
+            await mkdir(fileDir, { recursive: true });
 
             // Check if file exists
             if (existsSync(filePath) && !options.force) {
@@ -203,6 +202,14 @@ export const rulesCommand = new Command('rules')
         if (!supportedAgents.includes(agentId)) {
           console.error(chalk.red(`Error: Unknown agent "${agentId}"`));
           process.exit(1);
+        }
+
+        // Check if agent is actually installed
+        const installedAgents = await loadInstalledAgents();
+        if (!installedAgents.has(agentId)) {
+          console.warn(chalk.yellow(`Warning: Agent "${agentId}" is not configured in this project.`));
+          console.log(chalk.gray('Nothing to remove.'));
+          process.exit(0);
         }
 
         const spinner = ora(`Removing ${agentId} configuration...`).start();
