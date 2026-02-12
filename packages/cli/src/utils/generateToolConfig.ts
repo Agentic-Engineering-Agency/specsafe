@@ -1,26 +1,19 @@
-import { writeFile, mkdir } from 'fs/promises';
+import { writeFile, mkdir, readFile } from 'fs/promises';
 import { existsSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import chalk from 'chalk';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /**
  * Generates configuration files for AI coding tools
- * Updated for v0.4.0 OpenSpec workflow
  */
 
-// v0.4.0: All 7 OpenSpec commands
-const cursorRulesContentV040 = `# SpecSafe Rules for Cursor (v0.4.0)
-
-You are working on a SpecSafe project with OpenSpec workflow.
-
-## 7 OpenSpec Commands (MUST use these names)
-
-1. **specsafe:new** — Create spec with PRD + BRD
-2. **specsafe:spec** — Flesh out detailed spec
-3. **specsafe:test-create** — Generate tests from scenarios
-4. **specsafe:test-apply** — Run tests, loop on failure
-5. **specsafe:verify** — Verify implementation completeness
-6. **specsafe:done** — Mark complete, archive
-7. **specsafe:explore** — Pre-spec spike/research
+const cursorRulesContent = `# SpecSafe Rules for Cursor v0.4.0
+# OpenSpec-Style Workflow Configuration
+# https://github.com/luci-efe/specsafe
 
 ## Always Check PROJECT_STATE.md
 Before making changes, read PROJECT_STATE.md to understand:
@@ -28,178 +21,461 @@ Before making changes, read PROJECT_STATE.md to understand:
 - Which spec is being worked on
 - Requirements that must be satisfied
 
-## OpenSpec Workflow
-1. **explore** → Pre-spec research and spike
-2. **new** → Create spec with PRD + BRD documents
-3. **spec** → Flesh out detailed requirements
-4. **test-create** → Generate tests from scenarios
-5. **test-apply** → Run tests against implementation, loop on failure
-6. **verify** → Verify implementation completeness
-7. **done** → Mark complete, archive
+## Spec-Driven Development (SDD) Workflow
+
+EXPLORE → NEW → SPEC → TEST-CREATE → TEST-APPLY → VERIFY → DONE
+
+## Stage-Aware Development
+
+| Stage | Description | Your Role |
+|-------|-------------|-----------|
+| EXPLORE | Research & validate ideas | Help evaluate approaches |
+| NEW | PRD with requirements | Create PRD, tech stack, rules |
+| SPEC | Detailed specification | Generate scenarios & acceptance criteria |
+| TEST-CREATE | Test generation | Create tests from Given/When/Then |
+| TEST-APPLY | Implementation | Write code to pass tests |
+| VERIFY | Test validation | Run tests, fix failures, loop |
+| DONE | Completion | Archive, summarize, celebrate |
+
+## The 7 OpenSpec-Style Commands
+
+### /specsafe:explore — Pre-Spec Exploration
+**When to use:** Before committing to a spec, explore ideas and validate approaches.
+
+**Your responsibilities:**
+- Guide problem definition and user identification
+- Research existing solutions and competitors
+- Evaluate technology options with pros/cons
+- Estimate effort (S/M/L/XL)
+- Output: specs/exploration/FEATURE-NAME.md with findings
+
+**Decision gate:** Recommend proceed to /specsafe:new or need more research.
+
+### /specsafe:new — Initialize Spec with PRD
+**When to use:** Starting a new feature with validated concept.
+
+**Your responsibilities:**
+1. Generate spec ID: SPEC-YYYYMMDD-NNN
+2. Create PRD with problem statement, requirements, scenarios
+3. Recommend tech stack and define rules
+4. Output: specs/drafts/SPEC-ID.md + update PROJECT_STATE.md
+
+**Always confirm with user before writing files.**
+
+### /specsafe:spec — Generate Detailed Spec
+**When to use:** PRD exists, need implementation-ready specification.
+
+**Your responsibilities:**
+1. Read PRD from specs/drafts/SPEC-ID.md
+2. Create comprehensive spec with functional requirements (FR-XXX),
+   technical requirements (TR-XXX), scenarios, acceptance criteria
+3. Move to specs/active/SPEC-ID.md
+4. Update PROJECT_STATE.md: DRAFT → SPEC stage
+
+**Validate:** Every requirement must be testable.
+
+### /specsafe:test-create — Create Tests from Spec
+**When to use:** Spec is ready, time to define verification.
+
+**Your responsibilities:**
+1. Read spec scenarios from specs/active/SPEC-ID.md
+2. Determine test strategy (unit, integration, E2E)
+3. Generate test files: src/__tests__/SPEC-ID/*.test.ts
+4. Map each scenario to test cases
+5. Update PROJECT_STATE.md: SPEC → TEST-CREATE stage
+6. Output: Test count, coverage expectations
+
+### /specsafe:test-apply — Apply Tests (Development Mode)
+**When to use:** Tests exist, implement to make them pass.
+
+**Your responsibilities:**
+1. Read spec requirements and test expectations
+2. Guide iterative development: Plan → Implement → Test → Commit
+3. Enforce rules:
+   - Every change maps to a requirement
+   - Never modify tests to pass (fix code instead)
+   - Keep functions small and focused
+4. Update PROJECT_STATE.md: TEST-CREATE → TEST-APPLY stage
+
+**Ask:** "Which requirement should we tackle next?"
+
+### /specsafe:verify — Verify & Iterate
+**When to use:** Implementation complete, need validation.
+
+**Your responsibilities:**
+1. Read spec for expected behavior
+2. Run test suite: npm test -- SPEC-ID
+3. For each failure: identify, map to requirement, fix
+4. Iterate: Run → Analyze → Fix → Run until all pass
+5. Check coverage meets spec requirements
+6. Update PROJECT_STATE.md: TEST-APPLY → VERIFY stage
+
+**Output:** Pass rate, coverage %, remaining issues
+
+### /specsafe:done — Complete & Archive
+**When to use:** All tests pass, ready to finalize.
+
+**Your responsibilities:**
+1. Verify completion checklist
+2. Run final test suite
+3. Move specs/active/SPEC-ID.md → specs/archive/SPEC-ID.md
+4. Update PROJECT_STATE.md: move to COMPLETED
+5. Generate summary: date, files, tests, LOC, notes
+6. Suggest next spec from active list
+
+**Ask for confirmation before archiving.**
 
 ## Critical Rules
-- NEVER use 'test' or 'dev' — use 'test-create' and 'test-apply'
-- PRD sections: Problem Statement, User Stories, Acceptance Criteria, Technical Requirements
-- BRD sections: Business Justification, Success Metrics, Stakeholders, Timeline
-- Always run tests before marking work complete
-- Update spec stage using specsafe commands (not manual edits)
+
+### ALWAYS
+- Read PROJECT_STATE.md before making changes
+- Ensure implementation satisfies tests
+- Use specsafe CLI commands to advance stages
+- Reference spec ID in commit messages: feat(SPEC-001): add user auth
+- Run tests before marking work complete
+
+### NEVER
+- Skip tests to implement faster
+- Modify specs without updating PROJECT_STATE.md
+- Commit code without corresponding spec entry
+- Break the verify loop by ignoring test failures
+- Modify tests to make them pass without discussion
+
+## File Organization
+
+my-project/
+├── specs/
+│   ├── drafts/          # PRD stage specs
+│   ├── active/          # In-progress specs
+│   ├── archive/         # Completed specs
+│   └── exploration/     # Research notes
+├── src/
+│   └── __tests__/       # Test files organized by spec
+├── PROJECT_STATE.md     # Central status tracker
+└── specsafe.config.json # Tool configuration
+
+## Commit Message Format
+
+type(SPEC-ID): brief description
+
+- Detailed change 1
+- Detailed change 2
+
+Refs: SPEC-ID
+
+Types: feat, fix, test, docs, refactor, chore
+
+---
+*Version: 0.4.0*
+*OpenSpec-Style Workflow Enabled*
 `;
 
-// v0.4.0: Continue config with all 7 commands
-const continueConfigContentV040 = {
-  customCommands: [
-    {
-      name: 'specsafe-new',
-      description: 'Create spec with PRD + BRD',
-      prompt: 'Create a new spec with ID SPEC-{YYYYMMDD}-{NNN}. Generate PRD (Problem Statement, User Stories, Acceptance Criteria, Technical Requirements) and BRD (Business Justification, Success Metrics, Stakeholders, Timeline) sections.',
-    },
-    {
-      name: 'specsafe-spec',
-      description: 'Flesh out detailed spec',
-      prompt: 'Read the spec file and expand it with detailed requirements, scenarios, and technical approach.',
-    },
-    {
-      name: 'specsafe-test-create',
-      description: 'Generate tests from scenarios',
-      prompt: 'Read the spec and generate test files from the scenarios defined in the spec.',
-    },
-    {
-      name: 'specsafe-test-apply',
-      description: 'Run tests, loop on failure',
-      prompt: 'Run the tests against the implementation. If tests fail, analyze failures and fix the implementation. Loop until all tests pass.',
-    },
-    {
-      name: 'specsafe-verify',
-      description: 'Verify implementation completeness',
-      prompt: 'Verify that the implementation satisfies all requirements in the spec. Check for any gaps or missing functionality.',
-    },
-    {
-      name: 'specsafe-done',
-      description: 'Mark complete, archive',
-      prompt: 'Mark the spec as complete and move it to the archive. Update PROJECT_STATE.md.',
-    },
-    {
-      name: 'specsafe-explore',
-      description: 'Pre-spec spike/research',
-      prompt: 'Explore ideas before committing to a spec. Research approaches, estimate effort, document findings.',
-    },
-  ],
-  contextProviders: [
-    {
-      name: 'specsafe-state',
-      params: {
-        file: 'PROJECT_STATE.md',
-      },
-    },
-  ],
-};
-
-// v0.4.0: Aider config with new commands
-const aiderConfigContentV040 = `# Aider configuration for SpecSafe v0.4.0
+const aiderConfigContent = `# Aider configuration for SpecSafe v0.4.0
+# OpenSpec-Style Workflow Configuration
+# https://aider.chat/docs/config/aider_conf.html
 
 # Always read PROJECT_STATE.md for context
 read:
   - PROJECT_STATE.md
+  - README.md
+  - CONVENTIONS.md
 
-# Instructions for the AI
+# Use .aiderignore for file exclusions (gitignore syntax)
+aiderignore: .aiderignore
+
+# Don't add .gitignore'd files to aider's scope
+add-gitignore-files: false
+
+# AI Assistant Instructions for SpecSafe Workflow
 assistant_prompt: |
-  You are working on a SpecSafe v0.4.0 project with OpenSpec workflow.
-  
-  ## 7 OpenSpec Commands (use these exact names)
-  - specsafe:new — Create spec with PRD + BRD
-  - specsafe:spec — Flesh out detailed spec  
-  - specsafe:test-create — Generate tests from scenarios
-  - specsafe:test-apply — Run tests, loop on failure
-  - specsafe:verify — Verify implementation completeness
-  - specsafe:done — Mark complete, archive
-  - specsafe:explore — Pre-spec spike/research
-  
-  ## PRD Sections Required
-  - Problem Statement
-  - User Stories
-  - Acceptance Criteria
-  - Technical Requirements
-  
-  ## BRD Sections Required
-  - Business Justification
-  - Success Metrics
-  - Stakeholders
-  - Timeline
-  
-  Always:
-  1. Check PROJECT_STATE.md for current specs and stages
-  2. Ensure implementation satisfies test requirements
-  3. Update spec stage using specsafe commands when complete
-  4. NEVER use 'test' or 'dev' — use 'test-create' and 'test-apply'
+  You are working on a SpecSafe project using spec-driven development (SDD).
 
-# Files to ignore
-ignore:
-  - specs/archive/
-  - node_modules/
-  - dist/
-  - .git/
+  ## The 7 OpenSpec-Style Commands
+
+  When the user invokes a command, follow the corresponding workflow:
+
+  ### /specsafe:explore — Pre-Spec Exploration
+  - Guide problem definition and user research
+  - Evaluate technology options with pros/cons
+  - Estimate effort (S/M/L/XL)
+  - Document in specs/exploration/FEATURE-NAME.md
+  - Recommend proceed, research more, or park idea
+
+  ### /specsafe:new — Initialize Spec with PRD
+  - Generate spec ID: SPEC-YYYYMMDD-NNN format
+  - Create PRD with problem statement, requirements, scenarios
+  - Recommend tech stack and define rules
+  - Output to specs/drafts/SPEC-ID.md
+  - Update PROJECT_STATE.md (status: DRAFT)
+  - Confirm details with user before writing
+
+  ### /specsafe:spec — Generate Detailed Spec
+  - Read PRD from specs/drafts/SPEC-ID.md
+  - Create comprehensive spec:
+    * Functional Requirements (FR-001, FR-002...)
+    * Technical Requirements (TR-001, TR-002...)
+    * Scenarios (Given/When/Then)
+    * Acceptance Criteria
+    * Architecture Notes
+  - Write to specs/active/SPEC-ID.md
+  - Update PROJECT_STATE.md: DRAFT → SPEC
+  - Ensure every requirement is testable
+
+  ### /specsafe:test-create — Create Tests from Spec
+  - Read spec scenarios from specs/active/SPEC-ID.md
+  - Generate test files: src/__tests__/SPEC-ID/*.test.ts
+  - Map Given/When/Then to test cases
+  - Include happy path and edge cases
+  - Update PROJECT_STATE.md: SPEC → TEST-CREATE
+  - Report test count and coverage expectations
+
+  ### /specsafe:test-apply — Apply Tests (Development Mode)
+  - Read spec requirements and test expectations
+  - Implement one requirement at a time
+  - Follow cycle: Plan → Implement → Test → Commit
+  - Map every code change to requirement ID
+  - Never modify tests to make them pass
+  - Update PROJECT_STATE.md: TEST-CREATE → TEST-APPLY
+  - Ask: "Which requirement next?"
+
+  ### /specsafe:verify — Verify and Iterate
+  - Run test suite: npm test -- SPEC-ID
+  - For each failure: identify, map to requirement, fix
+  - Golden rule: Fix code, not tests (unless confirmed wrong)
+  - Iterate until all tests pass
+  - Check coverage meets requirements
+  - Run full suite for regressions
+  - Update PROJECT_STATE.md: TEST-APPLY → VERIFY
+  - Report: pass rate, coverage %, issues
+
+  ### /specsafe:done — Complete and Archive
+  - Verify completion checklist
+  - Run final test suite
+  - Move specs/active/SPEC-ID.md → specs/archive/SPEC-ID.md
+  - Update PROJECT_STATE.md: move to COMPLETED
+  - Generate completion summary
+  - Suggest next spec from active list
+  - Ask for confirmation before archiving
+
+  ## Critical Rules
+
+  ALWAYS:
+  - Check PROJECT_STATE.md before making changes
+  - Ensure implementation satisfies tests
+  - Use spec ID in commit messages: feat(SPEC-001): description
+  - Run tests before marking work complete
+  - Fix the code, not the test
+
+  NEVER:
+  - Skip tests to implement faster
+  - Modify PROJECT_STATE.md directly (use workflow commands)
+  - Break the verify loop by ignoring failures
+  - Modify tests without discussion
+  - Commit code without spec reference
+
+  ## Workflow Diagram
+
+  EXPLORE → NEW → SPEC → TEST-CREATE → TEST-APPLY → VERIFY → DONE
+
+# Commit message conventions
+commit-prompt: |
+  Format: type(SPEC-ID): brief description
+  
+  Types: feat, fix, test, docs, refactor, chore
+  Example: feat(SPEC-001): add user authentication
+  
+  Always reference the spec ID in commits.
 `;
 
-// v0.4.0: Zed config with all 7 commands
-const zedSettingsContentV040 = {
+const aiderIgnoreContent = `# Aider ignore patterns for SpecSafe projects
+
+# Spec archives (read-only reference)
+specs/archive/
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build outputs
+dist/
+build/
+*.min.js
+*.min.css
+
+# Generated files
+*.generated.ts
+*.generated.js
+
+# Logs
+*.log
+logs/
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test outputs
+test-results/
+playwright-report/
+`;
+
+const zedSettingsContent = {
+  name: "specsafe-zed",
+  version: "0.4.0",
+  description: "SpecSafe v0.4.0 OpenSpec-Style Workflow for Zed Editor",
+  
   assistant: {
     default_model: {
-      provider: 'anthropic',
-      model: 'claude-3-5-sonnet-latest',
+      provider: "anthropic",
+      model: "claude-3-5-sonnet-latest"
     },
-    version: '2',
+    version: "2"
   },
+  
   context_servers: {
     specsafe: {
-      command: 'cat',
-      args: ['PROJECT_STATE.md'],
-    },
+      command: "cat",
+      args: ["PROJECT_STATE.md"]
+    }
   },
+  
+  lsp: {
+    specsafe: {
+      command: "specsafe",
+      args: ["status", "--json"]
+    }
+  },
+  
   agent: {
-    default_profile: 'specsafe',
-    profiles: {
-      specsafe: {
-        name: 'SpecSafe OpenSpec',
-        prompt: `You are a SpecSafe v0.4.0 assistant. Use these 7 commands:
-- specsafe:new — Create spec with PRD + BRD
-- specsafe:spec — Flesh out detailed spec
-- specsafe:test-create — Generate tests from scenarios
-- specsafe:test-apply — Run tests, loop on failure
-- specsafe:verify — Verify implementation completeness
-- specsafe:done — Mark complete, archive
-- specsafe:explore — Pre-spec spike/research
-
-PRD Sections: Problem Statement, User Stories, Acceptance Criteria, Technical Requirements
-BRD Sections: Business Justification, Success Metrics, Stakeholders, Timeline`,
-      },
+    name: "SpecSafe",
+    description: "Spec-driven development assistant for OpenSpec-style workflow",
+    
+    context: {
+      files: [
+        "PROJECT_STATE.md",
+        "specsafe.config.json"
+      ],
+      directories: [
+        "specs/active",
+        "specs/drafts"
+      ]
     },
+    
+    commands: {
+      "specsafe:explore": {
+        description: "Pre-spec exploration and research",
+        prompt: "Conduct preliminary exploration before committing to a full spec. Guide problem definition, research technology options, estimate effort, and document findings in specs/exploration/FEATURE-NAME.md. Recommend proceed to spec creation or need more research.",
+        context: ["PROJECT_STATE.md"]
+      },
+      
+      "specsafe:new": {
+        description: "Initialize spec with PRD",
+        prompt: "Create a new spec with Product Requirements Document. Generate spec ID (SPEC-YYYYMMDD-NNN), create PRD with problem statement, requirements, scenarios, recommend tech stack, and define rules. Output to specs/drafts/SPEC-ID.md and update PROJECT_STATE.md (status: DRAFT). Confirm with user before writing.",
+        context: ["PROJECT_STATE.md"]
+      },
+      
+      "specsafe:spec": {
+        description: "Generate detailed spec from PRD",
+        prompt: "Read PRD from specs/drafts/SPEC-ID.md and create comprehensive implementation-ready specification. Include functional requirements (FR-XXX), technical requirements (TR-XXX), Given/When/Then scenarios, acceptance criteria, and architecture notes. Write to specs/active/SPEC-ID.md and update PROJECT_STATE.md (DRAFT → SPEC).",
+        context: ["PROJECT_STATE.md", "specs/drafts/*.md"]
+      },
+      
+      "specsafe:test-create": {
+        description: "Create tests from spec scenarios",
+        prompt: "Read spec from specs/active/SPEC-ID.md and generate comprehensive test suite. Create test files in src/__tests__/SPEC-ID/ mapping Given/When/Then to test cases. Include happy path and edge cases. Update PROJECT_STATE.md (SPEC → TEST-CREATE) and report test count.",
+        context: ["PROJECT_STATE.md", "specs/active/*.md"]
+      },
+      
+      "specsafe:test-apply": {
+        description: "Apply tests (development mode for active spec)",
+        prompt: "Guide implementation for active spec. Read requirements and tests, implement one requirement at a time following Plan → Implement → Test → Commit cycle. Map changes to requirement IDs. Never modify tests to make them pass. Update PROJECT_STATE.md (TEST-CREATE → TEST-APPLY). Ask which requirement to tackle next.",
+        context: ["PROJECT_STATE.md", "specs/active/*.md", "src/__tests__/**/*.test.ts"]
+      },
+      
+      "specsafe:verify": {
+        description: "Run tests and iterate until pass",
+        prompt: "Verify implementation by running test suite. Execute npm test -- SPEC-ID, analyze failures, map to requirements, and fix code (not tests). Iterate until all pass. Check coverage, run full suite for regressions. Update PROJECT_STATE.md (TEST-APPLY → VERIFY). Report pass rate, coverage %, and any issues.",
+        context: ["PROJECT_STATE.md", "specs/active/*.md", "src/__tests__/**/*.test.ts"]
+      },
+      
+      "specsafe:done": {
+        description: "Complete and archive spec",
+        prompt: "Finalize spec after all tests pass. Verify completion checklist, run final test suite, move specs/active/SPEC-ID.md to specs/archive/SPEC-ID.md. Update PROJECT_STATE.md (VERIFY → COMPLETE). Generate completion summary and suggest next spec. Ask for confirmation before archiving.",
+        context: ["PROJECT_STATE.md", "specs/active/*.md"]
+      },
+      
+      specsafe: {
+        description: "Show project status",
+        prompt: "Read PROJECT_STATE.md and show current active specs, their stages, what needs attention, and recommended next actions. Provide brief SDD workflow reminder (EXPLORE → NEW → SPEC → TEST-CREATE → TEST-APPLY → VERIFY → DONE).",
+        context: ["PROJECT_STATE.md"]
+      }
+    },
+    
+    rules: {
+      always: [
+        "Read PROJECT_STATE.md before making changes",
+        "Ensure implementation satisfies tests",
+        "Use spec ID in commit messages: type(SPEC-XXX): description",
+        "Run tests before marking work complete"
+      ],
+      never: [
+        "Skip tests to implement faster",
+        "Modify PROJECT_STATE.md directly (use commands)",
+        "Break verify loop by ignoring failures",
+        "Modify tests without discussion",
+        "Commit code without spec reference"
+      ]
+    },
+    
+    workflow: {
+      stages: ["EXPLORE", "NEW", "SPEC", "TEST-CREATE", "TEST-APPLY", "VERIFY", "COMPLETE"],
+      transitions: {
+        EXPLORE: ["NEW"],
+        NEW: ["SPEC"],
+        SPEC: ["TEST-CREATE"],
+        "TEST-CREATE": ["TEST-APPLY"],
+        "TEST-APPLY": ["VERIFY"],
+        VERIFY: ["COMPLETE", "TEST-APPLY"],
+        COMPLETE: []
+      }
+    }
   },
+  
+  file_types: {
+    "SpecSafe Spec": {
+      path_suffixes: [".specsafe.md"],
+      grammar: "markdown"
+    }
+  }
 };
 
-// Claude Code skills content for v0.4.0
-const claudeSkillSpecsafeContentV040 = `---
+// Skill content for Claude Code slash commands
+const claudeSkillSpecsafeContent = `---
 name: specsafe
 description: Show SpecSafe project status and workflow guidance
 disable-model-invocation: true
 ---
 
-You are in a SpecSafe v0.4.0 project using OpenSpec workflow.
+You are in a SpecSafe project using spec-driven development.
 
 Read PROJECT_STATE.md and provide:
 1. Summary of active specs and their current stages
 2. Which specs need attention
 3. Recommended next actions based on the project state
-4. Brief reminder of the 7 OpenSpec commands:
-   - specsafe:new — Create spec with PRD + BRD
-   - specsafe:spec — Flesh out detailed spec
-   - specsafe:test-create — Generate tests from scenarios
-   - specsafe:test-apply — Run tests, loop on failure
-   - specsafe:verify — Verify implementation completeness
-   - specsafe:done — Mark complete, archive
-   - specsafe:explore — Pre-spec spike/research
+4. Brief reminder of the SDD workflow (EXPLORE → NEW → SPEC → TEST-CREATE → TEST-APPLY → VERIFY → DONE)
 `;
 
-const claudeSkillExploreContentV040 = `---
+const claudeSkillExploreContent = `---
 name: specsafe-explore
 description: Pre-spec exploration and research mode
 argument-hint: "[feature-name]"
@@ -220,125 +496,145 @@ You are in exploration mode. Guide the user through pre-spec research.
 **Decision Gate:** Recommend proceeding to /specsafe:new or gathering more information.
 `;
 
-const claudeSkillNewContentV040 = `---
+const claudeSkillNewContent = `---
 name: specsafe-new
-description: Initialize spec with PRD + BRD
+description: Initialize spec with PRD
 argument-hint: "[feature-name]"
 disable-model-invocation: true
 ---
 
-Create a new spec with PRD and BRD sections.
-
-**PRD (Product Requirements Document):**
-- Problem Statement
-- User Stories
-- Acceptance Criteria
-- Technical Requirements
-
-**BRD (Business Requirements Document):**
-- Business Justification
-- Success Metrics
-- Stakeholders
-- Timeline
+Create a new spec with Product Requirements Document.
 
 **Steps:**
 1. Generate spec ID: SPEC-YYYYMMDD-NNN
-2. Create PRD and BRD sections
-3. Output to specs/active/SPEC-ID.md
-4. Update PROJECT_STATE.md (status: SPEC)
+2. Create PRD with problem statement, requirements, scenarios
+3. Recommend tech stack and define rules
+4. Output to specs/drafts/SPEC-ID.md
+5. Update PROJECT_STATE.md (status: DRAFT)
 
 Always confirm with user before writing files.
 `;
 
-const claudeSkillSpecContentV040 = `---
+const claudeSkillSpecContent = `---
 name: specsafe-spec
 description: Generate detailed spec from PRD
 argument-hint: "[spec-id]"
 disable-model-invocation: true
 ---
 
-Read the PRD from specs/active/{spec-id}.md and generate detailed spec:
+Read PRD from specs/drafts/$ARGUMENTS.md and create comprehensive specification.
 
-1. Expand requirements with IDs (FR-1, FR-2, etc.)
-2. Add Given/When/Then scenarios
-3. Define technical approach
-4. Add test strategy
-5. Create implementation plan
-6. Document risks
+**Include:**
+- Functional Requirements (FR-001, FR-002...)
+- Technical Requirements (TR-001, TR-002...)
+- Scenarios (Given/When/Then)
+- Acceptance Criteria
+- Architecture Notes
 
-Move spec to SPEC stage in PROJECT_STATE.md.
+Move to specs/active/SPEC-ID.md and update PROJECT_STATE.md (DRAFT → SPEC).
+
+If no argument provided, list available drafts.
 `;
 
-const claudeSkillTestCreateContentV040 = `---
+const claudeSkillTestCreateContent = `---
 name: specsafe-test-create
-description: Generate tests from scenarios
+description: Create tests from spec scenarios
 argument-hint: "[spec-id]"
 disable-model-invocation: true
 ---
 
-Generate test files from the scenarios in specs/active/{spec-id}.md:
+Generate comprehensive test suite from the active spec.
 
-1. Parse Given/When/Then scenarios
-2. Generate TypeScript test code (Vitest/Jest)
-3. Write to tests/{spec-id}.test.ts
-4. Update PROJECT_STATE.md (status: TEST)
+**Process:**
+1. Read spec from specs/active/$ARGUMENTS.md
+2. Generate test files in src/__tests__/$ARGUMENTS/
+3. Map Given/When/Then to test cases
+4. Include happy path and edge cases
+5. Update PROJECT_STATE.md (SPEC → TEST-CREATE)
 
-NEVER use old 'test' command name — this is test-create.
+Report test count and coverage expectations.
 `;
 
-const claudeSkillTestApplyContentV040 = `---
+const claudeSkillTestApplyContent = `---
 name: specsafe-test-apply
-description: Run tests, loop on failure
+description: Apply tests - development mode to pass tests
 argument-hint: "[spec-id]"
 disable-model-invocation: true
 ---
 
-Run tests against implementation and loop on failure:
+Guide implementation for active spec.
 
-1. Run tests: npx vitest run tests/{spec-id}.test.ts
-2. If tests pass: ✅ Move to VERIFY stage
-3. If tests fail: 🔧 Analyze failures and fix implementation
-4. Repeat until all tests pass
+**Development Cycle:**
+1. Plan - Identify smallest slice of functionality
+2. Implement - Write code for one requirement at a time
+3. Test - Run tests, fix failures
+4. Commit - Small commits with spec reference
 
-Update PROJECT_STATE.md (status: CODE → VERIFY).
+**Rules:**
+- Never modify tests to make them pass (fix the code)
+- Map every change to a requirement ID
+- Update PROJECT_STATE.md (TEST-CREATE → TEST-APPLY)
 
-NEVER use old 'dev' command name — this is test-apply.
+Ask: "Which requirement should we tackle next?"
 `;
 
-const claudeSkillVerifyContentV040 = `---
+const claudeSkillVerifyContent = `---
 name: specsafe-verify
-description: Verify implementation completeness
+description: Verify implementation by running tests
+argument-hint: "[spec-id]"
 disable-model-invocation: true
 ---
 
-Verify that implementation satisfies all spec requirements:
+Run tests and iterate until implementation is correct.
 
-1. Check all P0 requirements are implemented
-2. Verify acceptance criteria are met
-3. Run full test suite
-4. Check code quality and documentation
-5. Confirm success metrics from BRD
+**Process:**
+1. Execute test suite: npm test -- $ARGUMENTS
+2. Analyze failures and map to requirements
+3. Fix code (not tests) and re-run
+4. Iterate until all pass
+5. Check coverage and run full suite for regressions
 
-Update PROJECT_STATE.md (status: QA → COMPLETE).
+Update PROJECT_STATE.md (TEST-APPLY → VERIFY).
+Report pass rate, coverage %, and any issues.
 `;
 
-const claudeSkillDoneContentV040 = `---
+const claudeSkillDoneContent = `---
 name: specsafe-done
-description: Mark complete and archive
+description: Complete and archive spec
+argument-hint: "[spec-id]"
 disable-model-invocation: true
 ---
 
-Complete the spec and archive it:
+Finalize spec after all tests pass.
 
-1. Move specs/active/{spec-id}.md to specs/completed/
-2. Update PROJECT_STATE.md (status: DONE, archive)
-3. Generate completion report
-4. Suggest next spec to work on
+**Completion Checklist:**
+- [ ] All requirements implemented
+- [ ] All tests passing
+- [ ] Code reviewed (if required)
+- [ ] Documentation updated
+- [ ] No TODO/debug code
+
+**Archive:**
+- Move specs/active/$ARGUMENTS.md → specs/archive/$ARGUMENTS.md
+- Update PROJECT_STATE.md (VERIFY → COMPLETE)
+- Generate completion summary
+
+Ask for confirmation before archiving.
+`;
+
+const claudeSkillValidateContent = `---
+name: specsafe-validate
+description: Validate current implementation against active spec
+disable-model-invocation: true
+---
+
+Check if the current code changes satisfy the requirements in the active spec.
+Point out any gaps or issues that need to be addressed before completing.
 `;
 
 /**
  * Generate configuration for a specific tool
- * @param tool - The tool name (cursor, continue, aider, zed, claude-code, crush)
+ * @param tool - The tool name (cursor, continue, aider, zed, claude-code, crush, git-hooks)
  * @param projectDir - The project directory path
  */
 export async function generateToolConfig(tool: string, projectDir: string = '.'): Promise<void> {
@@ -359,8 +655,10 @@ export async function generateToolConfig(tool: string, projectDir: string = '.')
       await generateClaudeCodeConfig(projectDir);
       break;
     case 'crush':
-    case 'opencode':
       await generateCrushConfig(projectDir);
+      break;
+    case 'git-hooks':
+      await generateGitHooks(projectDir);
       break;
     default:
       throw new Error(`Unknown tool: ${tool}`);
@@ -375,37 +673,218 @@ async function generateCursorConfig(projectDir: string): Promise<void> {
     return;
   }
   
-  await writeFile(configPath, cursorRulesContentV040);
+  await writeFile(configPath, cursorRulesContent);
   console.log(chalk.green('✓ Created .cursorrules'));
 }
 
 async function generateContinueConfig(projectDir: string): Promise<void> {
   const configDir = `${projectDir}/.continue`;
-  const configPath = `${configDir}/config.json`;
+  const promptsDir = `${configDir}/prompts`;
   
   if (!existsSync(configDir)) {
     await mkdir(configDir, { recursive: true });
   }
-  
-  if (existsSync(configPath)) {
-    console.log(chalk.yellow('⚠ .continue/config.json already exists, skipping'));
-    return;
+  if (!existsSync(promptsDir)) {
+    await mkdir(promptsDir, { recursive: true });
   }
   
-  await writeFile(configPath, JSON.stringify(continueConfigContentV040, null, 2));
-  console.log(chalk.green('✓ Created .continue/config.json'));
+  // Create config.yaml
+  const configPath = `${configDir}/config.yaml`;
+  if (!existsSync(configPath)) {
+    const continueConfigContent = `# Continue.dev configuration for SpecSafe v0.4.0
+# Generated by SpecSafe
+
+name: SpecSafe
+version: 0.4.0
+schema: v1
+
+prompts:
+  - uses: file://prompts/specsafe.md
+  - uses: file://prompts/spec.md
+  - uses: file://prompts/validate.md
+  - uses: file://prompts/specsafe-explore.md
+  - uses: file://prompts/specsafe-new.md
+  - uses: file://prompts/specsafe-spec.md
+  - uses: file://prompts/specsafe-test-create.md
+  - uses: file://prompts/specsafe-test-apply.md
+  - uses: file://prompts/specsafe-verify.md
+  - uses: file://prompts/specsafe-done.md
+
+context:
+  include:
+    - PROJECT_STATE.md
+    - specs/active/*.md
+    - specs/drafts/*.md
+`;
+    await writeFile(configPath, continueConfigContent);
+    console.log(chalk.green('✓ Created .continue/config.yaml'));
+  } else {
+    console.log(chalk.yellow('⚠ .continue/config.yaml already exists, skipping'));
+  }
+  
+  // Create basic prompt files
+  const promptFiles: Record<string, string> = {
+    'specsafe.md': `---
+name: specsafe
+description: Show SpecSafe project status
+invokable: true
+---
+
+Read PROJECT_STATE.md and summarize:
+1) Active specs and their stages
+2) What spec is currently being worked on
+3) What the next steps should be
+`,
+    'spec.md': `---
+name: spec
+description: Show details for a specific spec
+invokable: true
+---
+
+Read the spec file for {{input}} from specs/active/ and show its requirements, scenarios, and current stage.
+`,
+    'validate.md': `---
+name: validate
+description: Validate implementation against spec
+invokable: true
+---
+
+Check if the current implementation satisfies the active spec requirements.
+`,
+    'specsafe-explore.md': `---
+name: specsafe-explore
+description: Pre-Spec Exploration
+invokable: true
+---
+
+You are in exploration mode. Guide pre-spec research:
+- Define problem and identify users
+- Research existing solutions
+- Evaluate technology options
+- Estimate effort (S/M/L/XL)
+
+Output: specs/exploration/FEATURE-NAME.md
+`,
+    'specsafe-new.md': `---
+name: specsafe-new
+description: Initialize Spec with PRD
+invokable: true
+---
+
+Create a new spec:
+1. Generate spec ID: SPEC-YYYYMMDD-NNN
+2. Create PRD with requirements and scenarios
+3. Recommend tech stack
+4. Output: specs/drafts/SPEC-ID.md
+5. Update PROJECT_STATE.md (status: DRAFT)
+
+Confirm before writing.
+`,
+    'specsafe-spec.md': `---
+name: specsafe-spec
+description: Generate Detailed Spec
+invokable: true
+---
+
+Convert PRD to comprehensive spec:
+- Functional Requirements (FR-XXX)
+- Technical Requirements (TR-XXX)
+- Scenarios (Given/When/Then)
+- Acceptance Criteria
+- Architecture Notes
+
+Move: specs/drafts/ → specs/active/
+Update: PROJECT_STATE.md (DRAFT → SPEC)
+`,
+    'specsafe-test-create.md': `---
+name: specsafe-test-create
+description: Create Tests from Spec
+invokable: true
+---
+
+Generate test suite:
+1. Read spec scenarios
+2. Create src/__tests__/SPEC-ID/*.test.ts
+3. Map Given/When/Then to test cases
+4. Include happy path and edge cases
+5. Update PROJECT_STATE.md (SPEC → TEST-CREATE)
+
+Report: test count and coverage
+`,
+    'specsafe-test-apply.md': `---
+name: specsafe-test-apply
+description: Apply Tests (Development Mode)
+invokable: true
+---
+
+Guide implementation:
+- Plan → Implement → Test → Commit
+- Map changes to requirement IDs
+- Never modify tests to pass (fix code)
+- Update PROJECT_STATE.md (TEST-CREATE → TEST-APPLY)
+
+Ask: "Which requirement next?"
+`,
+    'specsafe-verify.md': `---
+name: specsafe-verify
+description: Verify and Iterate
+invokable: true
+---
+
+Run tests and fix failures:
+1. Execute: npm test -- SPEC-ID
+2. Map failures to requirements
+3. Fix code (not tests)
+4. Iterate until all pass
+5. Check coverage
+
+Update PROJECT_STATE.md (TEST-APPLY → VERIFY)
+`,
+    'specsafe-done.md': `---
+name: specsafe-done
+description: Complete and Archive
+invokable: true
+---
+
+Finalize spec:
+- Verify completion checklist
+- Run final test suite
+- Move: specs/active/ → specs/archive/
+- Update PROJECT_STATE.md (VERIFY → COMPLETE)
+- Generate summary
+
+Confirm before archiving.
+`
+  };
+  
+  for (const [filename, content] of Object.entries(promptFiles)) {
+    const targetPath = `${promptsDir}/${filename}`;
+    if (!existsSync(targetPath)) {
+      await writeFile(targetPath, content);
+      console.log(chalk.green(`✓ Created .continue/prompts/${filename}`));
+    } else {
+      console.log(chalk.yellow(`⚠ .continue/prompts/${filename} already exists, skipping`));
+    }
+  }
 }
 
 async function generateAiderConfig(projectDir: string): Promise<void> {
   const configPath = `${projectDir}/.aider.conf.yml`;
+  const ignorePath = `${projectDir}/.aiderignore`;
   
   if (existsSync(configPath)) {
     console.log(chalk.yellow('⚠ .aider.conf.yml already exists, skipping'));
-    return;
+  } else {
+    await writeFile(configPath, aiderConfigContent);
+    console.log(chalk.green('✓ Created .aider.conf.yml'));
   }
   
-  await writeFile(configPath, aiderConfigContentV040);
-  console.log(chalk.green('✓ Created .aider.conf.yml'));
+  if (existsSync(ignorePath)) {
+    console.log(chalk.yellow('⚠ .aiderignore already exists, skipping'));
+  } else {
+    await writeFile(ignorePath, aiderIgnoreContent);
+    console.log(chalk.green('✓ Created .aiderignore'));
+  }
 }
 
 async function generateZedConfig(projectDir: string): Promise<void> {
@@ -421,7 +900,7 @@ async function generateZedConfig(projectDir: string): Promise<void> {
     return;
   }
   
-  await writeFile(configPath, JSON.stringify(zedSettingsContentV040, null, 2));
+  await writeFile(configPath, JSON.stringify(zedSettingsContent, null, 2));
   console.log(chalk.green('✓ Created .zed/settings.json'));
 }
 
@@ -430,55 +909,65 @@ async function generateClaudeCodeConfig(projectDir: string): Promise<void> {
   const configPath = `${projectDir}/CLAUDE.md`;
   
   if (!existsSync(configPath)) {
-    const claudeContent = `# SpecSafe Project — Claude Code Configuration (v0.4.0)
+    const claudeContent = `# SpecSafe Project - Claude Code Configuration
 
-You are working on a SpecSafe v0.4.0 project using OpenSpec workflow.
+You are working on a SpecSafe project using spec-driven development (SDD).
 
 ## Project Context
 
-**PROJECT_STATE.md** — Always read this file first. It contains:
+**PROJECT_STATE.md** - Always read this file first. It contains:
 - Active specs and their current stages
 - Which spec is being worked on
 - Overall project status
 
-**Specs directory** — \`specs/active/*.md\` contains detailed spec files with:
-- PRD: Problem Statement, User Stories, Acceptance Criteria, Technical Requirements
-- BRD: Business Justification, Success Metrics, Stakeholders, Timeline
+**Specs directory** - specs/active/*.md contains detailed spec files with:
 - Requirements (must be satisfied)
 - Scenarios (acceptance criteria)
+- Current stage
 
-## 7 OpenSpec Commands
+## Spec-Driven Development Workflow
 
-1. **specsafe:new** — Create spec with PRD + BRD
-2. **specsafe:spec** — Flesh out detailed spec
-3. **specsafe:test-create** — Generate tests from scenarios
-4. **specsafe:test-apply** — Run tests, loop on failure
-5. **specsafe:verify** — Verify implementation completeness
-6. **specsafe:done** — Mark complete, archive
-7. **specsafe:explore** — Pre-spec spike/research
+1. **EXPLORE**: Research and validate ideas
+2. **NEW**: PRD with requirements
+3. **SPEC**: Detailed specification
+4. **TEST-CREATE**: Generate tests from spec
+5. **TEST-APPLY**: Implement to pass tests
+6. **VERIFY**: Validate all tests pass
+7. **DONE**: Complete and archive
 
 ## Critical Rules
 
-✅ **ALWAYS** read PROJECT_STATE.md before making changes  
-✅ **ALWAYS** ensure implementation satisfies tests  
-✅ **ALWAYS** use specsafe commands (NOT 'test' or 'dev')  
-✅ **ALWAYS** reference spec ID in commit messages  
+ALWAYS read PROJECT_STATE.md before making changes
+ALWAYS ensure implementation satisfies tests
+ALWAYS use specsafe CLI commands to advance stages
+ALWAYS reference spec ID in commit messages
 
-❌ **NEVER** modify PROJECT_STATE.md directly (use CLI)  
-❌ **NEVER** skip tests to implement faster  
-❌ **NEVER** use old command names ('test', 'code') — use 'test-create', 'test-apply'
+NEVER modify PROJECT_STATE.md directly (use CLI)
+NEVER skip tests to implement faster
+NEVER modify tests to make them pass without discussion
 
-## Claude Code Skills (v0.4.0)
+## SpecSafe CLI Reference
+
+- specsafe status - Show current project status
+- specsafe explore <name> - Start exploration
+- specsafe new <name> - Create PRD
+- specsafe spec <id> - Generate detailed spec
+- specsafe test-create <id> - Create tests
+- specsafe test-apply <id> - Start implementation
+- specsafe verify <id> - Run validation
+- specsafe done <id> - Complete spec
+
+## Claude Code Skills
 
 This project includes Claude Code skills for slash commands:
-- \`/specsafe\` — Show project status and workflow guidance
-- \`/specsafe-explore\` — Pre-spec exploration
-- \`/specsafe-new\` — Create spec with PRD + BRD
-- \`/specsafe-spec\` — Flesh out detailed spec
-- \`/specsafe-test-create\` — Generate tests from scenarios
-- \`/specsafe-test-apply\` — Run tests, loop on failure
-- \`/specsafe-verify\` — Verify implementation completeness
-- \`/specsafe-done\` — Mark complete, archive
+- /specsafe - Show project status
+- /specsafe-explore - Pre-spec exploration
+- /specsafe-new - Initialize spec with PRD
+- /specsafe-spec - Generate detailed spec
+- /specsafe-test-create - Create tests
+- /specsafe-test-apply - Development mode
+- /specsafe-verify - Run verification
+- /specsafe-done - Complete and archive
 `;
     
     await writeFile(configPath, claudeContent);
@@ -494,16 +983,16 @@ This project includes Claude Code skills for slash commands:
     await mkdir(skillsDir, { recursive: true });
   }
 
-  // Create all 8 skills for v0.4.0
   const skills = [
-    { name: 'specsafe', content: claudeSkillSpecsafeContentV040 },
-    { name: 'specsafe-explore', content: claudeSkillExploreContentV040 },
-    { name: 'specsafe-new', content: claudeSkillNewContentV040 },
-    { name: 'specsafe-spec', content: claudeSkillSpecContentV040 },
-    { name: 'specsafe-test-create', content: claudeSkillTestCreateContentV040 },
-    { name: 'specsafe-test-apply', content: claudeSkillTestApplyContentV040 },
-    { name: 'specsafe-verify', content: claudeSkillVerifyContentV040 },
-    { name: 'specsafe-done', content: claudeSkillDoneContentV040 },
+    { name: 'specsafe', content: claudeSkillSpecsafeContent },
+    { name: 'specsafe-explore', content: claudeSkillExploreContent },
+    { name: 'specsafe-new', content: claudeSkillNewContent },
+    { name: 'specsafe-spec', content: claudeSkillSpecContent },
+    { name: 'specsafe-test-create', content: claudeSkillTestCreateContent },
+    { name: 'specsafe-test-apply', content: claudeSkillTestApplyContent },
+    { name: 'specsafe-verify', content: claudeSkillVerifyContent },
+    { name: 'specsafe-done', content: claudeSkillDoneContent },
+    { name: 'specsafe-validate', content: claudeSkillValidateContent },
   ];
 
   for (const skill of skills) {
@@ -530,68 +1019,115 @@ async function generateCrushConfig(projectDir: string): Promise<void> {
     await mkdir(commandsDir, { recursive: true });
   }
 
-  // v0.4.0 commands for OpenCode
-  const commands = [
-    {
-      name: 'specsafe-new',
-      content: `Create spec with PRD + BRD
+  // Create basic command files
+  const commandFiles: Record<string, string> = {
+    'specsafe.md': `Show SpecSafe project status
 
-Generate a new spec with:
-- PRD: Problem Statement, User Stories, Acceptance Criteria, Technical Requirements
-- BRD: Business Justification, Success Metrics, Stakeholders, Timeline
+Read PROJECT_STATE.md and provide:
+1. Summary of active specs and their current stages
+2. Which specs need attention
+3. Recommended next actions
+4. SDD workflow reminder
+`,
+    'spec.md': `Show details for a specific spec by ID
 
-Usage: @specsafe-new [feature-name]`,
-    },
-    {
-      name: 'specsafe-spec',
-      content: `Flesh out detailed spec
+Read the spec file from specs/active/$SPEC_ID.md and show:
+- Requirements
+- Scenarios/acceptance criteria
+- Current stage
+- Implementation files referenced
 
-Expand PRD into detailed spec with requirements, scenarios, and technical approach.`,
-    },
-    {
-      name: 'specsafe-test-create',
-      content: `Generate tests from scenarios
+If no SPEC_ID provided, list available specs.
+`,
+    'validate.md': `Validate current implementation against active spec
 
-Parse Given/When/Then scenarios and generate test files.
+Check if the current code changes satisfy the requirements in the active spec.
+Point out any gaps or issues that need to be addressed before completing.
+`,
+    'specsafe-explore.md': `Pre-Spec Exploration and Research Mode
 
-NEVER use 'test' — this is test-create.`,
-    },
-    {
-      name: 'specsafe-test-apply',
-      content: `Run tests, loop on failure
+Guide the user through pre-spec research:
+- Define problem and identify users
+- Research existing solutions
+- Evaluate technology options
+- Estimate effort (S/M/L/XL)
+- Output: specs/exploration/FEATURE-NAME.md
+`,
+    'specsafe-new.md': `Initialize Spec with Product Requirements Document
 
-Run tests against implementation. If tests fail, fix implementation and repeat.
+Create a new spec:
+1. Generate spec ID: SPEC-YYYYMMDD-NNN
+2. Create PRD with requirements, scenarios
+3. Recommend tech stack
+4. Output: specs/drafts/SPEC-ID.md
+5. Update PROJECT_STATE.md (status: DRAFT)
 
-NEVER use 'dev' — this is test-apply.`,
-    },
-    {
-      name: 'specsafe-verify',
-      content: `Verify implementation completeness
+Confirm before writing.
+`,
+    'specsafe-spec.md': `Generate Detailed Spec from PRD
 
-Verify all requirements are met and acceptance criteria satisfied.`,
-    },
-    {
-      name: 'specsafe-done',
-      content: `Mark complete, archive
+Convert PRD to comprehensive spec:
+- Functional Requirements (FR-XXX)
+- Technical Requirements (TR-XXX)
+- Scenarios (Given/When/Then)
+- Acceptance Criteria
+- Architecture Notes
 
-Move spec to completed and update project state.`,
-    },
-    {
-      name: 'specsafe-explore',
-      content: `Pre-spec spike/research
+Move: specs/drafts/ → specs/active/
+Update: PROJECT_STATE.md (DRAFT → SPEC)
+`,
+    'specsafe-test-create.md': `Create Tests from Spec Scenarios
 
-Explore ideas before committing to a spec. Research and estimate.`,
-    },
-  ];
+Generate test suite:
+1. Read spec scenarios
+2. Create src/__tests__/SPEC-ID/*.test.ts
+3. Map Given/When/Then to test cases
+4. Include happy path and edge cases
+5. Update PROJECT_STATE.md (SPEC → TEST-CREATE)
 
-  for (const cmd of commands) {
-    const cmdPath = `${commandsDir}/${cmd.name}.md`;
-    
-    if (!existsSync(cmdPath)) {
-      await writeFile(cmdPath, cmd.content);
-      console.log(chalk.green(`✓ Created .opencode/commands/${cmd.name}.md`));
+Report: test count and coverage
+`,
+    'specsafe-test-apply.md': `Apply Tests - Development Mode
+
+Guide implementation:
+- Plan → Implement → Test → Commit
+- Map changes to requirement IDs
+- Never modify tests to pass (fix code)
+- Update PROJECT_STATE.md (TEST-CREATE → TEST-APPLY)
+
+Ask: "Which requirement next?"
+`,
+    'specsafe-verify.md': `Verify Implementation and Iterate
+
+Run tests and fix:
+1. Execute: npm test -- SPEC-ID
+2. Map failures to requirements
+3. Fix code (not tests)
+4. Iterate until all pass
+5. Check coverage
+
+Update PROJECT_STATE.md (TEST-APPLY → VERIFY)
+`,
+    'specsafe-done.md': `Complete and Archive Spec
+
+Finalize:
+- Verify completion checklist
+- Run final test suite
+- Move: specs/active/ → specs/archive/
+- Update PROJECT_STATE.md (VERIFY → COMPLETE)
+- Generate summary
+
+Confirm before archiving.
+`
+  };
+
+  for (const [filename, content] of Object.entries(commandFiles)) {
+    const targetPath = `${commandsDir}/${filename}`;
+    if (!existsSync(targetPath)) {
+      await writeFile(targetPath, content);
+      console.log(chalk.green(`✓ Created .opencode/commands/${filename}`));
     } else {
-      console.log(chalk.yellow(`⚠ .opencode/commands/${cmd.name}.md already exists, skipping`));
+      console.log(chalk.yellow(`⚠ .opencode/commands/${filename} already exists, skipping`));
     }
   }
 }
@@ -609,20 +1145,77 @@ export async function generateGitHooks(projectDir: string): Promise<void> {
   }
   
   const preCommitContent = `#!/bin/bash
-# SpecSafe pre-commit hook
+# SpecSafe pre-commit hook v0.4.0
+# Enhanced verification for OpenSpec-style workflow
 
-echo "🔍 Running SpecSafe pre-commit checks..."
+set -e
 
-# Validate PROJECT_STATE.md exists
+echo "Running SpecSafe pre-commit checks..."
+
+FAILED=0
+
+# Check 1: Validate PROJECT_STATE.md exists
+echo "Checking PROJECT_STATE.md..."
 if [ ! -f "PROJECT_STATE.md" ]; then
-  echo "❌ PROJECT_STATE.md not found. Run 'specsafe init' first."
-  exit 1
+    echo "PROJECT_STATE.md not found. Run 'specsafe init' first."
+    FAILED=1
+else
+    echo "PROJECT_STATE.md exists"
 fi
 
-# Run spec validation (if we add a validate command)
-# specsafe validate --silent || exit 1
+# Check 2: Verify specs directory structure
+echo "Checking specs directory structure..."
+if [ -d "specs" ]; then
+    for subdir in drafts active archive exploration; do
+        if [ ! -d "specs/\$subdir" ]; then
+            echo "Missing specs/\$subdir directory - creating"
+            mkdir -p "specs/\$subdir"
+        fi
+    done
+    echo "Specs directory structure valid"
+else
+    echo "No specs directory found. Run 'specsafe init'."
+fi
 
-echo "✅ Pre-commit checks passed"
+# Check 3: Check for TODO/FIXME in staged files
+echo "Checking for TODO/FIXME markers..."
+STAGED_FILES=\$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null || true)
+
+if [ -n "\$STAGED_FILES" ]; then
+    TODO_FOUND=0
+    for file in \$STAGED_FILES; do
+        if echo "\$file" | grep -qE '\\.(ts|tsx|js|jsx|py|java|go|rs|cpp|c|h|php|rb)\$'; then
+            if git diff --cached "\$file" | grep -i "TODO\\|FIXME\\|XXX\\|HACK" > /dev/null 2>&1; then
+                echo "Warning: \$file contains TODO/FIXME markers"
+                TODO_FOUND=1
+            fi
+        fi
+    done
+    
+    if [ \$TODO_FOUND -eq 1 ]; then
+        echo "Consider resolving these before committing"
+    fi
+fi
+
+# Check 4: Run specsafe doctor if available
+if command -v specsafe >/dev/null 2>&1; then
+    echo "Running SpecSafe validation..."
+    if specsafe doctor --silent 2>/dev/null; then
+        echo "SpecSafe doctor passed"
+    else
+        echo "SpecSafe doctor found issues. Run 'specsafe doctor' for details."
+    fi
+fi
+
+# Final status
+echo ""
+if [ \$FAILED -eq 0 ]; then
+    echo "All pre-commit checks passed"
+    exit 0
+else
+    echo "Some pre-commit checks failed"
+    exit 1
+fi
 `;
   
   if (existsSync(preCommitPath)) {
@@ -631,13 +1224,13 @@ echo "✅ Pre-commit checks passed"
   }
   
   await writeFile(preCommitPath, preCommitContent);
-  console.log(chalk.green('✓ Created .githooks/pre-commit'));
   
   // Make the hook executable (this won't work on Windows without special handling)
   try {
     const { exec } = await import('child_process');
     exec(`chmod +x ${preCommitPath}`);
+    console.log(chalk.green('✓ Created .githooks/pre-commit'));
   } catch {
-    // Ignore chmod errors on Windows
+    console.log(chalk.yellow('⚠ Could not make pre-commit executable'));
   }
 }
