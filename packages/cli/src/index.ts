@@ -26,6 +26,7 @@ import { exploreCommand } from './commands/explore.js';
 import { deltaCommand } from './commands/delta.js';
 import { applyCommand } from './commands/apply.js';
 import { diffCommand } from './commands/diff.js';
+import { constitutionCommand } from './commands/constitution.js';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
@@ -60,6 +61,9 @@ program.addCommand(rulesCommand);
 program.addCommand(deltaCommand);       // Create delta spec
 program.addCommand(applyCommand);       // Apply delta specs
 program.addCommand(diffCommand);        // Preview delta changes
+
+// Governance commands
+program.addCommand(constitutionCommand); // Constitutional governance
 
 // Workflow command group
 program

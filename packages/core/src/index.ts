@@ -96,3 +96,30 @@ export {
   generateEARSTemplate,
   generateEARSExamples,
 } from './ears/index.js';
+
+// Governance system
+export type {
+  Constitution,
+  Principle,
+  PrincipleSeverity,
+  Gate,
+  GatePhase,
+  GateResult,
+  Violation,
+  ConstitutionLoadOptions,
+  ValidationOptions,
+  GenerateConstitutionOptions,
+} from './governance/index.js';
+
+export {
+  ConstitutionManager,
+  BUILTIN_PRINCIPLES,
+  BUILTIN_GATES,
+  getBuiltinPrinciple,
+  getBuiltinGate,
+  getGatesForPhase,
+  generateConstitution,
+  generateMinimalConstitution,
+  generateStrictConstitution,
+  generateConstitutionReadme,
+} from './governance/index.js';
