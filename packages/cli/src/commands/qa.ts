@@ -158,7 +158,13 @@ export const qaCommand = new Command('qa')
         
         if (options.ears && earsScore !== undefined) {
           console.log(chalk.blue(`  EARS Report: ${earsReportPath}`));
-          console.log(chalk.yellow(`  EARS Score: ${earsScore}/100`));
+          if (earsScore >= 90) {
+            console.log(chalk.green(`  EARS Score: ${earsScore}/100 ✅`));
+          } else if (earsScore >= 70) {
+            console.log(chalk.yellow(`  EARS Score: ${earsScore}/100 ⚠️`));
+          } else {
+            console.log(chalk.red(`  EARS Score: ${earsScore}/100 ❌`));
+          }
         }
         
         console.log(chalk.blue('Fix issues and re-run: specsafe qa <id>'));

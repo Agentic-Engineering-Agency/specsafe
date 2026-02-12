@@ -88,6 +88,12 @@ program
     console.log(chalk.cyan('  specsafe done <id>        → Complete & archive'));
     console.log();
     
+    console.log(chalk.white('Brownfield Changes (Delta Specs):'));
+    console.log(chalk.cyan('  specsafe delta <id>       → Create delta spec for changes'));
+    console.log(chalk.cyan('  specsafe diff <id>        → Preview delta changes'));
+    console.log(chalk.cyan('  specsafe apply <id>       → Apply delta to base spec'));
+    console.log();
+    
     console.log(chalk.white('Utility Commands:'));
     console.log(chalk.gray('  specsafe status           → View project status'));
     console.log(chalk.gray('  specsafe list             → List all specs'));
