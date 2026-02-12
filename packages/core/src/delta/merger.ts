@@ -195,7 +195,7 @@ export class SemanticMerger {
         currentReq = {
           id: tableMatch[1],
           text: tableMatch[2].trim(),
-          priority: tableMatch[3],
+          priority: tableMatch[3] as 'P0' | 'P1' | 'P2' | undefined,
           startLine: i,
           endLine: i
         };
