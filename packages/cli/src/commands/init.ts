@@ -137,12 +137,14 @@ export const initCommand = new Command('init')
         }
 
         if (selectedAgents.length === 0) {
-          // Prompt user to select
-          const agentChoices = AGENT_DEFINITIONS.map((agent) => ({
-            name: agent.name,
-            value: agent.id,
-            checked: detectedAgents.includes(agent.id),
-          }));
+          // Prompt user to select - only show agents with registered adapters
+          const agentChoices = AGENT_DEFINITIONS
+            .filter((agent) => getAgent(agent.id) !== undefined)
+            .map((agent) => ({
+              name: agent.name,
+              value: agent.id,
+              checked: detectedAgents.includes(agent.id),
+            }));
 
           selectedAgents = await checkbox({
             message: 'Which AI coding agents do you use?',
