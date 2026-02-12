@@ -94,3 +94,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - CLI version now reads from package.json (was hardcoded to 0.1.0)
+
+## [0.3.4] - 2026-02-11
+
+### Fixed
+- Claude Code skills now appear as slash commands (/specsafe, /spec, /validate)
