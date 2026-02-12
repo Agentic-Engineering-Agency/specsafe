@@ -68,7 +68,7 @@ describe('CLI rules command', () => {
     it('should have add subcommand', () => {
       const addCmd = rulesCommand.commands.find((cmd) => cmd.name() === 'add');
       expect(addCmd).toBeDefined();
-      expect(addCmd?.description()).toContain('install');
+      expect(addCmd?.description()).toContain('Install');
     });
 
     it('should have remove subcommand', () => {
@@ -77,32 +77,32 @@ describe('CLI rules command', () => {
       expect(removeCmd?.description()).toContain('Remove');
     });
 
-    it('should have update subcommand', () => {
-      const updateCmd = rulesCommand.commands.find((cmd) => cmd.name() === 'update');
-      expect(updateCmd).toBeDefined();
-      expect(updateCmd?.description()).toContain('Update');
+    it('should have info subcommand', () => {
+      const infoCmd = rulesCommand.commands.find((cmd) => cmd.name() === 'info');
+      expect(infoCmd).toBeDefined();
+      expect(infoCmd?.description()).toContain('information');
     });
   });
 
   describe('add subcommand argument', () => {
-    it('should require <tool> argument', () => {
+    it('should require <agent> argument', () => {
       const addCmd = rulesCommand.commands.find((cmd) => cmd.name() === 'add');
       expect(addCmd).toBeDefined();
       const args = addCmd!.registeredArguments;
       expect(args).toHaveLength(1);
       expect(args[0].required).toBe(true);
-      expect(args[0]._name || args[0].name).toBe('tool');
+      expect(args[0]._name || args[0].name).toBe('agent');
     });
   });
 
   describe('remove subcommand argument', () => {
-    it('should require <tool> argument', () => {
+    it('should require <agent> argument', () => {
       const removeCmd = rulesCommand.commands.find((cmd) => cmd.name() === 'remove');
       expect(removeCmd).toBeDefined();
       const args = removeCmd!.registeredArguments;
       expect(args).toHaveLength(1);
       expect(args[0].required).toBe(true);
-      expect(args[0]._name || args[0].name).toBe('tool');
+      expect(args[0]._name || args[0].name).toBe('agent');
     });
   });
 });
