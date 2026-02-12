@@ -62,7 +62,7 @@ EXPLORE → NEW → SPEC → TEST → DEV → VERIFY → DONE
    - Constraints and assumptions
 3. Recommend tech stack (language, framework, testing)
 4. Define project-specific rules
-5. Output: `specs/drafts/SPEC-ID.md` + update PROJECT_STATE.md
+5. Output: `specs/active/SPEC-ID.md` + update PROJECT_STATE.md
 
 **Always confirm with user before writing files.**
 

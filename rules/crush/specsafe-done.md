@@ -1,43 +1,33 @@
-Mark spec complete and archive
+Complete and Archive Spec
 
-You are finalizing a spec that has passed all validation.
+Finalize a spec after all tests pass and archive it.
 
-1. **Completion Checklist**
-   Verify all items complete:
-   - [ ] All requirements implemented
-   - [ ] All tests passing
-   - [ ] Code reviewed (if required)
-   - [ ] Documentation updated
-   - [ ] Acceptance criteria met
+**Completion Checklist:**
+- [ ] All requirements implemented
+- [ ] All tests passing
+- [ ] Code reviewed (if required)
+- [ ] Documentation updated
+- [ ] No TODO/debug code remaining
+- [ ] Acceptance criteria satisfied
 
-2. **Final Validation**
-   - Run full test suite one more time
-   - Check for TODO comments or debug code
-   - Verify no spec files are modified during implementation
+**Final Verification:**
+- Run final test suite
+- Confirm coverage meets requirements
 
-3. **Archive Process**
-   a) Move spec to archive:
-      - `specs/active/SPEC-ID.md` → `specs/archive/SPEC-ID.md`
-   
-   b) Update `PROJECT_STATE.md`:
-      - Move spec to COMPLETED section
-      - Record completion date
-      - Add implementation summary
+**Archive Process:**
+1. Move: `specs/active/SPEC-ID.md` → `specs/archive/SPEC-ID.md`
+2. Update PROJECT_STATE.md:
+   - Move spec to COMPLETED section
+   - Update timestamp
+3. Generate completion summary:
+   - Completion date
+   - Files changed
+   - Test count and pass rate
+   - LOC added/modified
+   - Notes/lessons learned
 
-4. **Summary Generation**
-   Create completion report:
-   ```
-   Spec: SPEC-ID — [Feature Name]
-   Completed: [Date]
-   Files Modified: [list]
-   Tests Added: [count]
-   Lines of Code: [approximate]
-   Notes: [any important details]
-   ```
+**Next Steps:**
+- Suggest next spec from active list
+- Ask for confirmation before archiving
 
-5. **Post-Completion**
-   - Suggest any follow-up specs needed
-   - Recommend next spec to work on (from active list)
-   - Offer to generate release notes snippet
-
-Ask for final confirmation before archiving.
+Ask: "Should I complete and archive [SPEC-ID]?" if not specified.

@@ -1,30 +1,26 @@
-Generate detailed specification from PRD
+Generate Detailed Spec from PRD
 
-You are expanding a Product Requirements Document into a complete, implementation-ready specification.
+Convert a Product Requirements Document into an implementation-ready specification.
 
-1. **Read the PRD**
-   - Location: `specs/drafts/SPEC-ID.md` or user-provided path
-   - Extract: requirements, scenarios, tech stack, constraints
+**Input:**
+- Read PRD from `specs/drafts/SPEC-ID.md`
 
-2. **Structure the Detailed Spec**
-   Create comprehensive spec with:
-   
-   a) **Overview** — Executive summary, goals, non-goals
-   b) **Requirements** — Functional requirements (numbered FR-001, FR-002...)
-   c) **Technical Requirements** — TR-001, TR-002... (performance, security, scalability)
-   d) **Scenarios** — Concrete user scenarios with Given/When/Then format
-   e) **Acceptance Criteria** — Checklist for completion
-   f) **Architecture Notes** — Component breakdown, data flow, API contracts
-   g) **Open Questions** — Document any unresolved decisions
+**Output Structure:**
+1. **Overview:** Executive summary, goals, non-goals
+2. **Functional Requirements:** FR-001, FR-002... (numbered, testable)
+3. **Technical Requirements:** TR-001, TR-002... (performance, security, scale)
+4. **Scenarios:** Given/When/Then format for each user flow
+5. **Acceptance Criteria:** Checklist for completion
+6. **Architecture Notes:** Components, data flow, APIs, diagrams
+7. **Open Questions:** Document unresolved decisions
 
-3. **Validation**
-   - Ensure every requirement is testable
-   - Verify scenarios cover happy path and edge cases
-   - Confirm tech stack alignment with requirements
+**Validation:**
+- Every requirement must be testable
+- Each scenario maps to at least one requirement
+- Acceptance criteria are measurable
 
-4. **Output**
-   - Write to `specs/active/SPEC-ID.md`
-   - Update `PROJECT_STATE.md`: move spec from DRAFT → SPEC stage
-   - List any blockers or questions for the user
+**File Operations:**
+- Move: `specs/drafts/SPEC-ID.md` → `specs/active/SPEC-ID.md`
+- Update PROJECT_STATE.md: DRAFT → SPEC stage
 
-Ask user to review before finalizing.
+Ask: "Which draft spec should I detail?" if not specified.

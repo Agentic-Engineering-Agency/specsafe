@@ -22,7 +22,7 @@ export const newCommand = new Command('new')
 
       // Generate spec ID with auto-increment to avoid collisions
       const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
-      
+
       // Check if specs/active directory exists
       try {
         await readdir('specs/active');
@@ -32,7 +32,7 @@ export const newCommand = new Command('new')
         }
         throw err;
       }
-      
+
       // List existing specs for today and find max suffix
       let maxSuffix = 0;
       try {
@@ -49,12 +49,12 @@ export const newCommand = new Command('new')
       } catch {
         // Directory doesn't exist yet, that's fine
       }
-      
+
       const id = `SPEC-${date}-${String(maxSuffix + 1).padStart(3, '0')}`;
 
       // Interactive mode or defaults
       spinner.stop();
-      
+
       // Get feature name if not provided
       let featureName = name;
       if (!featureName && !options.skipInteractive) {
@@ -66,16 +66,20 @@ export const newCommand = new Command('new')
         featureName = 'untitled-feature';
       }
 
-      // Interactive PRD creation
+      // Interactive PRD + BRD creation
       let problemStatement = '';
       let userStories = '';
       let acceptanceCriteria = '';
       let technicalConsiderations = '';
+      let businessJustification = '';
+      let successMetrics = '';
+      let stakeholders = '';
+      let timeline = '';
       let priority = 'P1';
 
       if (!options.skipInteractive && !options.dryRun) {
         console.log(chalk.blue('\n📋 Let\'s create a Product Requirements Document (PRD)\n'));
-        
+
         problemStatement = await editor({
           message: 'Problem Statement (what problem does this solve?):',
           default: '<!-- Describe the problem this feature solves -->'
@@ -97,9 +101,45 @@ So that [some reason]
 - [ ] Criterion 3`
         });
 
-        technicalConsiderations = await editor({
-          message: 'Technical Considerations:',
-          default: `<!-- Any technical constraints, dependencies, or considerations -->`
+        const technicalConsiderations = await editor({
+          message: 'Technical Requirements (dependencies, constraints, stack):',
+          default: `<!-- Technical constraints, dependencies, integrations needed -->
+- Required APIs:
+- Data storage:
+- Security requirements:`
+        });
+
+        console.log(chalk.blue('\n💼 Now let\'s create a Business Requirements Document (BRD)\n'));
+
+        businessJustification = await editor({
+          message: 'Business Justification (why invest in this?):',
+          default: `<!-- Why should we build this? Business value, market need, strategic alignment -->`
+        });
+
+        successMetrics = await editor({
+          message: 'Success Metrics (how do we measure success?):',
+          default: `- Metric 1: [e.g., "Reduce processing time by 50%"]
+- Metric 2: [e.g., "Increase user engagement by 20%"]
+- Metric 3: [e.g., "Zero critical bugs in production"]`
+        });
+
+        stakeholders = await editor({
+          message: 'Stakeholders (who cares about this?):',
+          default: `| Role | Name/Team | Responsibility |
+|------|-----------|----------------|
+| Product Owner | | Decision maker |
+| Engineering Lead | | Technical oversight |
+| QA Lead | | Quality assurance |`
+        });
+
+        timeline = await editor({
+          message: 'Timeline (key milestones):',
+          default: `| Phase | Milestone | Target Date |
+|-------|-----------|-------------|
+| 1 | Requirements final | |
+| 2 | Development complete | |
+| 3 | QA complete | |
+| 4 | Release | |`
         });
 
         priority = await select({
@@ -124,46 +164,78 @@ So that [some reason]
         basename(process.cwd())
       );
 
-      // Create PRD-enhanced spec content
+      // Create PRD + BRD-enhanced spec content
       const specContent = `# ${featureName} Specification
 
-**ID:** ${id}  
-**Status:** SPEC  
-**Created:** ${new Date().toISOString().split('T')[0]}  
-**Author:** ${options.author}  
+**ID:** ${id}
+**Status:** SPEC
+**Created:** ${new Date().toISOString().split('T')[0]}
+**Author:** ${options.author}
 **Priority:** ${priority}
 
 ---
 
-## 1. Product Requirements Document (PRD)
+## PRD (Product Requirements Document)
 
-### 1.1 Problem Statement
+### Problem Statement
 ${problemStatement || '<!-- Describe the problem this feature solves -->'}
 
-### 1.2 User Stories
+### User Stories
 ${userStories || `As a [type of user]
 I want [some goal]
-So that [some reason]`}
+So that [some reason]
 
-### 1.3 Acceptance Criteria
+<!-- Add more user stories as needed -->`}
+
+### Acceptance Criteria
 ${acceptanceCriteria || `- [ ] Criterion 1
 - [ ] Criterion 2
 - [ ] Criterion 3`}
 
-### 1.4 Technical Considerations
-${technicalConsiderations || '<!-- Any technical constraints, dependencies, or considerations -->'}
+### Technical Requirements
+${technicalConsiderations || `<!-- Technical constraints, dependencies, integrations needed -->
+- Required APIs:
+- Data storage:
+- Security requirements:`}
 
 ---
 
-## 2. Scope (WHAT)
+## BRD (Business Requirements Document)
+
+### Business Justification
+${businessJustification || '<!-- Why should we build this? Business value, market need, strategic alignment -->'}
+
+### Success Metrics
+${successMetrics || `- Metric 1: [e.g., "Reduce processing time by 50%"]
+- Metric 2: [e.g., "Increase user engagement by 20%"]
+- Metric 3: [e.g., "Zero critical bugs in production"]`}
+
+### Stakeholders
+${stakeholders || `| Role | Name/Team | Responsibility |
+|------|-----------|----------------|
+| Product Owner | | Decision maker |
+| Engineering Lead | | Technical oversight |
+| QA Lead | | Quality assurance |`}
+
+### Timeline
+${timeline || `| Phase | Milestone | Target Date |
+|-------|-----------|-------------|
+| 1 | Requirements final | |
+| 2 | Development complete | |
+| 3 | QA complete | |
+| 4 | Release | |`}
+
+---
+
+## Scope (WHAT)
 
 ### In Scope
-- 
+-
 
 ### Out of Scope
-- 
+-
 
-## 3. Requirements
+## Requirements
 
 ### Functional Requirements
 | ID | Requirement | Priority | Acceptance Criteria |
@@ -175,14 +247,14 @@ ${technicalConsiderations || '<!-- Any technical constraints, dependencies, or c
 |----|-------------|--------|
 | NFR-1 | | |
 
-## 4. Scenarios (Given/When/Then)
+## Scenarios (Given/When/Then)
 
 ### Scenario 1: [Name]
 - **Given** [initial context]
 - **When** [action/event occurs]
 - **Then** [expected outcome]
 
-## 5. Technical Approach (HOW)
+## Technical Approach (HOW)
 
 ### Tech Stack
 <!-- Refer to .specsafe/tech-stack.md -->
@@ -191,33 +263,33 @@ ${technicalConsiderations || '<!-- Any technical constraints, dependencies, or c
 
 ### Dependencies
 
-## 6. Test Strategy (TDD)
+## Test Strategy (TDD)
 
 ### Unit Tests
-- 
+-
 
 ### Integration Tests
-- 
+-
 
-## 7. Implementation Plan
+## Implementation Plan
 
 | Phase | Task | Est. Time | Dependencies |
 |-------|------|-----------|--------------|
 | 1 | | | |
 
-## 8. Success Criteria
+## Success Criteria
 - [ ] All P0 requirements met
 - [ ] All tests passing
 - [ ] Documentation complete
 
-## 9. Risks & Mitigations
+## Risks & Mitigations
 
 | Risk | Probability | Impact | Mitigation |
 |------|-------------|--------|------------|
 | | | | |
 
-## 10. Notes & References
-- 
+## Notes & References
+-
 
 ---
 
@@ -243,18 +315,13 @@ ${technicalConsiderations || '<!-- Any technical constraints, dependencies, or c
 
       // Create .specsafe directory and supporting files
       await mkdir('.specsafe', { recursive: true });
-      
+
       // Create tech-stack.md if it doesn't exist
       const techStackPath = join('.specsafe', 'tech-stack.md');
-      try {
-        await readdir('.specsafe');
-      } catch {
-        // .specsafe doesn't exist yet
-      }
-      
+
       const techStackContent = `# Tech Stack
 
-**Project:** ${basename(process.cwd())}  
+**Project:** ${basename(process.cwd())}
 **Last Updated:** ${new Date().toISOString().split('T')[0]}
 
 ## Core Technologies
@@ -303,11 +370,11 @@ specs/
 
 *Auto-generated by specsafe new*
 `;
-      
+
       // Create rules.md if it doesn't exist
       const rulesContent = `# Project Rules
 
-**Project:** ${basename(process.cwd())}  
+**Project:** ${basename(process.cwd())}
 **Last Updated:** ${new Date().toISOString().split('T')[0]}
 
 ## Coding Standards
@@ -357,7 +424,7 @@ When assisting with this project:
       } catch {
         // File already exists, skip
       }
-      
+
       try {
         await writeFile(join('.specsafe', 'rules.md'), rulesContent, { flag: 'wx' });
       } catch {

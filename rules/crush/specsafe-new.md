@@ -1,30 +1,29 @@
-Create a new spec with PRD, tech stack selection, and rules configuration
+Initialize Spec with Product Requirements Document (PRD)
 
-You are initializing a new feature spec. Guide the user through:
+Create a new spec with a comprehensive PRD.
 
-1. **Feature Identification**
-   - Ask for a concise feature name (kebab-case)
-   - Suggest a spec ID format: SPEC-YYYYMMDD-NNN
+**Step 1: Generate Spec ID**
+Format: `SPEC-YYYYMMDD-NNN` (e.g., SPEC-20260211-001)
+- Check existing specs to avoid duplicates
 
-2. **PRD Creation**
-   - Prompt for: feature purpose, target user, core functionality
-   - Define 3-5 key requirements
-   - List 2-3 user scenarios/stories
-   - Identify constraints and assumptions
+**Step 2: Create PRD with:**
+- **Problem Statement:** What problem does this solve?
+- **Target Users:** Who will use this feature?
+- **Key Requirements:** 3-5 must-have capabilities (KR-001, KR-002...)
+- **User Scenarios:** 2-3 stories describing usage
+- **Constraints & Assumptions:** What's in/out of scope?
 
-3. **Tech Stack Selection**
-   - Based on the feature, recommend appropriate technologies
-   - Ask for confirmation or modifications
-   - Document: language, framework, testing approach, key libraries
+**Step 3: Recommend Tech Stack**
+- Language/framework
+- Testing approach
+- Key dependencies
 
-4. **Rules Configuration**
-   - Define coding standards specific to this spec
-   - Set testing requirements (coverage thresholds, test types)
-   - Establish file organization rules
+**Step 4: Define Rules**
+- Project-specific conventions
+- Code style preferences
 
-5. **Output Generation**
-   Create files:
-   - `specs/drafts/SPEC-ID.md` — Full PRD with requirements, scenarios, tech stack, rules
-   - Update `PROJECT_STATE.md` with new spec entry (status: DRAFT)
+**Output:**
+- File: `specs/drafts/SPEC-ID.md`
+- Update PROJECT_STATE.md (status: DRAFT)
 
-Confirm all details with the user before writing files.
+**Always confirm with user before writing files.**

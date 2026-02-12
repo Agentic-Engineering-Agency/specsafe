@@ -14,32 +14,32 @@ export const specCommand = new Command('spec')
   .option('--auto-generate', 'Auto-generate scenarios from PRD')
   .action(async (id: string, options: { fromPrd?: boolean; interactive?: boolean; autoGenerate?: boolean }) => {
     const spinner = ora(`Processing ${id}...`).start();
-    
+
     try {
       // Validate spec ID format
       validateSpecId(id);
 
       const workflow = new Workflow();
       const tracker = new ProjectTracker(process.cwd());
-      
+
       // Load existing specs from disk
       await tracker.loadSpecsIntoWorkflow(workflow);
-      
+
       // Check if spec exists
       let spec = workflow.getSpec(id);
       let specContent: string;
       let specPath: string;
-      
+
       if (!spec) {
         // Try to load from file
         try {
           specPath = join('specs/active', `${id}.md`);
           specContent = await readFile(specPath, 'utf-8');
-          
+
           // Extract name from content (first heading)
           const nameMatch = specContent.match(/^#\s+(.+?)\s+Specification/m);
           const name = nameMatch ? nameMatch[1] : id;
-          
+
           // Create spec in workflow
           spec = workflow.createSpec(
             id,
@@ -48,9 +48,9 @@ export const specCommand = new Command('spec')
             'developer',
             basename(process.cwd())
           );
-          
+
           await tracker.addSpec(spec);
-          
+
           spinner.text = `Loaded spec from file...`;
         } catch (fileError) {
           throw new Error(`Spec ${id} not found. Run 'specsafe new <name>' to create it first.`);
@@ -106,10 +106,10 @@ export const specCommand = new Command('spec')
       // Parse PRD and generate requirements
       if (options.fromPrd || options.autoGenerate) {
         spinner.start('Generating requirements from PRD...');
-        
+
         const generatedRequirements = parsePrdForRequirements(specContent);
         const generatedScenarios = parsePrdForScenarios(specContent);
-        
+
         spinner.stop();
 
         if (generatedRequirements.length > 0) {
@@ -192,11 +192,11 @@ export const specCommand = new Command('spec')
             };
 
             spec.requirements.push(newReq);
-            
+
             // Update file
             specContent = updateRequirementsSection(specContent, [newReq]);
             await writeFile(specPath, specContent);
-            
+
             console.log(chalk.green(`  Added: ${newReq.id}`));
           }
         }
@@ -209,14 +209,14 @@ export const specCommand = new Command('spec')
       } else {
         spinner.succeed(chalk.green(`${id} validated: ${spec.requirements.length} requirements defined`));
       }
-      
+
       // Persist state
       await tracker.addSpec(spec);
-      
+
       console.log(chalk.blue('\nNext steps:'));
       console.log(chalk.gray(`  • Run: specsafe test ${id}  → Generate tests from requirements`));
       console.log(chalk.gray(`  • Run: specsafe verify ${id} → Verify implementation`));
-      
+
     } catch (error: any) {
       spinner.fail(chalk.red(error.message));
       if (error.message.includes('not found')) {
@@ -229,7 +229,7 @@ export const specCommand = new Command('spec')
 
 function parsePrdForRequirements(content: string): Array<{ id: string; text: string; priority: 'P0' | 'P1' | 'P2'; scenarios: any[] }> {
   const requirements: Array<{ id: string; text: string; priority: 'P0' | 'P1' | 'P2'; scenarios: any[] }> = [];
-  
+
   // Extract user stories
   const userStoryMatch = content.match(/### 1\.2 User Stories\n([\s\S]*?)(?=###|$)/);
   if (userStoryMatch) {
@@ -237,7 +237,7 @@ function parsePrdForRequirements(content: string): Array<{ id: string; text: str
       .split('\n')
       .filter(line => line.trim().match(/^As\s+a/i))
       .map(line => line.trim());
-    
+
     stories.forEach((story, index) => {
       requirements.push({
         id: `FR-${index + 1}`,
@@ -255,7 +255,7 @@ function parsePrdForRequirements(content: string): Array<{ id: string; text: str
       .split('\n')
       .filter(line => line.trim().startsWith('- [ ]') || line.trim().startsWith('- '))
       .map(line => line.replace(/^- \[ \]\s*/, '').replace(/^- \[x\]\s*/i, '').replace(/^- /, '').trim());
-    
+
     criteria.forEach((criterion, index) => {
       if (!requirements.some(r => r.text.includes(criterion))) {
         requirements.push({
@@ -271,16 +271,16 @@ function parsePrdForRequirements(content: string): Array<{ id: string; text: str
   return requirements;
 }
 
-function parsePrdForScenarios(content: string): Array<{ name: string; given: string; when: string; then: string }> {
-  const scenarios: Array<{ name: string; given: string; when: string; then: string }> = [];
-  
+function parsePrdForScenarios(content: string): Array<{ name: string; given: string; when: string; thenOutcome: string }> {
+  const scenarios: Array<{ name: string; given: string; when: string; thenOutcome: string }> = [];
+
   // Try to extract from user stories
   const userStoryMatch = content.match(/### 1\.2 User Stories\n([\s\S]*?)(?=###|$)/);
   if (userStoryMatch) {
     const stories = userStoryMatch[1]
       .split('\n')
       .filter(line => line.trim().match(/^As\s+a/i));
-    
+
     stories.forEach((story, index) => {
       // Parse "As a X, I want Y, so that Z"
       const match = story.match(/As\s+a[n]?\s+(\w+),?\s*I\s+want\s+(.+?),?\s*so\s+that\s+(.+)/i);
@@ -289,7 +289,7 @@ function parsePrdForScenarios(content: string): Array<{ name: string; given: str
           name: `User ${match[1]} completes goal`,
           given: `I am a ${match[1]}`,
           when: `I want to ${match[2]}`,
-          then: `I can ${match[3]}`
+          thenOutcome: `I can ${match[3]}`
         });
       }
     });
@@ -302,8 +302,8 @@ function updateRequirementsSection(content: string, newRequirements: any[]): str
   // Find or create the requirements table
   const tableHeader = '| ID | Requirement | Priority | Acceptance Criteria |';
   const tableSeparator = '|----|-------------|----------|---------------------|';
-  
-  const requirementsRows = newRequirements.map(r => 
+
+  const requirementsRows = newRequirements.map(r =>
     `| ${r.id} | ${r.text} | ${r.priority} | |`
   );
 
@@ -314,18 +314,41 @@ function updateRequirementsSection(content: string, newRequirements: any[]): str
       const lastRow = tableEndMatch[tableEndMatch.length - 1];
       const insertIndex = content.indexOf(lastRow) + lastRow.length;
       content = content.slice(0, insertIndex) + '\n' + requirementsRows.join('\n') + content.slice(insertIndex);
+      return content;
+    }
+    // Table header exists but no data rows yet - add after separator
+    const separatorIndex = content.indexOf(tableSeparator);
+    if (separatorIndex !== -1) {
+      const insertIndex = separatorIndex + tableSeparator.length;
+      content = content.slice(0, insertIndex) + '\n' + requirementsRows.join('\n') + content.slice(insertIndex);
+      return content;
     }
   }
+
+  // Fallback: If no table header found, try to find Functional Requirements section
+  const funcReqMatch = content.match(/(### Functional Requirements\n[\s\S]*?)(?=###|##\s+\d+|$)/);
+  if (funcReqMatch) {
+    // Insert table after the section header
+    const sectionEnd = funcReqMatch.index! + funcReqMatch[1].length;
+    content = content.slice(0, sectionEnd) +
+      '\n\n' + tableHeader + '\n' + tableSeparator + '\n' + requirementsRows.join('\n') +
+      content.slice(sectionEnd);
+    return content;
+  }
+
+  // Last resort: append a new Functional Requirements section at the end
+  content = content.trimEnd() + '\n\n### Functional Requirements\n\n' +
+    tableHeader + '\n' + tableSeparator + '\n' + requirementsRows.join('\n') + '\n';
 
   return content;
 }
 
 function updateScenariosSection(content: string, scenarios: any[]): string {
-  const scenariosText = scenarios.map((s, i) => 
+  const scenariosText = scenarios.map((s, i) =>
     `### Scenario ${i + 1}: ${s.name}
 - **Given** ${s.given}
 - **When** ${s.when}
-- **Then** ${s.then}
+- **Then** ${s.thenOutcome}
 `
   ).join('\n');
 
