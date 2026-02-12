@@ -188,6 +188,7 @@ async function generateZedConfig(projectDir: string): Promise<void> {
 const claudeSkillSpecsafeContent = `---
 name: specsafe
 description: Show SpecSafe project status and workflow guidance
+disable-model-invocation: true
 ---
 
 You are in a SpecSafe project using spec-driven development.
@@ -203,6 +204,7 @@ const claudeSkillSpecContent = `---
 name: spec
 description: Show details for a specific spec by ID
 argument-hint: "[spec-id]"
+disable-model-invocation: true
 ---
 
 Read the spec file from specs/active/$ARGUMENTS.md and show:
@@ -217,6 +219,7 @@ If no argument provided, list available specs.
 const claudeSkillValidateContent = `---
 name: validate
 description: Validate current implementation against active spec
+disable-model-invocation: true
 ---
 
 Check if the current code changes satisfy the requirements in the active spec.
