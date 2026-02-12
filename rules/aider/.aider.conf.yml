@@ -1,12 +1,51 @@
-# Aider configuration for SpecSafe projects
+# Aider configuration for SpecSafe v0.4.0
 # https://aider.chat/docs/config/aider_conf.html
-# Version: 1.0.0
+# Version: 0.4.0
 
 # Always read PROJECT_STATE.md for context
 read:
   - PROJECT_STATE.md
   - README.md
-  - CONVENTIONS.md
+
+# Convention: 7 OpenSpec Commands
+# - specsafe:new — Create spec with PRD + BRD
+# - specsafe:spec — Flesh out detailed spec
+# - specsafe:test-create — Generate tests from scenarios
+# - specsafe:test-apply — Run tests, loop on failure
+# - specsafe:verify — Verify implementation completeness
+# - specsafe:done — Mark complete, archive
+# - specsafe:explore — Pre-spec spike/research
+
+# Instructions for the AI
+assistant_prompt: |
+  You are working on a SpecSafe v0.4.0 project with OpenSpec workflow.
+
+  ## 7 OpenSpec Commands (use these exact names)
+  - specsafe:new — Create spec with PRD + BRD
+  - specsafe:spec — Flesh out detailed spec
+  - specsafe:test-create — Generate tests from scenarios
+  - specsafe:test-apply — Run tests, loop on failure
+  - specsafe:verify — Verify implementation completeness
+  - specsafe:done — Mark complete, archive
+  - specsafe:explore — Pre-spec spike/research
+
+  ## PRD Sections Required
+  - Problem Statement
+  - User Stories
+  - Acceptance Criteria
+  - Technical Requirements
+
+  ## BRD Sections Required
+  - Business Justification
+  - Success Metrics
+  - Stakeholders
+  - Timeline
+
+  Always:
+  1. Check PROJECT_STATE.md for current specs and stages
+  2. Ensure implementation satisfies test requirements
+  3. Update spec stage using specsafe commands when complete
+  4. NEVER use 'test' or 'dev' — use 'test-create' and 'test-apply'
 
 # Use .aiderignore for file exclusions (gitignore syntax)
 aiderignore: .aiderignore

@@ -1,6 +1,27 @@
 {
   "name": "specsafe-zed",
-  "version": "1.0.0",
-  "description": "SpecSafe rules for Zed Editor",
-  "note": "This is a placeholder. Full content will be added in a future update."
+  "version": "0.4.0",
+  "description": "SpecSafe rules for Zed Editor — OpenSpec workflow",
+  "assistant": {
+    "default_model": {
+      "provider": "anthropic",
+      "model": "claude-3-5-sonnet-latest"
+    },
+    "version": "2"
+  },
+  "context_servers": {
+    "specsafe": {
+      "command": "cat",
+      "args": ["PROJECT_STATE.md"]
+    }
+  },
+  "agent": {
+    "default_profile": "specsafe",
+    "profiles": {
+      "specsafe": {
+        "name": "SpecSafe OpenSpec",
+        "prompt": "You are a SpecSafe v0.4.0 assistant using the OpenSpec workflow.\n\n7 Commands:\n- specsafe:new — Create spec with PRD + BRD\n- specsafe:spec — Flesh out detailed spec\n- specsafe:test-create — Generate tests from scenarios\n- specsafe:test-apply — Run tests, loop on failure\n- specsafe:verify — Verify implementation completeness\n- specsafe:done — Mark complete, archive\n- specsafe:explore — Pre-spec spike/research\n\nPRD: Problem Statement, User Stories, Acceptance Criteria, Technical Requirements\nBRD: Business Justification, Success Metrics, Stakeholders, Timeline\n\nCRITICAL: NEVER use 'test' or 'dev' — use 'test-create' and 'test-apply'"
+      }
+    }
+  }
 }
