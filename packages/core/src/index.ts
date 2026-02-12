@@ -96,3 +96,21 @@ export {
   generateEARSTemplate,
   generateEARSExamples,
 } from './ears/index.js';
+
+// Elicitation system
+export type {
+  StepType,
+  ValidateFn,
+  ConditionFn,
+  ElicitationStep,
+  ElicitationFlow,
+  ElicitationResult,
+} from './elicitation/index.js';
+
+export {
+  ElicitationEngine,
+  quickFlow,
+  fullFlow,
+  earsFlow,
+  generateSpec,
+} from './elicitation/index.js';

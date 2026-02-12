@@ -9,6 +9,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { initCommand } from './commands/init.js';
+import { createCommand } from './commands/create.js';
 import { newCommand } from './commands/new.js';
 import { statusCommand } from './commands/status.js';
 import { specCommand } from './commands/spec.js';
@@ -41,6 +42,7 @@ program
 
 // Add commands
 program.addCommand(initCommand);
+program.addCommand(createCommand);      // NEW: Interactive spec elicitation
 program.addCommand(newCommand);
 program.addCommand(statusCommand);
 program.addCommand(listCommand);
