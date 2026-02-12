@@ -104,3 +104,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Renamed Claude Code skills to /specsafe-spec and /specsafe-validate to avoid name conflicts
+
+## [0.3.6] - 2026-02-11
+
+### Fixed
+- OpenCode integration now uses .opencode/commands/ for custom commands
