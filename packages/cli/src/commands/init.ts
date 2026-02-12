@@ -261,9 +261,7 @@ export const initCommand = new Command('init')
       // Generate git hooks if enabled
       if (useGitHooks) {
         const hooksDir = join(projectDir, '.githooks');
-        if (!existsSync(hooksDir)) {
-          await mkdir(hooksDir, { recursive: true });
-        }
+        await mkdir(hooksDir, { recursive: true });
         
         const preCommitPath = join(hooksDir, 'pre-commit');
         if (!existsSync(preCommitPath)) {
@@ -288,6 +286,8 @@ echo "Pre-commit checks passed"
 exit 0
 `;
           await writeFile(preCommitPath, preCommitContent);
+          // Make the hook executable
+          await chmod(preCommitPath, 0o755);
           console.log(chalk.green('  ✓ Created .githooks/pre-commit'));
         }
       }
@@ -314,7 +314,8 @@ exit 0
         for (const agentId of selectedAgents.slice(0, 3)) {
           const agentEntry = getAgent(agentId);
           if (agentEntry) {
-            const cmdFormat = agentEntry.commandFormat.replace('command', 'specsafe');
+            // Use regex for whole-word replacement
+            const cmdFormat = agentEntry.commandFormat.replace(/\bcommand\b/, 'specsafe');
             console.log(`  ${agentEntry.name}: ${cmdFormat}`);
           }
         }
