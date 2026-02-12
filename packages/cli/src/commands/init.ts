@@ -65,12 +65,10 @@ async function generateAgentConfigs(
       // Write files
       for (const file of allFiles) {
         const filePath = join(projectDir, file.path);
-        const fileDir = join(filePath, '..');
+        const fileDir = dirname(filePath);
 
-        // Create directory if needed
-        if (!existsSync(fileDir)) {
-          await mkdir(fileDir, { recursive: true });
-        }
+        // Create directory if needed (mkdir recursive is idempotent, no need to check existsSync)
+        await mkdir(fileDir, { recursive: true });
 
         // Skip if file exists
         if (existsSync(filePath)) {
