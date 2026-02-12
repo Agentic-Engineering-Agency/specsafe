@@ -84,3 +84,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `@specsafe/core@0.1.0` — Core workflow engine and types
 - `@specsafe/cli@0.1.0` — Command-line interface
 - `@specsafe/test-gen@0.1.0` — Test generation library
+
+## [0.3.2] - 2026-02-11
+
+### Fixed
+- Claude Code integration: create SKILL.md files in .claude/skills/ for slash commands (/specsafe, /spec, /validate)
