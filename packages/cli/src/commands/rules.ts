@@ -103,7 +103,7 @@ export const rulesCommand = new Command('rules')
 
             console.log(`  ${status} ${chalk.cyan(agentDef.id.padEnd(15))} ${agentDef.name}`);
             
-            if (isDetected && !isInstalled) {
+            if (isDetected && !isInstalled && agentDef.detectionFiles.length > 0) {
               console.log(`             ${chalk.gray(`Detected: ${agentDef.detectionFiles[0]}`)}`);
             }
           }

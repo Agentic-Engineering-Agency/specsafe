@@ -78,7 +78,7 @@ export const newCommand = new Command('new')
       let timeline = '';
       let priority = 'P1';
 
-      if (!options.skipInteractive && !options.dryRun) {
+      if (!options.skipInteractive && !options.dryRun && !options.ears) {
         console.log(chalk.blue('\n📋 Let\'s create a Product Requirements Document (PRD)\n'));
 
         problemStatement = await editor({
@@ -102,7 +102,7 @@ So that [some reason]
 - [ ] Criterion 3`
         });
 
-        const technicalConsiderations = await editor({
+        technicalConsiderations = await editor({
           message: 'Technical Requirements (dependencies, constraints, stack):',
           default: `<!-- Technical constraints, dependencies, integrations needed -->
 - Required APIs:
