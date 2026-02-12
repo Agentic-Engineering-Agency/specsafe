@@ -227,7 +227,7 @@ function parseTestOutput(stdout: string, stderr: string, framework: string): Tes
     if (timeMatch) result.duration = parseInt(timeMatch[1], 10);
     
     // Parse failures
-    const failureBlocks = output.match(/FAIL\s+[^]+?(?=FAIL|Test Files|✓|passed|failed|$)/g) || [];
+    const failureBlocks = output.match(/FAIL\s+[\s\S]+?(?=FAIL|Test Files|✓|passed|failed|$)/g) || [];
     for (const block of failureBlocks) {
       const testMatch = block.match(/FAIL\s+(.+)/);
       const errorMatch = block.match(/AssertionError:\s*(.+)/) || block.match(/Error:\s*(.+)/);
@@ -245,11 +245,18 @@ function parseTestOutput(stdout: string, stderr: string, framework: string): Tes
     result.passed = result.failedTests === 0 && result.totalTests > 0;
   } else if (framework === 'jest' || output.includes('jest')) {
     // Parse Jest output
-    const summaryMatch = output.match(/Tests:\s+(\d+) passed,\s+(\d+) failed,\s+(\d+) total/);
-    if (summaryMatch) {
-      result.passedTests = parseInt(summaryMatch[1], 10);
-      result.failedTests = parseInt(summaryMatch[2], 10);
-      result.totalTests = parseInt(summaryMatch[3], 10);
+    const passedMatch = output.match(/(\d+)\s+passed/);
+    const failedMatch = output.match(/(\d+)\s+failed/);
+    const skippedMatch = output.match(/(\d+)\s+skipped/);
+    const totalMatch = output.match(/(\d+)\s+total/);
+
+    if (passedMatch) result.passedTests = parseInt(passedMatch[1], 10);
+    if (failedMatch) result.failedTests = parseInt(failedMatch[1], 10);
+    if (skippedMatch) result.skippedTests = parseInt(skippedMatch[1], 10);
+    if (totalMatch) {
+      result.totalTests = parseInt(totalMatch[1], 10);
+    } else {
+      result.totalTests = result.passedTests + result.failedTests + result.skippedTests;
     }
     
     const timeMatch = output.match(/Time:\s+([\d.]+)\s*s/);

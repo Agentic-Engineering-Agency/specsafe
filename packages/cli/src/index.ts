@@ -73,7 +73,7 @@ program
     console.log(chalk.gray('       ↓'));
     console.log(chalk.cyan('  specsafe test-create <id> → Generate tests from scenarios'));
     console.log(chalk.gray('       ↓'));
-    console.log(chalk.cyan('  specsafe test-apply <id>  → Run tests, loop on failure'));
+    console.log(chalk.cyan('  specsafe test-apply <id>  → Start implementation (TEST → CODE)'));
     console.log(chalk.gray('       ↓ (if tests pass)'));
     console.log(chalk.cyan('  specsafe verify <id>      → Verify implementation'));
     console.log(chalk.gray('       ↓'));
@@ -86,7 +86,7 @@ program
     console.log(chalk.gray('  specsafe doctor           → Check project health'));
     console.log();
     
-    console.log(chalk.yellow('💡 The test-apply command is the key differentiator:'));
+    console.log(chalk.yellow('💡 The verify command is the key differentiator:'));
     console.log(chalk.yellow('   It runs tests and loops back for the dev-test cycle.\n'));
   });
 

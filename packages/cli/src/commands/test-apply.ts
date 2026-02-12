@@ -220,7 +220,7 @@ export const testApplyCommand = new Command('test-apply')
   });
 
 function extractSection(content: string, sectionName: string): string | null {
-  const regex = new RegExp(`##+\s*${sectionName}[\\s\\S]*?(?=##+|$)`, 'i');
+  const regex = new RegExp(`##+\\s*${sectionName}[\\s\\S]*?(?=##+|$)`, 'i');
   const match = content.match(regex);
   return match ? match[0] : null;
 }

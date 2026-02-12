@@ -39,9 +39,9 @@ TODO_SPEC_FILES=$(echo "$STAGED_FILES" | xargs -I {} grep -l "TODO.*spec" {} 2>/
 
 if [ -n "$TODO_SPEC_FILES" ]; then
     echo -e "${YELLOW}⚠️  Found TODO items mentioning specs:${NC}"
-    echo "$TODO_SPEC_FILES" | while read -r file; do
+    while read -r file; do
         echo "   - $file"
-    done
+    done <<< "$TODO_SPEC_FILES"
     echo "   Review before committing"
     EXIT_CODE=1
 fi
@@ -55,7 +55,7 @@ echo "📄 Validating staged spec files..."
 STAGED_SPECS=$(echo "$STAGED_FILES" | grep -E "^specs/(active|drafts)/SPEC-[0-9]{8}-[0-9]{3}\.md$" 2>/dev/null)
 
 if [ -n "$STAGED_SPECS" ]; then
-    echo "$STAGED_SPECS" | while read -r specfile; do
+    while read -r specfile; do
         # Check for required sections
         if ! grep -q "^## 1. Purpose" "$specfile" 2>/dev/null && \
            ! grep -q "^## Problem Statement" "$specfile" 2>/dev/null; then
@@ -68,7 +68,7 @@ if [ -n "$STAGED_SPECS" ]; then
         fi
         
         echo -e "${GREEN}✓ $specfile structure valid${NC}"
-    done
+    done <<< "$STAGED_SPECS"
 fi
 
 # ============================================
@@ -81,11 +81,12 @@ STAGED_CODE=$(echo "$STAGED_FILES" | grep -E "\.(ts|js|tsx|jsx|py|rs|go|java|kt|
 
 if [ -n "$STAGED_CODE" ]; then
     # Check if code files have spec references in comments
-    MISSING_REFS=$(echo "$STAGED_CODE" | while read -r file; do
+    MISSING_REFS=""
+    while read -r file; do
         if ! grep -qE "(SPEC-[0-9]{8}-[0-9]{3}|Refs:|Related spec)" "$file" 2>/dev/null; then
-            echo "$file"
+            MISSING_REFS="$MISSING_REFS$file"$'\n'
         fi
-    done)
+    done <<< "$STAGED_CODE"
     
     if [ -n "$MISSING_REFS" ]; then
         echo -e "${YELLOW}⚠️  Some code files lack spec references:${NC}"
@@ -106,14 +107,14 @@ echo "🧪 Checking test coverage for CODE stage specs..."
 CODE_SPECS=$(grep -E "^- \[ \] .*Status: CODE" PROJECT_STATE.md 2>/dev/null | grep -oE "SPEC-[0-9]{8}-[0-9]{3}")
 
 if [ -n "$CODE_SPECS" ]; then
-    echo "$CODE_SPECS" | while read -r spec_id; do
+    while read -r spec_id; do
         # Look for corresponding test directory
         if [ ! -d "src/__tests__/$spec_id" ] && [ ! -d "tests/$spec_id" ]; then
             echo -e "${YELLOW}⚠️  $spec_id is in CODE stage but no tests found${NC}"
             echo "   Expected: src/__tests__/$spec_id/ or tests/$spec_id/"
             EXIT_CODE=1
         fi
-    done
+    done <<< "$CODE_SPECS"
 fi
 
 # ============================================

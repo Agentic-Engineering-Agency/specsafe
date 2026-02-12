@@ -283,7 +283,7 @@ function parsePrdForScenarios(content: string): Array<{ name: string; given: str
     
     stories.forEach((story, index) => {
       // Parse "As a X, I want Y, so that Z"
-      const match = story.match(/As\s+a[n]?\s+(\w+),?\s*I\s+want\s+(.+?),?\s*so\s+that\s+(.+)/i);
+      const match = story.match(/As\s+a[n]?\s+(.+?),?\s*I\s+want\s+(.+?),?\s*so\s+that\s+(.+)/i);
       if (match) {
         scenarios.push({
           name: `User ${match[1]} completes goal`,

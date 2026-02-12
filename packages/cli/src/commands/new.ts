@@ -101,7 +101,7 @@ So that [some reason]
 - [ ] Criterion 3`
         });
 
-        const technicalConsiderations = await editor({
+        technicalConsiderations = await editor({
           message: 'Technical Requirements (dependencies, constraints, stack):',
           default: `<!-- Technical constraints, dependencies, integrations needed -->
 - Required APIs:

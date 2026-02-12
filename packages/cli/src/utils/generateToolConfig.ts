@@ -1227,8 +1227,8 @@ fi
   
   // Make the hook executable (this won't work on Windows without special handling)
   try {
-    const { exec } = await import('child_process');
-    exec(`chmod +x ${preCommitPath}`);
+    const { chmod } = await import('fs/promises');
+    await chmod(preCommitPath, 0o755);
     console.log(chalk.green('✓ Created .githooks/pre-commit'));
   } catch {
     console.log(chalk.yellow('⚠ Could not make pre-commit executable'));
