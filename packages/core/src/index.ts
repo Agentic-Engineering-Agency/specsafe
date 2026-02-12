@@ -96,3 +96,31 @@ export {
   generateEARSTemplate,
   generateEARSExamples,
 } from './ears/index.js';
+
+// Extension system
+export type {
+  Extension,
+  ExtensionPhase,
+  ExtensionHook,
+  ExtensionContext,
+  ExtensionResult,
+  ExtensionRegistryEntry,
+  ExtensionConfig,
+} from './extensions/index.js';
+
+export {
+  registerExtension,
+  unregisterExtension,
+  getExtension,
+  listExtensions,
+  listEnabledExtensions,
+  hasExtension,
+  enableExtension,
+  disableExtension,
+  executeHooks,
+  clearExtensions,
+  validateExtension,
+  loadExtension,
+  loadExtensions,
+  loadBuiltinExtensions,
+} from './extensions/index.js';
