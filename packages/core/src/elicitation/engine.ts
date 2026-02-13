@@ -44,9 +44,9 @@ export class ElicitationEngine {
 
   /**
    * Start the elicitation flow
-   * @returns The first step to present to the user
+   * @returns The first step to present to the user, or null if no valid steps
    */
-  start(): ElicitationStep {
+  start(): ElicitationStep | null {
     this.startedAt = new Date();
     this.currentIndex = 0;
     return this.getNextValidStep(0);
@@ -177,9 +177,9 @@ export class ElicitationEngine {
   /**
    * Find the next valid step, skipping conditional steps that don't match
    * @param startIndex Index to start searching from
-   * @returns The next valid step
+   * @returns The next valid step, or null if flow is complete
    */
-  private getNextValidStep(startIndex: number): ElicitationStep {
+  private getNextValidStep(startIndex: number): ElicitationStep | null {
     for (let i = startIndex; i < this.flow.steps.length; i++) {
       const step = this.flow.steps[i];
       
@@ -198,8 +198,8 @@ export class ElicitationEngine {
       return step;
     }
 
-    // No more valid steps - mark as complete
+    // No more valid steps - mark as complete and return null
     this.completedAt = new Date();
-    throw new Error('No more valid steps in flow');
+    return null;
   }
 }

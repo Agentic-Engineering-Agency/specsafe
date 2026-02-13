@@ -40,7 +40,11 @@ function generateQuickSpec(answers: Record<string, any>): string {
   const specId = generateSpecId();
   const date = new Date().toISOString().split('T')[0];
 
-  const requirements = (answers.requirements as string)
+  const requirementsValue = answers.requirements;
+  if (typeof requirementsValue !== 'string') {
+    throw new Error('Missing required field: requirements');
+  }
+  const requirements = requirementsValue
     .split('\n')
     .filter(line => line.trim().length > 0)
     .map(req => `- ${req.trim()}`)
@@ -88,7 +92,11 @@ function generateFullSpec(answers: Record<string, any>): string {
   const specId = generateSpecId();
   const date = new Date().toISOString().split('T')[0];
 
-  const requirements = (answers.requirements as string)
+  const requirementsValue = answers.requirements;
+  if (typeof requirementsValue !== 'string') {
+    throw new Error('Missing required field: requirements');
+  }
+  const requirements = requirementsValue
     .split('\n')
     .filter(line => line.trim().length > 0)
     .map(req => `- ${req.trim()}`)
@@ -109,94 +117,67 @@ ${answers.description}
 `;
 
   if (answers.scope) {
-    spec += `\n## Scope
-
-${answers.scope}
-`;
+    spec += `\n## Scope\n\n${answers.scope}\n`;
   }
 
   if (answers.stakeholders) {
-    const stakeholderList = (answers.stakeholders as string)
-      .split(',')
-      .map(s => `- ${s.trim()}`)
-      .join('\n');
-    spec += `\n## Stakeholders
-
-${stakeholderList}
-`;
+    const stakeholdersValue = answers.stakeholders;
+    if (typeof stakeholdersValue === 'string') {
+      const stakeholderList = stakeholdersValue
+        .split(',')
+        .map(s => `- ${s.trim()}`)
+        .join('\n');
+      spec += `\n## Stakeholders\n\n${stakeholderList}\n`;
+    }
   }
 
-  spec += `\n## Requirements
-
-${requirements}
-`;
+  spec += `\n## Requirements\n\n${requirements}\n`;
 
   if (answers.has_security && answers.security_considerations) {
-    spec += `\n## Security Considerations
-
-${answers.security_considerations}
-`;
+    spec += `\n## Security Considerations\n\n${answers.security_considerations}\n`;
   }
 
-  spec += `\n## Testing Strategy
-
-${answers.testing_strategy}
-`;
+  spec += `\n## Testing Strategy\n\n${answers.testing_strategy}\n`;
 
   if (answers.has_performance && answers.performance_requirements) {
-    spec += `\n## Performance Requirements
-
-${answers.performance_requirements}
-`;
+    spec += `\n## Performance Requirements\n\n${answers.performance_requirements}\n`;
   }
 
   if (answers.dependencies) {
-    const depList = (answers.dependencies as string)
-      .split('\n')
-      .filter(line => line.trim().length > 0)
-      .map(dep => `- ${dep.trim()}`)
-      .join('\n');
-    spec += `\n## Dependencies
-
-${depList}
-`;
+    const dependenciesValue = answers.dependencies;
+    if (typeof dependenciesValue === 'string') {
+      const depList = dependenciesValue
+        .split('\n')
+        .filter(line => line.trim().length > 0)
+        .map(dep => `- ${dep.trim()}`)
+        .join('\n');
+      spec += `\n## Dependencies\n\n${depList}\n`;
+    }
   }
 
   if (answers.timeline) {
-    spec += `\n## Timeline
-
-${answers.timeline}
-`;
+    spec += `\n## Timeline\n\n${answers.timeline}\n`;
   }
 
   if (answers.risks) {
-    const riskList = (answers.risks as string)
-      .split('\n')
-      .filter(line => line.trim().length > 0)
-      .map(risk => `- ${risk.trim()}`)
-      .join('\n');
-    spec += `\n## Risks
-
-${riskList}
-`;
+    const risksValue = answers.risks;
+    if (typeof risksValue === 'string') {
+      const riskList = risksValue
+        .split('\n')
+        .filter(line => line.trim().length > 0)
+        .map(risk => `- ${risk.trim()}`)
+        .join('\n');
+      spec += `\n## Risks\n\n${riskList}\n`;
+    }
   }
 
-  spec += `\n## Acceptance Criteria
-
-${answers.acceptance_criteria}
-`;
+  spec += `\n## Acceptance Criteria\n\n${answers.acceptance_criteria}\n`;
 
   if (answers.notes) {
-    spec += `\n## Notes
-
-${answers.notes}
-`;
+    spec += `\n## Notes\n\n${answers.notes}\n`;
   }
 
-  spec += `\n---
-
-Created via SpecSafe full flow elicitation.
-`;
+  spec += `\n---\n\nCreated via SpecSafe full flow elicitation.\n`;
 
   return spec;
 }
@@ -207,7 +188,15 @@ Created via SpecSafe full flow elicitation.
 function generateEARSSpec(answers: Record<string, any>): string {
   const specId = generateSpecId();
   const date = new Date().toISOString().split('T')[0];
-  const reqCount = parseInt(answers.req_count, 10);
+  
+  const reqCountValue = answers.req_count;
+  if (typeof reqCountValue !== 'string') {
+    throw new Error('Missing required field: req_count');
+  }
+  const reqCount = parseInt(reqCountValue, 10);
+  if (isNaN(reqCount) || reqCount < 1) {
+    throw new Error('Invalid req_count value');
+  }
 
   let spec = `# ${answers.name}
 
@@ -235,7 +224,7 @@ ${answers.description}
     const type = answers[typeKey];
     const response = answers[responseKey];
 
-    if (!response) continue;
+    if (!response || typeof response !== 'string') continue;
 
     spec += `### REQ-${i.toString().padStart(3, '0')}\n\n`;
 
@@ -245,23 +234,26 @@ ${answers.description}
         spec += `The system shall ${response}\n\n`;
         break;
 
-      case 'event':
+      case 'event': {
         const trigger = answers[triggerKey];
         spec += `**Type**: Event-driven\n\n`;
         spec += `WHEN ${trigger}, the system shall ${response}\n\n`;
         break;
+      }
 
-      case 'state':
+      case 'state': {
         const statePrecondition = answers[preconditionKey];
         spec += `**Type**: State-driven\n\n`;
         spec += `WHILE ${statePrecondition}, the system shall ${response}\n\n`;
         break;
+      }
 
-      case 'optional':
+      case 'optional': {
         const optionalPrecondition = answers[preconditionKey];
         spec += `**Type**: Optional\n\n`;
         spec += `WHERE ${optionalPrecondition}, the system shall ${response}\n\n`;
         break;
+      }
 
       case 'unwanted':
         spec += `**Type**: Unwanted behavior\n\n`;
