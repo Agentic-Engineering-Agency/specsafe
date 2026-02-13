@@ -20,6 +20,38 @@ import { shardByScenario } from './strategies/by-scenario.js';
 import { shardAuto } from './strategies/auto.js';
 
 /**
+ * Constants for token estimation and limits
+ */
+const TOKEN_ESTIMATION_PROSE_CHARS_PER_TOKEN = 4;
+const TOKEN_ESTIMATION_CODE_CHARS_PER_TOKEN = 3.5;
+
+/**
+ * Properly escape a string for use in a regular expression
+ * @param str - The string to escape
+ * @returns Escaped string safe for use in regex
+ */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Validate that a shard ID is safe for use in operations
+ * @param id - The shard ID to validate
+ * @throws Error if the ID is invalid
+ */
+function validateShardId(id: unknown): asserts id is string {
+  if (typeof id !== 'string') {
+    throw new Error(`Invalid shard ID: expected string, got ${typeof id}`);
+  }
+  if (id.length === 0) {
+    throw new Error('Invalid shard ID: empty string');
+  }
+  if (id.length > 200) {
+    throw new Error('Invalid shard ID: exceeds maximum length of 200 characters');
+  }
+}
+
+/**
  * Engine for analyzing and sharding specifications
  */
 export class ShardEngine {
@@ -81,7 +113,7 @@ export class ShardEngine {
     complexity = Math.min(Math.round(complexity), 100);
     
     // Estimate total tokens (rough approximation: ~4 chars per token)
-    const totalTokens = Math.ceil(spec.length / 4);
+    const totalTokens = Math.ceil(spec.length / TOKEN_ESTIMATION_PROSE_CHARS_PER_TOKEN);
     
     // Determine recommended strategy
     let recommendedStrategy: ShardStrategy;
@@ -269,7 +301,9 @@ export class ShardEngine {
     const proseChars = charCount - codeChars;
     
     // Code tends to have slightly higher token density
-    const estimatedTokens = Math.ceil(proseChars / 4) + Math.ceil(codeChars / 3.5);
+    const estimatedTokens =
+      Math.ceil(proseChars / TOKEN_ESTIMATION_PROSE_CHARS_PER_TOKEN) +
+      Math.ceil(codeChars / TOKEN_ESTIMATION_CODE_CHARS_PER_TOKEN);
     
     return estimatedTokens;
   }
@@ -281,7 +315,10 @@ export class ShardEngine {
    */
   findDependencies(shards: SpecShard[]): CrossReference[] {
     const references: CrossReference[] = [];
-    const shardIds = new Set(shards.map(s => s.id));
+    const shardIds = new Set(shards.map(s => {
+      validateShardId(s.id);
+      return s.id;
+    }));
     
     // Build lookup by section name for matching
     const sectionMap = new Map<string, string>();
@@ -296,7 +333,8 @@ export class ShardEngine {
       for (const otherId of shardIds) {
         if (otherId === shard.id) continue;
         
-        const pattern = new RegExp(`\\b${otherId.replace(/[-/]/g, '[-/]')}\\b`, 'i');
+        const safeOtherId = escapeRegex(otherId);
+        const pattern = new RegExp(`\\b${safeOtherId}\\b`, 'i');
         if (pattern.test(shard.content)) {
           references.push({
             from: shard.id,

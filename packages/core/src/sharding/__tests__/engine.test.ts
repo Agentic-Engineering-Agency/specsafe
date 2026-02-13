@@ -307,6 +307,44 @@ See REQ-001 in the Requirements section for more details
       
       expect(refs.length).toBeGreaterThan(0);
     });
+
+    it('should safely handle shard IDs with regex special characters', () => {
+      const engine = new ShardEngine();
+
+      expect(() =>
+        engine.findDependencies([
+          {
+            id: 'section-(a+b)?[1]',
+            type: 'mixed',
+            content: 'Main shard',
+            dependencies: [],
+            priority: 0,
+          },
+          {
+            id: 'section-plain',
+            type: 'mixed',
+            content: 'References section-(a+b)?[1] directly',
+            dependencies: [],
+            priority: 1,
+          },
+        ])
+      ).not.toThrow();
+    });
+
+    it('should throw for invalid shard IDs in dependency analysis', () => {
+      const engine = new ShardEngine();
+      expect(() =>
+        engine.findDependencies([
+          {
+            id: '' as string,
+            type: 'mixed',
+            content: 'content',
+            dependencies: [],
+            priority: 0,
+          },
+        ])
+      ).toThrow('Invalid shard ID');
+    });
   });
 
   describe('recommendedOrder', () => {
@@ -357,9 +395,9 @@ Header content
       expect(result.plan.shards.length).toBeGreaterThan(0);
     });
 
-    it('should handle invalid strategy by falling back', () => {
-      const engine = new ShardEngine({ 
-        strategy: 'auto' as any // Force auto to test fallback
+    it('should handle auto strategy safely', () => {
+      const engine = new ShardEngine({
+        strategy: 'auto',
       });
       const spec = '# Simple Spec';
       
