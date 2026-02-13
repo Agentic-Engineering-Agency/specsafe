@@ -149,3 +149,30 @@ export type {
 export { ElicitationEngine } from './elicitation/engine.js';
 export { quickFlow, fullFlow, earsFlow } from './elicitation/flows.js';
 export { generateSpec } from './elicitation/generator.js';
+
+// Capsule System (Story Context Capsules)
+export type {
+  Capsule,
+  CapsuleCollection,
+  CapsuleType,
+  CapsuleFilter,
+  DateRange,
+  CapsuleTemplate,
+  TemplateField,
+} from './capsules/index.js';
+
+export { CapsuleManager, type CapsuleManagerOptions } from './capsules/index.js';
+export {
+  USER_STORY_TEMPLATE,
+  TECHNICAL_CONTEXT_TEMPLATE,
+  BUSINESS_JUSTIFICATION_TEMPLATE,
+  DISCOVERY_NOTE_TEMPLATE,
+  BUILTIN_TEMPLATES,
+  TEMPLATE_NAMES,
+  getTemplate,
+  listTemplates,
+  isValidTemplateType,
+  getTemplateChoices,
+  formatContent,
+  parseContent,
+} from './capsules/index.js';

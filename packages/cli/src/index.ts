@@ -27,6 +27,7 @@ import { deltaCommand } from './commands/delta.js';
 import { applyCommand } from './commands/apply.js';
 import { diffCommand } from './commands/diff.js';
 import { extendCommand } from './commands/extend.js';
+import { capsuleCommand } from './commands/capsule.js';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
@@ -64,6 +65,9 @@ program.addCommand(diffCommand);        // Preview delta changes
 
 // Extension system
 program.addCommand(extendCommand);      // Manage extensions
+
+// Capsule system (story context)
+program.addCommand(capsuleCommand);     // Manage context capsules
 
 // Workflow command group
 program
