@@ -5,6 +5,13 @@ import { join } from 'path';
 import { existsSync } from 'fs';
 import type { TestReport } from '@specsafe/core';
 
+function validateSpecId(specId: string): string {
+  if (!/^[A-Za-z0-9_-]+$/.test(specId)) {
+    throw new Error('Invalid spec ID. Use only letters, numbers, dash, and underscore.');
+  }
+  return specId;
+}
+
 export const testReportCommand = new Command('test-report')
   .description('View E2E test report for a spec')
   .argument('<spec>', 'Spec ID')
@@ -17,6 +24,7 @@ export const testReportCommand = new Command('test-report')
     all?: boolean;
   }) => {
     try {
+      specId = validateSpecId(specId);
       const reportsDir = join('.specsafe', 'e2e', 'reports');
 
       if (!existsSync(reportsDir)) {

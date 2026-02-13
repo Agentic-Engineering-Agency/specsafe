@@ -12,7 +12,23 @@ import {
   generatePlaywrightScript,
 } from '@specsafe/core';
 import { readFile, writeFile, mkdir } from 'fs/promises';
-import { join, dirname } from 'path';
+import { join, dirname, normalize, isAbsolute } from 'path';
+
+function validateSpecInput(specInput: string): string {
+  if (specInput.endsWith('.md')) return specInput;
+  if (!/^[A-Za-z0-9_-]+$/.test(specInput)) {
+    throw new Error('Invalid spec identifier. Use only letters, numbers, dash, and underscore.');
+  }
+  return specInput;
+}
+
+function sanitizeOutputPath(outputPath: string): string {
+  const normalized = normalize(outputPath);
+  if (isAbsolute(normalized) || normalized.includes('..')) {
+    throw new Error('Output path must be a safe relative path');
+  }
+  return normalized;
+}
 
 export const testGuideCommand = new Command('test-guide')
   .description('Generate E2E test guide from spec')
@@ -32,6 +48,8 @@ export const testGuideCommand = new Command('test-guide')
     const spinner = ora('Generating test guide...').start();
 
     try {
+      specInput = validateSpecInput(specInput);
+
       const workflow = new Workflow();
       const tracker = new ProjectTracker(process.cwd());
       await tracker.loadSpecsIntoWorkflow(workflow);
@@ -93,7 +111,7 @@ export const testGuideCommand = new Command('test-guide')
 
       let outputPath: string;
       if (options.output) {
-        outputPath = options.output;
+        outputPath = sanitizeOutputPath(options.output);
       } else {
         const guidesDir = join('.specsafe', 'e2e', 'guides');
         await mkdir(guidesDir, { recursive: true });
@@ -134,10 +152,11 @@ export const testGuideCommand = new Command('test-guide')
   });
 
 function parseSpecFromContent(specId: string, content: string) {
-  const nameMatch = content.match(/^#\s+(.+?)(?:\s+Specification)?$/m);
+  const safeContent = content.slice(0, 500_000);
+  const nameMatch = safeContent.match(/^#\s+(.+?)(?:\s+Specification)?$/m);
   const name = nameMatch ? nameMatch[1] : specId;
 
-  const descMatch = content.match(/## Overview\n+([\s\S]*?)(?=##|$)/);
+  const descMatch = safeContent.match(/## Overview\n+([\s\S]*?)(?=##|$)/);
   const description = descMatch ? descMatch[1].trim() : '';
 
   const requirements: Array<{
@@ -147,7 +166,7 @@ function parseSpecFromContent(specId: string, content: string) {
     scenarios: Array<{ id: string; given: string; when: string; thenOutcome: string }>;
   }> = [];
 
-  const tableMatch = content.match(/\| ID \| Requirement \| Priority \|[^|]+\|\n\|[-\s|]+\|\n([\s\S]*?)(?=\n## |\n### |$)/);
+  const tableMatch = safeContent.match(/\| ID \| Requirement \| Priority \|[^|]+\|\n\|[-\s|]+\|\n([\s\S]*?)(?=\n## |\n### |$)/);
   if (tableMatch) {
     const rows = tableMatch[1].trim().split('\n');
     for (const row of rows) {
@@ -159,7 +178,7 @@ function parseSpecFromContent(specId: string, content: string) {
     }
   }
 
-  const scenariosMatch = content.match(/## \d+\.\s*Scenarios\n+([\s\S]*?)(?=## \d+\.|$)/);
+  const scenariosMatch = safeContent.match(/## \d+\.\s*Scenarios\n+([\s\S]*?)(?=## \d+\.|$)/);
   if (scenariosMatch) {
     const scenarioBlocks = scenariosMatch[1].split(/### Scenario \d+:/);
     for (let i = 0; i < scenarioBlocks.length; i++) {

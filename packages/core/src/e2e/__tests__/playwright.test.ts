@@ -29,9 +29,9 @@ describe('Playwright E2E integration', () => {
 
     const script = generatePlaywrightScript('SPEC-42', scenarios);
     expect(script).toContain("import { test, expect } from '@playwright/test';");
-    expect(script).toContain("await page.goto('https://example.com/login');");
-    expect(script).toContain("await page.fill('#email', 'test@example.com');");
-    expect(script).toContain("await page.click('#submit');");
+    expect(script).toContain('await page.goto("https://example.com/login");');
+    expect(script).toContain('await page.fill("#email", "test@example.com");');
+    expect(script).toContain('await page.click("#submit");');
   });
 
   it('converts manual guide to playwright scenarios', () => {
@@ -84,6 +84,12 @@ describe('Playwright E2E integration', () => {
     expect(calls[0].path).toBe('shots/home.png');
   });
 
+  it('rejects unsafe screenshot traversal paths', async () => {
+    const engine = new E2EEngine();
+    const page = { screenshot: async () => {} };
+    await expect(engine.captureScreenshot(page, '../etc/passwd')).rejects.toThrow('path traversal');
+  });
+
   it('fills form using selector map', async () => {
     const engine = new E2EEngine();
     const filled: Array<[string, string]> = [];
@@ -119,5 +125,17 @@ describe('Playwright E2E integration', () => {
     const engine = new E2EEngine();
     const out = await engine.runAllScenarios('SPEC-42');
     expect(out).toEqual([]);
+  });
+
+  it('escapes quotes in generated playwright script', () => {
+    const scenarios: PlaywrightScenario[] = [{
+      id: 'S2',
+      name: "Flow with 'quotes'",
+      actions: [{ type: 'click', selector: "button[data-name='x']" }],
+    }];
+
+    const script = generatePlaywrightScript('SPEC-42', scenarios);
+    expect(script).toContain('test.describe("Flow with \'quotes\'", () => {');
+    expect(script).toContain('await page.click("button[data-name=\'x\']");');
   });
 });

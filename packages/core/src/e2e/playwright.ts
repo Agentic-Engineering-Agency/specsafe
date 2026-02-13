@@ -3,6 +3,9 @@
  * Automated browser testing with Playwright
  */
 
+import { dirname, isAbsolute, normalize } from 'path';
+import { mkdir } from 'fs/promises';
+
 // Check if @playwright/test is available
 let playwrightModule: any = null;
 let playwrightAvailable = false;
@@ -61,6 +64,34 @@ export interface PlaywrightResult {
     duration: number;
     error?: string;
   }>;
+}
+
+const MAX_INPUT_LENGTH = 2000;
+
+function ensureSafeInput(value: string, label: string): string {
+  if (!value || typeof value !== 'string') {
+    throw new Error(`${label} must be a non-empty string`);
+  }
+  if (value.length > MAX_INPUT_LENGTH) {
+    throw new Error(`${label} exceeds maximum length of ${MAX_INPUT_LENGTH}`);
+  }
+  return value;
+}
+
+function ensureSafeScreenshotPath(filePath: string): string {
+  const safePath = ensureSafeInput(filePath, 'Screenshot path');
+  const normalized = normalize(safePath);
+  if (normalized.includes('..')) {
+    throw new Error('Screenshot path cannot contain path traversal segments');
+  }
+  if (isAbsolute(normalized)) {
+    throw new Error('Screenshot path must be relative');
+  }
+  return normalized;
+}
+
+function escapeJsString(value: string): string {
+  return JSON.stringify(value);
 }
 
 /**
@@ -144,7 +175,7 @@ export class E2EEngine {
         status: 'error',
         duration: Date.now() - startTime,
         screenshots,
-        error: error.message,
+        error: error?.message || 'Scenario execution failed',
         steps
       };
     }
@@ -200,43 +231,57 @@ export class E2EEngine {
   ): Promise<void> {
     const stepStart = Date.now();
 
+    if (!this.page) {
+      throw new Error('Playwright page is not initialized');
+    }
+
     try {
       switch (action.type) {
-        case 'navigate':
-          await this.page.goto(action.value!);
+        case 'navigate': {
+          const targetUrl = ensureSafeInput(action.value || '', 'Navigation URL');
+          if (!/^https?:\/\//i.test(targetUrl)) {
+            throw new Error('Navigation URL must start with http:// or https://');
+          }
+          await this.page.goto(targetUrl);
           break;
+        }
 
-        case 'click':
-          if (!action.selector) throw new Error('Selector required for click action');
-          await this.page.click(action.selector);
+        case 'click': {
+          const selector = ensureSafeInput(action.selector || '', 'Selector');
+          await this.page.click(selector);
           break;
+        }
 
-        case 'fill':
-          if (!action.selector) throw new Error('Selector required for fill action');
-          await this.page.fill(action.selector, action.value || '');
+        case 'fill': {
+          const selector = ensureSafeInput(action.selector || '', 'Selector');
+          await this.page.fill(selector, (action.value || '').slice(0, MAX_INPUT_LENGTH));
           break;
+        }
 
-        case 'screenshot':
-          const path = action.screenshotPath || `screenshot-${Date.now()}.png`;
+        case 'screenshot': {
+          const rawPath = action.screenshotPath || `screenshot-${Date.now()}.png`;
+          const path = ensureSafeScreenshotPath(rawPath);
+          await mkdir(dirname(path), { recursive: true });
           await this.page.screenshot({ path });
           if (screenshots) screenshots.push(path);
           break;
+        }
 
         case 'wait':
           if (action.waitFor) {
-            if (!action.selector) throw new Error('Selector required for wait action with waitFor state');
+            const selector = ensureSafeInput(action.selector || '', 'Selector');
             switch (action.waitFor) {
               case 'visible':
-                await this.page.waitForSelector(action.selector, { state: 'visible', timeout: action.timeout });
+                await this.page.waitForSelector(selector, { state: 'visible', timeout: action.timeout });
                 break;
               case 'hidden':
-                await this.page.waitForSelector(action.selector, { state: 'hidden', timeout: action.timeout });
+                await this.page.waitForSelector(selector, { state: 'hidden', timeout: action.timeout });
                 break;
               case 'attached':
-                await this.page.waitForSelector(action.selector, { state: 'attached', timeout: action.timeout });
+                await this.page.waitForSelector(selector, { state: 'attached', timeout: action.timeout });
                 break;
               case 'detached':
-                await this.page.waitForSelector(action.selector, { state: 'detached', timeout: action.timeout });
+                await this.page.waitForSelector(selector, { state: 'detached', timeout: action.timeout });
                 break;
             }
           } else {
@@ -244,22 +289,25 @@ export class E2EEngine {
           }
           break;
 
-        case 'select':
-          if (!action.selector) throw new Error('Selector required for select action');
+        case 'select': {
+          const selector = ensureSafeInput(action.selector || '', 'Selector');
           if (action.value) {
-            await this.page.selectOption(action.selector, action.value);
+            await this.page.selectOption(selector, action.value.slice(0, MAX_INPUT_LENGTH));
           }
           break;
+        }
 
-        case 'hover':
-          if (!action.selector) throw new Error('Selector required for hover action');
-          await this.page.hover(action.selector);
+        case 'hover': {
+          const selector = ensureSafeInput(action.selector || '', 'Selector');
+          await this.page.hover(selector);
           break;
+        }
 
-        case 'press':
-          if (!action.key) throw new Error('Key required for press action');
-          await this.page.keyboard.press(action.key);
+        case 'press': {
+          const key = ensureSafeInput(action.key || '', 'Key');
+          await this.page.keyboard.press(key);
           break;
+        }
       }
 
       steps.push({
@@ -268,13 +316,14 @@ export class E2EEngine {
         duration: Date.now() - stepStart
       });
     } catch (error: any) {
+      const message = error?.message || 'Unknown Playwright action error';
       steps.push({
         action,
         status: 'error',
         duration: Date.now() - stepStart,
-        error: error.message
+        error: message
       });
-      throw error;
+      throw new Error(`Action "${action.type}" failed: ${message}`);
     }
   }
 
@@ -283,7 +332,9 @@ export class E2EEngine {
    */
   async captureScreenshot(page: any, path: string): Promise<string> {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const finalPath = path.endsWith('.png') ? path : `${path}-${timestamp}.png`;
+    const safePath = ensureSafeScreenshotPath(path);
+    const finalPath = safePath.endsWith('.png') ? safePath : `${safePath}-${timestamp}.png`;
+    await mkdir(dirname(finalPath), { recursive: true });
     await page.screenshot({ path: finalPath, fullPage: true });
     return finalPath;
   }
@@ -405,14 +456,16 @@ export function convertToPlaywrightScenarios(
  * Extract selector from step (simplified)
  */
 function extractSelector(step: import('./types.js').TestStep): string | null {
-  // Look for data-testid or other patterns in notes/expected
-  if (step.notes) {
-    const match = step.notes.match(/data-testid="([^"]+)"/);
+  // Bound user-provided strings to avoid pathological regex behavior
+  const notes = step.notes?.slice(0, MAX_INPUT_LENGTH);
+  const action = step.action.slice(0, MAX_INPUT_LENGTH);
+
+  if (notes) {
+    const match = /data-testid="([a-zA-Z0-9_-]{1,100})"/.exec(notes);
     if (match) return `[data-testid="${match[1]}"]`;
   }
 
-  // Look for quoted text that might be a selector
-  const selectorMatch = step.action.match(/'([^']+)'/) || step.action.match(/"([^"]+)"/);
+  const selectorMatch = /'([^'\n\r]{1,200})'/.exec(action) || /"([^"\n\r]{1,200})"/.exec(action);
   if (selectorMatch) {
     return selectorMatch[1];
   }
@@ -424,7 +477,8 @@ function extractSelector(step: import('./types.js').TestStep): string | null {
  * Extract value from step (simplified)
  */
 function extractValue(step: import('./types.js').TestStep): string | null {
-  const valueMatch = step.action.match(/["']([^"']+)["']/);
+  const action = step.action.slice(0, MAX_INPUT_LENGTH);
+  const valueMatch = /["']([^"'\n\r]{1,500})["']/.exec(action);
   return valueMatch ? valueMatch[1] : null;
 }
 
@@ -447,18 +501,18 @@ export function generatePlaywrightScript(
 
   // Generate test cases
   for (const scenario of scenarios) {
-    lines.push(`test.describe('${scenario.name}', () => {`);
+    lines.push(`test.describe(${escapeJsString(scenario.name)}, () => {`);
     lines.push('');
 
     // Generate before hook for navigation
     if (scenario.url) {
       lines.push(`  test.beforeEach(async ({ page }) => {`);
-      lines.push(`    await page.goto('${scenario.url}');`);
+      lines.push(`    await page.goto(${escapeJsString(scenario.url)});`);
       lines.push(`  });`);
       lines.push('');
     }
 
-    lines.push(`  test('${scenario.description || 'Execute scenario'}', async ({ page }) => {`);
+    lines.push(`  test(${escapeJsString(scenario.description || 'Execute scenario')}, async ({ page }) => {`);
 
     // Generate actions
     for (const action of scenario.actions) {
@@ -482,23 +536,25 @@ export function generatePlaywrightScript(
 function generateActionCode(action: PlaywrightAction, pageVar: string = 'page'): string | null {
   switch (action.type) {
     case 'navigate':
-      return `await ${pageVar}.goto('${action.value}');`;
+      return action.value ? `await ${pageVar}.goto(${escapeJsString(action.value)});` : null;
 
     case 'click':
-      return `await ${pageVar}.click('${action.selector}');`;
+      return action.selector ? `await ${pageVar}.click(${escapeJsString(action.selector)});` : null;
 
     case 'fill':
-      return `await ${pageVar}.fill('${action.selector}', '${action.value}');`;
+      return action.selector
+        ? `await ${pageVar}.fill(${escapeJsString(action.selector)}, ${escapeJsString(action.value || '')});`
+        : null;
 
     case 'screenshot':
       if (action.screenshotPath) {
-        return `await ${pageVar}.screenshot({ path: '${action.screenshotPath}' });`;
+        return `await ${pageVar}.screenshot({ path: ${escapeJsString(action.screenshotPath)} });`;
       }
       return `await ${pageVar}.screenshot();`;
 
     case 'wait':
       if (action.waitFor && action.selector) {
-        return `await ${pageVar}.waitForSelector('${action.selector}', { state: '${action.waitFor}' });`;
+        return `await ${pageVar}.waitForSelector(${escapeJsString(action.selector)}, { state: ${escapeJsString(action.waitFor)} });`;
       }
       if (action.timeout) {
         return `await ${pageVar}.waitForTimeout(${action.timeout});`;
@@ -506,13 +562,15 @@ function generateActionCode(action: PlaywrightAction, pageVar: string = 'page'):
       return `await ${pageVar}.waitForTimeout(1000);`;
 
     case 'select':
-      return `await ${pageVar}.selectOption('${action.selector}', '${action.value}');`;
+      return action.selector && action.value
+        ? `await ${pageVar}.selectOption(${escapeJsString(action.selector)}, ${escapeJsString(action.value)});`
+        : null;
 
     case 'hover':
-      return `await ${pageVar}.hover('${action.selector}');`;
+      return action.selector ? `await ${pageVar}.hover(${escapeJsString(action.selector)});` : null;
 
     case 'press':
-      return `await ${pageVar}.keyboard.press('${action.key}');`;
+      return action.key ? `await ${pageVar}.keyboard.press(${escapeJsString(action.key)});` : null;
 
     default:
       return null;

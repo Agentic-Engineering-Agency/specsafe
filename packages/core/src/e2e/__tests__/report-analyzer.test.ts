@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import type { ScreenshotSubmission, ExpectedState, TestResult } from '../types.js';
+import type { ScreenshotSubmission, ExpectedState, E2ETestResult } from '../types.js';
 import {
   analyzeSingleSubmission,
   analyzeScreenshots,
@@ -101,6 +101,11 @@ describe('analyzeSingleSubmission', () => {
 
     expect(result.processingTimeMs).toBeDefined();
     expect(result.processingTimeMs).toBeGreaterThanOrEqual(0);
+  });
+
+  it('should reject invalid submissions', async () => {
+    const badSubmission = { ...mockSubmission, imagePath: '' };
+    await expect(analyzeSingleSubmission(badSubmission, mockExpected)).rejects.toThrow('imagePath');
   });
 });
 
@@ -280,7 +285,7 @@ describe('generateReport', () => {
 });
 
 describe('generateFixSuggestions', () => {
-  const mockResults: TestResult[] = [
+  const mockResults: E2ETestResult[] = [
     {
       scenarioId: 'SC-1',
       stepId: 'step-1',
@@ -358,7 +363,7 @@ describe('generateFixSuggestions', () => {
 
 describe('suggestFixes', () => {
   it('should be an alias for generateFixSuggestions', () => {
-    const mockResults: TestResult[] = [
+    const mockResults: E2ETestResult[] = [
       {
         scenarioId: 'SC-1',
         stepId: 'step-1',

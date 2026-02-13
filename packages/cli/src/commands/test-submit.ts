@@ -8,10 +8,47 @@ import {
   formatReportAsMarkdown,
   DEFAULT_ANALYSIS_CONFIG 
 } from '@specsafe/core';
-import { readFile, writeFile, mkdir, readdir } from 'fs/promises';
-import { join, basename, extname } from 'path';
+import { readFile, writeFile, mkdir, readdir, stat, copyFile } from 'fs/promises';
+import { join, basename, extname, normalize, isAbsolute } from 'path';
 import { existsSync } from 'fs';
 import type { ScreenshotSubmission, ExpectedState } from '@specsafe/core';
+
+const ALLOWED_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp']);
+const MAX_SCREENSHOT_BYTES = 10 * 1024 * 1024; // 10MB
+const SAFE_FILENAME = /^[a-zA-Z0-9._-]+$/;
+
+export function validateSpecId(specId: string): string {
+  if (!/^[A-Za-z0-9_-]+$/.test(specId)) {
+    throw new Error('Invalid spec ID. Use only letters, numbers, dash, and underscore.');
+  }
+  return specId;
+}
+
+export function sanitizeRelativePath(input: string, label: string): string {
+  const normalized = normalize(input);
+  if (isAbsolute(normalized) || normalized.includes('..')) {
+    throw new Error(`${label} must be a safe relative path without traversal`);
+  }
+  return normalized;
+}
+
+export function sanitizeFilename(filename: string): string {
+  const base = basename(filename);
+  if (filename !== base || !SAFE_FILENAME.test(base)) {
+    throw new Error(`Unsafe filename detected: ${filename}`);
+  }
+  return base;
+}
+
+async function validateImageFile(path: string): Promise<void> {
+  const fileInfo = await stat(path);
+  if (!fileInfo.isFile()) {
+    throw new Error(`Not a file: ${path}`);
+  }
+  if (fileInfo.size <= 0 || fileInfo.size > MAX_SCREENSHOT_BYTES) {
+    throw new Error(`Invalid screenshot size for ${path}. Max allowed: ${MAX_SCREENSHOT_BYTES} bytes`);
+  }
+}
 
 export const testSubmitCommand = new Command('test-submit')
   .description('Submit screenshots for E2E test analysis')
@@ -29,6 +66,8 @@ export const testSubmitCommand = new Command('test-submit')
     const spinner = ora('Processing test submissions...').start();
 
     try {
+      specId = validateSpecId(specId);
+
       // Check for auto mode (future feature)
       if (options.auto) {
         spinner.stop();
@@ -55,7 +94,7 @@ export const testSubmitCommand = new Command('test-submit')
       // Determine screenshots directory
       let screenshotsDir: string;
       if (options.screenshots) {
-        screenshotsDir = options.screenshots;
+        screenshotsDir = sanitizeRelativePath(options.screenshots, 'Screenshots directory');
       } else {
         // Default to .specsafe/e2e/screenshots/
         screenshotsDir = join('.specsafe', 'e2e', 'screenshots', specId);
@@ -71,9 +110,9 @@ export const testSubmitCommand = new Command('test-submit')
 
       // Read screenshots
       const files = await readdir(screenshotsDir);
-      const imageFiles = files.filter(f => 
-        ['.png', '.jpg', '.jpeg', '.webp'].includes(extname(f).toLowerCase())
-      );
+      const imageFiles = files
+        .map((f) => sanitizeFilename(f))
+        .filter(f => ALLOWED_EXTENSIONS.has(extname(f).toLowerCase()));
 
       if (imageFiles.length === 0) {
         spinner.stop();
@@ -120,10 +159,11 @@ export const testSubmitCommand = new Command('test-submit')
       await mkdir(organizedDir, { recursive: true });
 
       for (const submission of submissions) {
-        const filename = basename(submission.imagePath);
-        const destPath = join(organizedDir, filename);
-        const content = await readFile(submission.imagePath);
-        await writeFile(destPath, content);
+        const filename = sanitizeFilename(basename(submission.imagePath));
+        await validateImageFile(submission.imagePath);
+        const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${filename}`;
+        const destPath = join(organizedDir, uniqueName);
+        await copyFile(submission.imagePath, destPath);
         // Update path to organized location
         submission.imagePath = destPath;
       }

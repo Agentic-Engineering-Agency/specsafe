@@ -26,6 +26,23 @@ export const DEFAULT_ANALYSIS_CONFIG: AnalysisConfig = {
   maxConcurrentAnalysis: 3
 };
 
+const MAX_PATH_LENGTH = 300;
+
+function sanitizePathForReport(path: string): string {
+  if (!path) return 'unknown.png';
+  const segments = path.replace(/\\/g, '/').split('/');
+  return segments[segments.length - 1] || 'unknown.png';
+}
+
+function validateSubmission(submission: ScreenshotSubmission): void {
+  if (!submission.scenarioId || !submission.stepId) {
+    throw new Error('Submission requires scenarioId and stepId');
+  }
+  if (!submission.imagePath || submission.imagePath.length > MAX_PATH_LENGTH) {
+    throw new Error('Submission imagePath is missing or too long');
+  }
+}
+
 /**
  * Analyze a batch of screenshot submissions
  */
@@ -34,17 +51,22 @@ export async function analyzeScreenshots(
   expectedStates: ExpectedState[],
   config: AnalysisConfig = DEFAULT_ANALYSIS_CONFIG
 ): Promise<E2ETestResult[]> {
-  const results: E2ETestResult[] = [];
-  
-  for (const submission of submissions) {
-    const expected = expectedStates.find(
-      e => e.scenarioId === submission.scenarioId && e.stepId === submission.stepId
-    );
-    
-    const result = await analyzeSingleSubmission(submission, expected, config);
-    results.push(result);
-  }
-  
+  const concurrency = Math.max(1, Math.min(config.maxConcurrentAnalysis || 1, 10));
+  const results: E2ETestResult[] = new Array(submissions.length);
+
+  let index = 0;
+  const workers = Array.from({ length: concurrency }, async () => {
+    while (index < submissions.length) {
+      const current = index++;
+      const submission = submissions[current];
+      const expected = expectedStates.find(
+        e => e.scenarioId === submission.scenarioId && e.stepId === submission.stepId
+      );
+      results[current] = await analyzeSingleSubmission(submission, expected, config);
+    }
+  });
+
+  await Promise.all(workers);
   return results;
 }
 
@@ -58,18 +80,25 @@ export async function analyzeSingleSubmission(
   config: AnalysisConfig = DEFAULT_ANALYSIS_CONFIG
 ): Promise<E2ETestResult> {
   const startTime = Date.now();
-  
+  void config;
+  validateSubmission(submission);
+
+  const sanitizedSubmission: ScreenshotSubmission = {
+    ...submission,
+    imagePath: sanitizePathForReport(submission.imagePath)
+  };
+
   // Mock analysis - in production, this would:
   // 1. Load the image from submission.imagePath
   // 2. Send to vision API with expected state description
   // 3. Parse the response
   
-  const mockAnalysis = generateMockAnalysis(submission, expected);
-  const issues = generateMockIssues(submission, mockAnalysis.status);
-  
+  const mockAnalysis = generateMockAnalysis(sanitizedSubmission, expected);
+  const issues = generateMockIssues(sanitizedSubmission, mockAnalysis.status);
+
   return {
-    scenarioId: submission.scenarioId,
-    stepId: submission.stepId,
+    scenarioId: sanitizedSubmission.scenarioId,
+    stepId: sanitizedSubmission.stepId,
     status: mockAnalysis.status,
     analysis: mockAnalysis.description,
     confidence: mockAnalysis.confidence,
