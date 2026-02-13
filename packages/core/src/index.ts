@@ -96,3 +96,56 @@ export type {
 
 export { TemplateEngine } from './templates/engine.js';
 export { parseChecklists, evaluateChecklists } from './templates/checklist.js';
+
+// Extension System
+export type {
+  Extension,
+  ExtensionContext,
+  ExtensionResult,
+  ExtensionHook,
+  HookRegistration,
+} from './extensions/types.js';
+
+export { ExtensionRegistry } from './extensions/registry.js';
+export {
+  validateExtension,
+  loadExtension,
+  loadExtensions,
+  loadBuiltinExtensions,
+} from './extensions/loader.js';
+export {
+  listExtensions,
+  listEnabledExtensions,
+  enableExtension,
+  disableExtension,
+  getExtension,
+} from './extensions/index.js';
+
+// Governance System
+export type {
+  Constitution,
+  Principle,
+  PrincipleSeverity,
+  Gate,
+  GatePhase,
+  GateResult,
+  Violation,
+  ConstitutionLoadOptions,
+  ValidationOptions,
+} from './governance/types.js';
+
+export { ConstitutionManager } from './governance/constitution.js';
+export { BUILTIN_PRINCIPLES, BUILTIN_GATES, getBuiltinPrinciple, getBuiltinGate, getGatesForPhase } from './governance/builtins.js';
+export { generateConstitution, generateMinimalConstitution, generateStrictConstitution, generateConstitutionReadme } from './governance/template.js';
+
+// Elicitation System
+export type {
+  ElicitationStep,
+  ElicitationFlow,
+  ElicitationResult,
+  StepType,
+} from './elicitation/types.js';
+
+export { ElicitationEngine } from './elicitation/engine.js';
+export { quickFlow, fullFlow, earsFlow } from './elicitation/flows.js';
+export { generateSpec } from './elicitation/generator.js';
