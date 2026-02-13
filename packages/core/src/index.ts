@@ -150,38 +150,19 @@ export { ElicitationEngine } from './elicitation/engine.js';
 export { quickFlow, fullFlow, earsFlow } from './elicitation/flows.js';
 export { generateSpec } from './elicitation/generator.js';
 
-// Capsule System (Story Context Capsules)
+// Memory & Steering System
 export type {
-  Capsule,
-  CapsuleCollection,
-  CapsuleType,
-  CapsuleFilter,
-  DateRange,
-  CapsuleTemplate,
-  TemplateField,
-} from './capsules/index.js';
+  ProjectMemory,
+  Decision,
+  Pattern,
+  PatternExample,
+  MemoryConstraint,
+  HistoryEntry,
+  SteeringInput,
+  SteeringOutput,
+  Warning,
+  Recommendation,
+} from './memory/types.js';
 
-export { CapsuleManager, type CapsuleManagerOptions } from './capsules/index.js';
-export {
-  USER_STORY_TEMPLATE,
-  TECHNICAL_CONTEXT_TEMPLATE,
-  BUSINESS_JUSTIFICATION_TEMPLATE,
-  DISCOVERY_NOTE_TEMPLATE,
-  BUILTIN_TEMPLATES,
-  TEMPLATE_NAMES,
-  getTemplate,
-  listTemplates,
-  isValidTemplateType,
-  getTemplateChoices,
-  formatContent,
-  parseContent,
-  VALIDATION_LIMITS,
-  sanitizeString,
-  validateTitle,
-  validateAuthor,
-  validateContent,
-  validateTags,
-  validateFilter,
-  validateCapsuleType,
-  isValidCapsuleType,
-} from './capsules/index.js';
+export { ProjectMemoryManager } from './memory/memory.js';
+export { SteeringEngine } from './memory/steering.js';

@@ -27,7 +27,7 @@ import { deltaCommand } from './commands/delta.js';
 import { applyCommand } from './commands/apply.js';
 import { diffCommand } from './commands/diff.js';
 import { extendCommand } from './commands/extend.js';
-import { capsuleCommand } from './commands/capsule.js';
+import { memoryCommand } from './commands/memory.js';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
@@ -57,6 +57,7 @@ program.addCommand(completeCommand);    // DEPRECATED: Use 'done' instead
 program.addCommand(archiveCommand);
 program.addCommand(doctorCommand);
 program.addCommand(rulesCommand);
+program.addCommand(memoryCommand);      // NEW: Project memory commands
 
 // Delta spec commands (brownfield)
 program.addCommand(deltaCommand);       // Create delta spec
@@ -65,9 +66,6 @@ program.addCommand(diffCommand);        // Preview delta changes
 
 // Extension system
 program.addCommand(extendCommand);      // Manage extensions
-
-// Capsule system (story context)
-program.addCommand(capsuleCommand);     // Manage context capsules
 
 // Workflow command group
 program
