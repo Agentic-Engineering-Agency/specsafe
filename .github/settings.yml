@@ -1,0 +1,58 @@
+# GitHub Repository Settings
+# This file configures repository settings and branch protections via the GitHub Settings app
+# https://github.com/apps/settings
+
+repository:
+  # Features
+  has_issues: true
+  has_projects: false
+  has_wiki: false
+  has_downloads: true
+
+  # Pull Requests
+  delete_branch_on_merge: true
+  allow_squash_merge: true
+  allow_merge_commit: true
+  allow_rebase_merge: true
+
+  # Security
+  vulnerability_alerts: true
+  enable_automated_security_fixes: true
+
+# Branch protection rules
+branches:
+  - name: main
+    protection:
+      # Require pull request reviews before merging
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: true
+        require_code_owner_reviews: false
+        require_last_push_approval: false
+
+      # Require status checks to pass before merging
+      required_status_checks:
+        strict: true
+        contexts:
+          - build-and-test
+
+      # Restrict pushes that create files larger than 100MB
+      required_linear_history: false
+
+      # Include administrators
+      enforce_admins: false
+
+      # Restrict who can push to this branch
+      restrictions: null
+
+      # Prevent force pushes
+      allow_force_pushes: false
+
+      # Prevent branch deletions
+      allow_deletions: false
+
+      # Require signed commits
+      required_signatures: false
+
+      # Require conversation resolution before merging
+      required_conversation_resolution: false
