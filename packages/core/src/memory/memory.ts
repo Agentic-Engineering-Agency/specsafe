@@ -3,8 +3,8 @@
  * Manages project context persistence and retrieval
  */
 
-import { readFile, writeFile, access, mkdir } from 'fs/promises';
-import { join, dirname } from 'path';
+import { readFile, writeFile, access, mkdir, rename, stat, unlink } from 'fs/promises';
+import { join, dirname, resolve } from 'path';
 import type {
   ProjectMemory,
   Decision,
@@ -13,45 +13,166 @@ import type {
   HistoryEntry,
   PatternExample
 } from './types.js';
+import {
+  validateProjectMemory,
+  isValidSpecId,
+  validateProjectId,
+  sanitizeString,
+  sanitizePath,
+  redactSensitiveInfo
+} from './validation.js';
 
 const MEMORY_FILE = '.specsafe/memory.json';
+const LOCK_FILE = '.specsafe/memory.lock';
+const LOCK_TIMEOUT = 30000; // 30 seconds
+
+/**
+ * File lock for preventing race conditions
+ */
+class FileLock {
+  private lockFilePath: string;
+  private isLocked: boolean = false;
+
+  constructor(basePath: string) {
+    // Sanitize the lock file path to prevent directory traversal
+    this.lockFilePath = sanitizePath(basePath, LOCK_FILE);
+  }
+
+  async acquire(): Promise<void> {
+    await mkdir(dirname(this.lockFilePath), { recursive: true });
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < LOCK_TIMEOUT) {
+      try {
+        // Try to create the lock file exclusively
+        await writeFile(
+          this.lockFilePath,
+          JSON.stringify({ pid: process.pid, timestamp: Date.now() }),
+          { flag: 'wx' }
+        );
+        this.isLocked = true;
+        return;
+      } catch (error: any) {
+        if (error.code !== 'EEXIST') {
+          throw error;
+        }
+
+        // Check if lock is stale
+        try {
+          const stats = await stat(this.lockFilePath);
+          const lockAge = Date.now() - stats.mtimeMs;
+          if (lockAge > LOCK_TIMEOUT) {
+            // Remove stale lock
+            await unlink(this.lockFilePath);
+          }
+        } catch {
+          // If we can't stat, try again
+        }
+
+        // Wait 100ms before retrying
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+
+    throw new Error('Failed to acquire lock after timeout');
+  }
+
+  async release(): Promise<void> {
+    if (this.isLocked) {
+      try {
+        await unlink(this.lockFilePath);
+        this.isLocked = false;
+      } catch (error) {
+        console.warn('Failed to release lock:', error);
+      }
+    }
+  }
+}
 
 export class ProjectMemoryManager {
   private projectPath: string;
   private memoryFilePath: string;
   private memory: ProjectMemory | null = null;
+  private lock: FileLock;
 
   constructor(projectPath: string) {
-    this.projectPath = projectPath;
-    this.memoryFilePath = join(projectPath, MEMORY_FILE);
+    // Sanitize and validate the project path to prevent directory traversal
+    const resolvedPath = resolve(projectPath);
+    this.projectPath = resolvedPath;
+    
+    // Sanitize the memory file path to prevent directory traversal
+    this.memoryFilePath = sanitizePath(resolvedPath, MEMORY_FILE);
+    
+    this.lock = new FileLock(resolvedPath);
   }
 
   /**
    * Load memory from disk or create default if not exists
    */
   async load(projectId: string): Promise<ProjectMemory> {
+    // Validate and sanitize project ID
+    if (!validateProjectId(projectId)) {
+      throw new Error('Invalid project ID');
+    }
+
     try {
       await access(this.memoryFilePath);
-      const content = await readFile(this.memoryFilePath, 'utf-8');
-      const parsed = JSON.parse(content) as ProjectMemory;
       
-      // Convert date strings back to Date objects
-      parsed.decisions = parsed.decisions.map(d => ({
-        ...d,
-        timestamp: new Date(d.timestamp)
-      }));
-      parsed.history = parsed.history.map(h => ({
-        ...h,
-        timestamp: new Date(h.timestamp)
-      }));
+      // Acquire lock to prevent race conditions
+      await this.lock.acquire();
       
-      this.memory = parsed;
-      return parsed;
+      try {
+        const content = await readFile(this.memoryFilePath, 'utf-8');
+        
+        // Validate JSON structure before parsing
+        if (content.trim().length === 0) {
+          throw new Error('Memory file is empty');
+        }
+
+        // Parse with error handling
+        let parsed: any;
+        try {
+          parsed = JSON.parse(content);
+        } catch (parseError) {
+          throw new Error('Invalid JSON in memory file');
+        }
+
+        // Convert date strings back to Date objects before validation
+        parsed.decisions = Array.isArray(parsed.decisions)
+          ? parsed.decisions.map((d: any) => ({
+              ...d,
+              timestamp: new Date(d.timestamp)
+            }))
+          : [];
+        parsed.history = Array.isArray(parsed.history)
+          ? parsed.history.map((h: any) => ({
+              ...h,
+              timestamp: new Date(h.timestamp)
+            }))
+          : [];
+
+        // Validate the structure and data types
+        if (!validateProjectMemory(parsed)) {
+          throw new Error('Memory file structure is invalid or contains corrupted data');
+        }
+        
+        // Redact sensitive information from memory
+        parsed.decisions = parsed.decisions.map((d: Decision) => ({
+          ...d,
+          rationale: redactSensitiveInfo(d.rationale),
+          alternatives: d.alternatives.map(alt => redactSensitiveInfo(alt))
+        }));
+        
+        this.memory = parsed;
+        return parsed;
+      } finally {
+        await this.lock.release();
+      }
     } catch (error: any) {
       if (error.code === 'ENOENT') {
         // Create default memory
         this.memory = {
-          projectId,
+          projectId: sanitizeString(projectId),
           specs: [],
           decisions: [],
           patterns: [],
@@ -60,7 +181,13 @@ export class ProjectMemoryManager {
         };
         return this.memory;
       }
-      throw error;
+      
+      // Wrap other errors with context
+      if (error.message && error.message.includes('structure is invalid')) {
+        throw error;
+      }
+      
+      throw new Error(`Failed to load memory: ${error.message || 'Unknown error'}`);
     }
   }
 
@@ -72,14 +199,24 @@ export class ProjectMemoryManager {
       throw new Error('No memory loaded. Call load() first.');
     }
 
-    // Ensure directory exists
-    await mkdir(dirname(this.memoryFilePath), { recursive: true });
+    // Acquire lock to prevent race conditions
+    await this.lock.acquire();
     
-    await writeFile(
-      this.memoryFilePath,
-      JSON.stringify(this.memory, null, 2),
-      'utf-8'
-    );
+    try {
+      // Ensure directory exists
+      await mkdir(dirname(this.memoryFilePath), { recursive: true });
+      
+      // Use atomic write pattern: write to temp file then rename
+      const tempFile = `${this.memoryFilePath}.tmp`;
+      const content = JSON.stringify(this.memory, null, 2);
+      
+      await writeFile(tempFile, content, 'utf-8');
+      
+      // Atomic rename
+      await rename(tempFile, this.memoryFilePath);
+    } finally {
+      await this.lock.release();
+    }
   }
 
   /**
@@ -100,9 +237,16 @@ export class ProjectMemoryManager {
       throw new Error('No memory loaded. Call load() first.');
     }
 
-    if (!this.memory.specs.includes(specId)) {
-      this.memory.specs.push(specId);
-      this.addHistoryEntry(specId, 'created', `Spec ${specId} added to project memory`);
+    // Validate and sanitize spec ID
+    if (!isValidSpecId(specId)) {
+      throw new Error('Invalid spec ID format');
+    }
+    
+    const sanitizedSpecId = sanitizeString(specId);
+
+    if (!this.memory.specs.includes(sanitizedSpecId)) {
+      this.memory.specs.push(sanitizedSpecId);
+      this.addHistoryEntry(sanitizedSpecId, 'created', `Spec ${sanitizedSpecId} added to project memory`);
     }
   }
 
@@ -119,17 +263,43 @@ export class ProjectMemoryManager {
       throw new Error('No memory loaded. Call load() first.');
     }
 
+    // Validate inputs
+    if (!isValidSpecId(specId)) {
+      throw new Error('Invalid spec ID format');
+    }
+    
+    if (typeof decision !== 'string' || decision.trim().length === 0) {
+      throw new Error('Decision cannot be empty');
+    }
+    
+    if (typeof rationale !== 'string' || rationale.trim().length === 0) {
+      throw new Error('Rationale cannot be empty');
+    }
+    
+    if (!Array.isArray(alternatives)) {
+      throw new Error('Alternatives must be an array');
+    }
+    
+    // Validate and sanitize inputs
+    const sanitizedSpecId = sanitizeString(specId);
+    const sanitizedDecision = sanitizeString(decision);
+    const sanitizedRationale = redactSensitiveInfo(sanitizeString(rationale));
+    const sanitizedAlternatives = alternatives
+      .filter(alt => typeof alt === 'string' && alt.trim().length > 0)
+      .map(alt => redactSensitiveInfo(sanitizeString(alt)))
+      .slice(0, 10); // Limit to 10 alternatives
+
     const newDecision: Decision = {
       id: `DECISION-${Date.now()}`,
-      specId,
-      decision,
-      rationale,
+      specId: sanitizedSpecId,
+      decision: sanitizedDecision,
+      rationale: sanitizedRationale,
       timestamp: new Date(),
-      alternatives
+      alternatives: sanitizedAlternatives
     };
 
     this.memory.decisions.push(newDecision);
-    this.addHistoryEntry(specId, 'decision', `Decision recorded: ${decision}`);
+    this.addHistoryEntry(sanitizedSpecId, 'decision', `Decision recorded: ${sanitizedDecision}`);
     
     return newDecision;
   }
@@ -142,32 +312,74 @@ export class ProjectMemoryManager {
       throw new Error('No memory loaded. Call load() first.');
     }
 
+    // Validate inputs
+    if (!isValidSpecId(specId)) {
+      throw new Error('Invalid spec ID format');
+    }
+    
+    if (typeof pattern !== 'object' || pattern === null) {
+      throw new Error('Pattern must be an object');
+    }
+    
+    if (typeof pattern.name !== 'string' || pattern.name.trim().length === 0) {
+      throw new Error('Pattern name cannot be empty');
+    }
+    
+    if (typeof pattern.description !== 'string' || pattern.description.trim().length === 0) {
+      throw new Error('Pattern description cannot be empty');
+    }
+    
+    // Validate and sanitize inputs
+    const sanitizedSpecId = sanitizeString(specId);
+    const sanitizedName = sanitizeString(pattern.name);
+    const sanitizedDescription = sanitizeString(pattern.description);
+    
+    // Validate examples
+    const sanitizedExamples = Array.isArray(pattern.examples)
+      ? pattern.examples
+          .filter(ex => typeof ex === 'object' && ex !== null && isValidSpecId(ex.specId))
+          .slice(0, 20) // Limit to 20 examples
+          .map(ex => ({
+            specId: sanitizeString(ex.specId),
+            context: sanitizeString(ex.context || ''),
+            snippet: ex.snippet !== undefined ? sanitizeString(ex.snippet) : undefined
+          }))
+      : [];
+
     // Check if pattern already exists
     const existingPattern = this.memory.patterns.find(
-      p => p.name.toLowerCase() === pattern.name.toLowerCase()
+      p => p.name.toLowerCase() === sanitizedName.toLowerCase()
     );
 
     if (existingPattern) {
       // Update existing pattern
       existingPattern.usageCount++;
-      if (pattern.examples && pattern.examples.length > 0) {
-        existingPattern.examples.push(...pattern.examples);
+      
+      // Add new examples, avoiding duplicates
+      for (const example of sanitizedExamples) {
+        const isDuplicate = existingPattern.examples.some(
+          e => e.specId === example.specId && e.context === example.context
+        );
+        if (!isDuplicate) {
+          existingPattern.examples.push(example);
+        }
       }
-      this.addHistoryEntry(specId, 'pattern', `Pattern "${existingPattern.name}" used again`);
+      
+      this.addHistoryEntry(sanitizedSpecId, 'pattern', `Pattern "${existingPattern.name}" used again`);
       return existingPattern;
     }
 
     // Create new pattern
     const newPattern: Pattern = {
       id: `PATTERN-${Date.now()}`,
-      name: pattern.name,
-      description: pattern.description,
-      examples: pattern.examples || [],
+      name: sanitizedName,
+      description: sanitizedDescription,
+      examples: sanitizedExamples,
       usageCount: 1
     };
 
     this.memory.patterns.push(newPattern);
-    this.addHistoryEntry(specId, 'pattern', `New pattern "${newPattern.name}" recorded`);
+    this.addHistoryEntry(sanitizedSpecId, 'pattern', `New pattern "${newPattern.name}" recorded`);
     
     return newPattern;
   }
@@ -180,9 +392,33 @@ export class ProjectMemoryManager {
       throw new Error('No memory loaded. Call load() first.');
     }
 
+    // Validate inputs
+    if (typeof constraint !== 'object' || constraint === null) {
+      throw new Error('Constraint must be an object');
+    }
+    
+    if (!['technical', 'business', 'architectural'].includes(constraint.type)) {
+      throw new Error('Invalid constraint type');
+    }
+    
+    if (typeof constraint.description !== 'string' || constraint.description.trim().length === 0) {
+      throw new Error('Constraint description cannot be empty');
+    }
+    
+    // Validate and sanitize inputs
+    const sanitizedType = constraint.type as 'technical' | 'business' | 'architectural';
+    const sanitizedDescription = sanitizeString(constraint.description);
+    const sanitizedSource = constraint.source !== undefined ? sanitizeString(constraint.source) : undefined;
+    const sanitizedSpecId = constraint.specId !== undefined && isValidSpecId(constraint.specId)
+      ? sanitizeString(constraint.specId)
+      : undefined;
+
     const newConstraint: MemoryConstraint = {
       id: `CONSTRAINT-${Date.now()}`,
-      ...constraint
+      type: sanitizedType,
+      description: sanitizedDescription,
+      source: sanitizedSource,
+      specId: sanitizedSpecId
     };
 
     this.memory.constraints.push(newConstraint);
@@ -333,12 +569,33 @@ export class ProjectMemoryManager {
   ): void {
     if (!this.memory) return;
 
+    // Validate inputs
+    if (!isValidSpecId(specId)) {
+      console.warn('Invalid spec ID in history entry, skipping');
+      return;
+    }
+    
+    if (!['created', 'updated', 'completed', 'decision', 'pattern'].includes(action)) {
+      console.warn('Invalid history action, skipping');
+      return;
+    }
+    
+    if (typeof details !== 'string' || details.trim().length === 0) {
+      console.warn('Empty history details, skipping');
+      return;
+    }
+
     this.memory.history.push({
       timestamp: new Date(),
-      specId,
+      specId: sanitizeString(specId),
       action,
-      details
+      details: sanitizeString(details)
     });
+
+    // Limit history to 1000 entries to prevent unbounded growth
+    if (this.memory.history.length > 1000) {
+      this.memory.history = this.memory.history.slice(-1000);
+    }
   }
 
   private generateContextSummary(

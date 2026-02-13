@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, rm, readFile, access } from 'fs/promises';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { ProjectMemoryManager } from '../memory.js';
 
 describe('ProjectMemoryManager', () => {
@@ -341,6 +341,247 @@ describe('ProjectMemoryManager', () => {
 
       const exists = await manager.exists();
       expect(exists).toBe(true);
+    });
+  });
+
+  describe('Security: Input Validation', () => {
+    it('should reject invalid spec IDs with special characters', async () => {
+      await manager.load('test-project');
+      
+      expect(() => manager.addSpec('SPEC-001; rm -rf /')).toThrow('Invalid spec ID format');
+      expect(() => manager.addSpec('SPEC-001|cat /etc/passwd')).toThrow('Invalid spec ID format');
+      expect(() => manager.addSpec('SPEC-001$(whoami)')).toThrow('Invalid spec ID format');
+    });
+
+    it('should reject empty decision text', async () => {
+      await manager.load('test-project');
+      
+      expect(() => manager.addDecision('SPEC-001', '', 'Rationale')).toThrow('Decision cannot be empty');
+      expect(() => manager.addDecision('SPEC-001', '   ', 'Rationale')).toThrow('Decision cannot be empty');
+    });
+
+    it('should reject empty rationale', async () => {
+      await manager.load('test-project');
+      
+      expect(() => manager.addDecision('SPEC-001', 'Decision', '')).toThrow('Rationale cannot be empty');
+    });
+
+    it('should reject invalid pattern names', async () => {
+      await manager.load('test-project');
+      
+      expect(() => manager.recordPattern('SPEC-001', {
+        name: '',
+        description: 'Test pattern',
+        examples: []
+      })).toThrow('Pattern name cannot be empty');
+    });
+
+    it('should reject invalid constraint types', async () => {
+      await manager.load('test-project');
+      
+      expect(() => manager.addConstraint({
+        type: 'invalid' as any,
+        description: 'Test constraint'
+      })).toThrow('Invalid constraint type');
+    });
+
+    it('should sanitize input strings', async () => {
+      await manager.load('test-project');
+      
+      const decision = manager.addDecision(
+        'SPEC-001',
+        'Use TypeScript\x00',
+        'Type safety\x01'
+      );
+      
+      expect(decision.decision).not.toContain('\x00');
+      expect(decision.rationale).not.toContain('\x01');
+    });
+  });
+
+  describe('Security: Data Sanitization', () => {
+    it('should redact sensitive info from decision rationale', async () => {
+      await manager.load('test-project');
+      
+      const decision = manager.addDecision(
+        'SPEC-001',
+        'Use JWT',
+        'Use token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
+      );
+      
+      expect(decision.rationale).toContain('[REDACTED]');
+      expect(decision.rationale).not.toContain('eyJhbGci');
+    });
+
+    it('should redact sensitive info from alternatives', async () => {
+      await manager.load('test-project');
+      
+      const decision = manager.addDecision(
+        'SPEC-001',
+        'Use API',
+        'For security',
+        ['Use sk-proj-abc123', 'Use xyz789']
+      );
+      
+      expect(decision.alternatives[0]).toContain('[REDACTED]');
+      expect(decision.alternatives[0]).not.toContain('abc123');
+    });
+
+    it('should limit alternatives to 10 items', async () => {
+      await manager.load('test-project');
+      
+      const alternatives = Array.from({ length: 15 }, (_, i) => `Alternative ${i}`);
+      const decision = manager.addDecision(
+        'SPEC-001',
+        'Choose option',
+        'Test',
+        alternatives
+      );
+      
+      expect(decision.alternatives).toHaveLength(10);
+    });
+
+    it('should limit pattern examples to 20 items', async () => {
+      await manager.load('test-project');
+      
+      const examples = Array.from({ length: 25 }, (_, i) => ({
+        specId: `SPEC-${i}`,
+        context: `Example ${i}`
+      }));
+      
+      const pattern = manager.recordPattern('SPEC-001', {
+        name: 'test-pattern',
+        description: 'Test',
+        examples
+      });
+      
+      expect(pattern.examples).toHaveLength(20);
+    });
+
+    it('should limit history to 1000 entries', async () => {
+      await manager.load('test-project');
+      
+      // Add more than 1000 specs
+      for (let i = 0; i < 1100; i++) {
+        manager.addSpec(`SPEC-${i.toString().padStart(3, '0')}`);
+      }
+      
+      const memory = manager.getMemory();
+      expect(memory.history.length).toBeLessThanOrEqual(1000);
+    });
+  });
+
+  describe('Security: Path Handling', () => {
+    it('should always resolve memory file under provided project root', async () => {
+      const managerWithNested = new ProjectMemoryManager(join(tempDir, 'nested/../project'));
+      expect(managerWithNested.getMemoryFilePath()).toContain('.specsafe/memory.json');
+      expect(managerWithNested.getMemoryFilePath()).not.toContain('..');
+    });
+  });
+
+  describe('Concurrent Access', () => {
+    it('should handle concurrent save operations', async () => {
+      await manager.load('test-project');
+      
+      // Create multiple concurrent saves
+      const saves = Array.from({ length: 10 }, (_, i) => 
+        async () => {
+          manager.addSpec(`SPEC-${i}`);
+          await manager.save();
+        }
+      );
+      
+      // Execute all saves
+      await Promise.all(saves.map(fn => fn()));
+      
+      // Reload and verify data integrity
+      const newManager = new ProjectMemoryManager(tempDir);
+      const loaded = await newManager.load('test-project');
+      
+      expect(loaded.specs).toHaveLength(10);
+    });
+
+    it('should handle concurrent load operations', async () => {
+      await manager.load('test-project');
+      manager.addSpec('SPEC-001');
+      await manager.save();
+      
+      // Create multiple concurrent loads
+      const loads = Array.from({ length: 10 }, () => 
+        async () => {
+          const m = new ProjectMemoryManager(tempDir);
+          return await m.load('test-project');
+        }
+      );
+      
+      const results = await Promise.all(loads.map(fn => fn()));
+      
+      // All should return the same data
+      results.forEach(loaded => {
+        expect(loaded.specs).toContain('SPEC-001');
+      });
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should handle malformed JSON in memory file', async () => {
+      await manager.load('test-project');
+      await manager.save();
+      
+      // Corrupt the file
+      const { writeFile } = await import('fs/promises');
+      await writeFile(manager.getMemoryFilePath(), '{ invalid json }');
+      
+      const newManager = new ProjectMemoryManager(tempDir);
+      
+      await expect(newManager.load('test-project')).rejects.toThrow('Invalid JSON');
+    });
+
+    it('should handle empty memory file', async () => {
+      const { writeFile, mkdir } = await import('fs/promises');
+      const path = manager.getMemoryFilePath();
+      await mkdir(dirname(path), { recursive: true });
+      await writeFile(path, '');
+      
+      const newManager = new ProjectMemoryManager(tempDir);
+      
+      await expect(newManager.load('test-project')).rejects.toThrow('Memory file is empty');
+    });
+
+    it('should handle invalid memory structure', async () => {
+      const { writeFile, mkdir } = await import('fs/promises');
+      const path = manager.getMemoryFilePath();
+      await mkdir(dirname(path), { recursive: true });
+      await writeFile(path, JSON.stringify({
+        projectId: 'test',
+        specs: 'invalid' // Should be array
+      }));
+      
+      const newManager = new ProjectMemoryManager(tempDir);
+      
+      await expect(newManager.load('test-project')).rejects.toThrow('structure is invalid');
+    });
+  });
+
+  describe('Atomic Writes', () => {
+    it('should use atomic write pattern (no partial writes)', async () => {
+      await manager.load('test-project');
+      
+      // Add data
+      manager.addSpec('SPEC-001');
+      manager.addDecision('SPEC-001', 'Test', 'Test');
+      
+      await manager.save();
+      
+      // Verify file is valid JSON
+      const { readFile } = await import('fs/promises');
+      const content = await readFile(manager.getMemoryFilePath(), 'utf-8');
+      
+      // Should be parseable JSON
+      expect(() => JSON.parse(content)).not.toThrow();
+      
+      const parsed = JSON.parse(content);
+      expect(parsed.specs).toContain('SPEC-001');
     });
   });
 });

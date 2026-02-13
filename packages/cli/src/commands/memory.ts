@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
 import { access } from 'fs/promises';
-import { ProjectMemoryManager, SteeringEngine } from '@specsafe/core';
+import { ProjectMemoryManager, SteeringEngine, validateSpecId } from '@specsafe/core';
 
 export const memoryCommand = new Command('memory')
   .description('Project memory and steering commands')
@@ -148,13 +148,17 @@ export const memoryCommand = new Command('memory')
         const spinner = ora('Loading context...').start();
 
         try {
+          // Validate spec ID
+          validateSpecId(specId);
+          const normalizedSpecId = specId.trim();
+
           const engine = new SteeringEngine(process.cwd());
           await engine.initialize('project');
 
-          const context = engine.getMemoryManager().getContextForSpec(specId);
+          const context = engine.getMemoryManager().getContextForSpec(normalizedSpecId);
           spinner.stop();
 
-          console.log(chalk.blue(`\n📚 Context for ${specId}\n`));
+          console.log(chalk.blue(`\n📚 Context for ${normalizedSpecId}\n`));
 
           console.log(chalk.white('Summary:'));
           console.log(chalk.gray(`  ${context.summary}\n`));
