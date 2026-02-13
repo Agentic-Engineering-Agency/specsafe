@@ -138,6 +138,44 @@ export { ConstitutionManager } from './governance/constitution.js';
 export { BUILTIN_PRINCIPLES, BUILTIN_GATES, getBuiltinPrinciple, getBuiltinGate, getGatesForPhase } from './governance/builtins.js';
 export { generateConstitution, generateMinimalConstitution, generateStrictConstitution, generateConstitutionReadme } from './governance/template.js';
 
+// E2E Testing System
+export type {
+  TestGuide,
+  TestScenario,
+  TestStep,
+  ScreenshotSubmission,
+  TestReport,
+  E2ETestResult,
+  TestStatus,
+  TestIssue,
+  ExpectedState,
+  FixSuggestion,
+  TestReportSummary,
+  AnalysisConfig,
+  GuideGenerationOptions,
+  TestSubmissionOptions
+} from './e2e/types.js';
+
+export {
+  generateGuide,
+  formatGuideAsMarkdown,
+  formatGuideAsJSON,
+  saveGuide,
+  filterScenariosByPriority,
+  getScreenshotSteps
+} from './e2e/guide-generator.js';
+
+export {
+  analyzeScreenshots,
+  analyzeSingleSubmission,
+  compareWithExpected,
+  generateReport,
+  generateFixSuggestions,
+  suggestFixes,
+  formatReportAsMarkdown,
+  DEFAULT_ANALYSIS_CONFIG
+} from './e2e/report-analyzer.js';
+
 // Elicitation System
 export type {
   ElicitationStep,
