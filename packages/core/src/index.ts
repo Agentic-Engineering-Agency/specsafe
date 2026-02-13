@@ -149,3 +149,25 @@ export type {
 export { ElicitationEngine } from './elicitation/engine.js';
 export { quickFlow, fullFlow, earsFlow } from './elicitation/flows.js';
 export { generateSpec } from './elicitation/generator.js';
+
+// Sharding System
+export type {
+  ShardStrategy,
+  ShardType,
+  SpecShard,
+  ShardPlan,
+  ShardOptions,
+  ShardResult,
+  MergeResult as ShardMergeResult,
+  ShardAnalysis,
+  CrossReference,
+} from './sharding/index.js';
+
+export {
+  ShardEngine,
+  shardBySection,
+  shardByRequirement,
+  shardByScenario,
+  shardAuto,
+  DEFAULT_SHARD_OPTIONS,
+} from './sharding/index.js';
