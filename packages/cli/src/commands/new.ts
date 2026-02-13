@@ -7,7 +7,6 @@ import { Workflow, ProjectTracker, generateEARSTemplate, SteeringEngine, Project
 import { input, editor, select, confirm } from '@inquirer/prompts';
 
 export const newCommand = new Command('new')
-  .alias('create')
   .description('Create a new spec with interactive PRD creation')
   .argument('[name]', 'Spec name (kebab-case)')
   .option('-d, --description <desc>', 'Spec description')
