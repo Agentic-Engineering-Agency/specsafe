@@ -166,3 +166,21 @@ export type {
 
 export { ProjectMemoryManager } from './memory/memory.js';
 export { SteeringEngine } from './memory/steering.js';
+
+// Capsules System
+export type {
+  Capsule,
+  CapsuleType,
+  CapsuleFilter,
+  CapsuleCollection,
+} from './capsules/types.js';
+export { CapsuleManager } from './capsules/capsules.js';
+export { formatCapsuleContent } from './capsules/templates.js';
+export {
+  validateCapsule,
+  validateSpecId,
+  validateTitle,
+  validateAuthor,
+  validateTags,
+  validateFilter,
+} from './capsules/validation.js';

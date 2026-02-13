@@ -28,6 +28,7 @@ import { applyCommand } from './commands/apply.js';
 import { diffCommand } from './commands/diff.js';
 import { extendCommand } from './commands/extend.js';
 import { memoryCommand } from './commands/memory.js';
+import { capsuleCommand } from './commands/capsule.js';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
@@ -58,6 +59,7 @@ program.addCommand(archiveCommand);
 program.addCommand(doctorCommand);
 program.addCommand(rulesCommand);
 program.addCommand(memoryCommand);      // NEW: Project memory commands
+program.addCommand(capsuleCommand);     // Manage context capsules
 
 // Delta spec commands (brownfield)
 program.addCommand(deltaCommand);       // Create delta spec
