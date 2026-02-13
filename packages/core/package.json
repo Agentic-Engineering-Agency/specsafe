@@ -26,7 +26,8 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "test": "vitest --passWithNoTests",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "echo \"No linter configured\""
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

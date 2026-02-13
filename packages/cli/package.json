@@ -24,7 +24,8 @@
     "postbuild": "chmod +x dist/index.js",
     "dev": "tsc --watch",
     "test": "vitest --passWithNoTests",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "echo \"No linter configured\""
   },
   "dependencies": {
     "@inquirer/prompts": "^5.5.0",
