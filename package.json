@@ -1,6 +1,6 @@
 {
   "name": "specsafe",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Test-Driven Development framework for AI-assisted software engineering",
   "private": true,
   "scripts": {
