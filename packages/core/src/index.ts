@@ -149,3 +149,25 @@ export type {
 export { ElicitationEngine } from './elicitation/engine.js';
 export { quickFlow, fullFlow, earsFlow } from './elicitation/flows.js';
 export { generateSpec } from './elicitation/generator.js';
+
+// Export System
+export type {
+  ExportFormat,
+  ExportOptions,
+  ExportResult,
+  StakeholderBundle,
+  ParsedSpec,
+  ExportConfig,
+} from './export/types.js';
+
+export {
+  parseSpec,
+  parseSpecFromFile,
+  exportToMarkdown,
+  exportToJSON,
+  exportSpecsToJSON,
+  exportToHTML,
+  generateStakeholderBundle,
+  generateStakeholderView,
+  exportSpec,
+} from './export/index.js';
