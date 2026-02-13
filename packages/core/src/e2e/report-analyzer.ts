@@ -12,7 +12,8 @@ import type {
   ExpectedState,
   FixSuggestion,
   AnalysisConfig,
-  TestReportSummary
+  TestReportSummary,
+  PlaywrightRunResult
 } from './types.js';
 
 /**
@@ -219,7 +220,63 @@ export async function generateReport(
     completedAt: new Date(),
     results,
     summary,
-    status: summary.failed > 0 ? 'completed' : 'completed',
+    status: 'completed',
+    recommendations,
+    fixSuggestions
+  };
+}
+
+/**
+ * Generate a test report from Playwright run results
+ */
+export function generatePlaywrightReport(
+  specId: string,
+  submittedBy: string,
+  runs: PlaywrightRunResult[]
+): TestReport {
+  const results: E2ETestResult[] = runs.map((run) => {
+    const status: TestStatus = run.status === 'pass'
+      ? 'pass'
+      : run.status === 'skipped'
+      ? 'skipped'
+      : 'fail';
+
+    const issues: TestIssue[] = status === 'pass' || status === 'skipped'
+      ? []
+      : [{
+          severity: 'high',
+          description: run.error || 'Scenario failed during Playwright execution',
+          category: 'functional',
+          suggestion: 'Review failed step logs and fix selectors/assertions'
+        }];
+
+    return {
+      scenarioId: run.scenarioId,
+      stepId: 'playwright-run',
+      status,
+      analysis: status === 'pass'
+        ? 'Playwright scenario completed successfully'
+        : run.error || 'Playwright scenario execution failed',
+      confidence: status === 'pass' ? 0.98 : 0.85,
+      issues,
+      matchesExpected: status === 'pass',
+      processingTimeMs: run.duration
+    };
+  });
+
+  const summary = generateSummary(results);
+  const fixSuggestions = generateFixSuggestions(results);
+  const recommendations = generateRecommendations(results, summary);
+
+  return {
+    specId,
+    reportId: `playwright-report-${Date.now()}`,
+    submittedBy,
+    createdAt: new Date(),
+    completedAt: new Date(),
+    results,
+    summary,
+    status: 'completed',
     recommendations,
     fixSuggestions
   };

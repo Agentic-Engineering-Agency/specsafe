@@ -26,6 +26,7 @@ export type {
 // Guide Generator
 export {
   generateGuide,
+  generateGuideContent,
   formatGuideAsMarkdown,
   formatGuideAsJSON,
   saveGuide,
@@ -39,6 +40,7 @@ export {
   analyzeSingleSubmission,
   compareWithExpected,
   generateReport,
+  generatePlaywrightReport,
   generateFixSuggestions,
   suggestFixes,
   formatReportAsMarkdown,

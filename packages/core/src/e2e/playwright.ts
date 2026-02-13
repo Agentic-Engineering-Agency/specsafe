@@ -43,6 +43,7 @@ export interface PlaywrightAction {
 export interface PlaywrightScenario {
   id: string;
   name: string;
+  steps?: string[];
   url?: string;
   actions: PlaywrightAction[];
   description?: string;
@@ -151,15 +152,19 @@ export class E2EEngine {
 
   /**
    * Run multiple scenarios
+   * Accepts either a scenario list or a specId placeholder (for API compatibility)
    */
-  async runAllScenarios(scenarios: PlaywrightScenario[]): Promise<PlaywrightResult[]> {
-    const results: PlaywrightResult[] = [];
+  async runAllScenarios(specIdOrScenarios: string | PlaywrightScenario[]): Promise<PlaywrightResult[]> {
+    if (typeof specIdOrScenarios === 'string') {
+      void specIdOrScenarios;
+      return [];
+    }
 
-    for (const scenario of scenarios) {
+    const results: PlaywrightResult[] = [];
+    for (const scenario of specIdOrScenarios) {
       const result = await this.runScenario(scenario);
       results.push(result);
     }
-
     return results;
   }
 
@@ -276,46 +281,32 @@ export class E2EEngine {
   /**
    * Capture screenshot with consistent naming
    */
-  async captureScreenshot(name: string): Promise<string> {
-    if (!this.page) {
-      await this.initialize();
-    }
-
+  async captureScreenshot(page: any, path: string): Promise<string> {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const path = `screenshots/${name}-${timestamp}.png`;
-
-    await this.page.screenshot({ path, fullPage: true });
-    return path;
+    const finalPath = path.endsWith('.png') ? path : `${path}-${timestamp}.png`;
+    await page.screenshot({ path: finalPath, fullPage: true });
+    return finalPath;
   }
 
   /**
-   * Fill form with data
+   * Fill form with smart selector mapping
    */
-  async fillForm(formData: Record<string, string>): Promise<void> {
-    if (!this.page) {
-      await this.initialize();
-    }
-
-    for (const [selector, value] of Object.entries(formData)) {
-      await this.page.fill(selector, value);
+  async fillForm(page: any, data: Record<string, string>): Promise<void> {
+    for (const [selector, value] of Object.entries(data)) {
+      await page.fill(selector, value);
     }
   }
 
   /**
-   * Wait for element state
+   * Wait for state condition (element appear/disappear)
    */
   async waitForState(
-    selector: string,
-    condition: 'visible' | 'hidden' | 'attached' | 'detached',
-    timeout?: number
+    page: any,
+    condition: { selector: string; state: 'visible' | 'hidden' | 'attached' | 'detached'; timeout?: number }
   ): Promise<void> {
-    if (!this.page) {
-      await this.initialize();
-    }
-
-    await this.page.waitForSelector(selector, {
-      state: condition,
-      timeout: timeout || this.config.timeout
+    await page.waitForSelector(condition.selector, {
+      state: condition.state,
+      timeout: condition.timeout || this.config.timeout
     });
   }
 

@@ -16,6 +16,8 @@ import type {
   Scenario as SpecScenario
 } from '../types.js';
 
+import { convertToPlaywrightScenarios, generatePlaywrightScript } from './playwright.js';
+
 /**
  * Generate a test guide from a spec
  */
@@ -29,34 +31,19 @@ export function generateGuide(
     priorityFilter = ['P0', 'P1', 'P2']
   } = options;
 
-  // Extract scenarios from spec requirements
   const scenarios: TestScenario[] = [];
-  
-  for (const req of spec.requirements) {
-    // Skip if filtering by priority
-    if (!priorityFilter.includes(req.priority)) {
-      continue;
-    }
 
-    // Convert spec scenarios to test scenarios
+  for (const req of spec.requirements) {
+    if (!priorityFilter.includes(req.priority)) continue;
+
     for (const specScenario of req.scenarios) {
       const scenarioId = `${req.id}-${specScenario.id}`;
-      
-      // Skip if filtering by scenario ID
-      if (scenarioFilter && !scenarioFilter.includes(scenarioId)) {
-        continue;
-      }
+      if (scenarioFilter && !scenarioFilter.includes(scenarioId)) continue;
 
-      const scenario = convertSpecScenarioToTestScenario(
-        scenarioId,
-        req,
-        specScenario
-      );
-      scenarios.push(scenario);
+      scenarios.push(convertSpecScenarioToTestScenario(scenarioId, req, specScenario));
     }
   }
 
-  // Sort by priority (P0 first)
   scenarios.sort((a, b) => {
     const priorityOrder: Record<string, number> = { P0: 0, P1: 1, P2: 2 };
     return (priorityOrder[a.priority] ?? 99) - (priorityOrder[b.priority] ?? 99);
@@ -75,9 +62,6 @@ export function generateGuide(
   };
 }
 
-/**
- * Convert a spec scenario to a test scenario
- */
 function convertSpecScenarioToTestScenario(
   scenarioId: string,
   requirement: Requirement,
@@ -123,9 +107,6 @@ function convertSpecScenarioToTestScenario(
   };
 }
 
-/**
- * Generate global prerequisites for the spec
- */
 function generatePrerequisites(spec: Spec): string[] {
   return [
     'Application is running in test environment',
@@ -136,9 +117,6 @@ function generatePrerequisites(spec: Spec): string[] {
   ];
 }
 
-/**
- * Generate setup instructions
- */
 function generateSetupInstructions(spec: Spec): string[] {
   return [
     `## Setup for ${spec.name}`,
@@ -151,10 +129,7 @@ function generateSetupInstructions(spec: Spec): string[] {
   ];
 }
 
-/**
- * Generate cleanup instructions
- */
-function generateCleanupInstructions(spec: Spec): string[] {
+function generateCleanupInstructions(_spec: Spec): string[] {
   return [
     '## Cleanup Instructions',
     '',
@@ -166,13 +141,9 @@ function generateCleanupInstructions(spec: Spec): string[] {
   ];
 }
 
-/**
- * Format a test guide as Markdown
- */
 export function formatGuideAsMarkdown(guide: TestGuide): string {
   const lines: string[] = [];
 
-  // Header
   lines.push(`# E2E Test Guide: ${guide.specName}`);
   lines.push('');
   lines.push(`**Spec ID:** ${guide.specId}`);
@@ -180,42 +151,30 @@ export function formatGuideAsMarkdown(guide: TestGuide): string {
   lines.push(`**Generated:** ${guide.createdAt.toISOString().split('T')[0]}`);
   lines.push('');
 
-  // Global prerequisites
   if (guide.globalPrerequisites.length > 0) {
     lines.push('## Global Prerequisites');
     lines.push('');
-    for (const prereq of guide.globalPrerequisites) {
-      lines.push(`- [ ] ${prereq}`);
-    }
+    for (const prereq of guide.globalPrerequisites) lines.push(`- [ ] ${prereq}`);
     lines.push('');
   }
 
-  // Setup instructions
-  if (guide.setupInstructions.length > 0) {
-    lines.push(...guide.setupInstructions);
-  }
+  if (guide.setupInstructions.length > 0) lines.push(...guide.setupInstructions);
 
-  // Scenarios
   lines.push('## Test Scenarios');
   lines.push('');
-
   for (const scenario of guide.scenarios) {
     lines.push(formatScenarioAsMarkdown(scenario));
     lines.push('');
   }
 
-  // Cleanup
-  if (guide.cleanupInstructions) {
-    lines.push(...guide.cleanupInstructions);
-  }
+  if (guide.cleanupInstructions) lines.push(...guide.cleanupInstructions);
 
-  // Summary
   lines.push('---');
   lines.push('');
   lines.push('## Test Summary');
   lines.push('');
   lines.push(`- Total Scenarios: ${guide.scenarios.length}`);
-  lines.push(`- Total Steps: ${guide.scenarios.reduce((sum: number, s) => sum + s.steps.length, 0)}`);
+  lines.push(`- Total Steps: ${guide.scenarios.reduce((sum, s) => sum + s.steps.length, 0)}`);
   lines.push(`- P0 (Critical): ${guide.scenarios.filter((s) => s.priority === 'P0').length}`);
   lines.push(`- P1 (High): ${guide.scenarios.filter((s) => s.priority === 'P1').length}`);
   lines.push(`- P2 (Normal): ${guide.scenarios.filter((s) => s.priority === 'P2').length}`);
@@ -224,15 +183,9 @@ export function formatGuideAsMarkdown(guide: TestGuide): string {
   return lines.join('\n');
 }
 
-/**
- * Format a single scenario as Markdown
- */
 function formatScenarioAsMarkdown(scenario: TestScenario): string {
   const lines: string[] = [];
-
-  // Scenario header with priority badge
-  const priorityBadge = scenario.priority === 'P0' ? '🔴' : 
-                       scenario.priority === 'P1' ? '🟡' : '🟢';
+  const priorityBadge = scenario.priority === 'P0' ? '🔴' : scenario.priority === 'P1' ? '🟡' : '🟢';
   lines.push(`### ${priorityBadge} ${scenario.name}`);
   lines.push('');
   lines.push(`**ID:** ${scenario.id}`);
@@ -240,28 +193,21 @@ function formatScenarioAsMarkdown(scenario: TestScenario): string {
   lines.push(`**Description:** ${scenario.description}`);
   lines.push('');
 
-  // Prerequisites
   if (scenario.prerequisites.length > 0) {
     lines.push('**Prerequisites:**');
-    for (const prereq of scenario.prerequisites) {
-      lines.push(`- ${prereq}`);
-    }
+    for (const prereq of scenario.prerequisites) lines.push(`- ${prereq}`);
     lines.push('');
   }
 
-  // Steps
   lines.push('**Steps:**');
   lines.push('');
-
   for (const step of scenario.steps.sort((a, b) => a.order - b.order)) {
     const screenshotIcon = step.screenshotRequired ? '📸' : '';
     lines.push(`#### Step ${step.order}: ${step.description} ${screenshotIcon}`);
     lines.push('');
     lines.push(`- **Action:** ${step.action}`);
     lines.push(`- **Expected Result:** ${step.expectedResult}`);
-    if (step.notes) {
-      lines.push(`- **Notes:** ${step.notes}`);
-    }
+    if (step.notes) lines.push(`- **Notes:** ${step.notes}`);
     if (step.screenshotRequired) {
       lines.push(`- **Screenshot Required:** ✅ Yes (save as \`${step.id}.png\`)`);
     }
@@ -271,34 +217,38 @@ function formatScenarioAsMarkdown(scenario: TestScenario): string {
   return lines.join('\n');
 }
 
-/**
- * Format a test guide as JSON
- */
 export function formatGuideAsJSON(guide: TestGuide): string {
   return JSON.stringify(guide, null, 2);
 }
 
-/**
- * Save a test guide to a file
- */
+export function generateGuideContent(
+  spec: Spec,
+  options: GuideGenerationOptions = {}
+): { content: string; format: 'markdown' | 'json' | 'js'; guide: TestGuide } {
+  const guide = generateGuide(spec, options);
+  const mode = options.mode ?? 'manual';
+
+  if (mode === 'playwright') {
+    const scenarios = convertToPlaywrightScenarios(guide);
+    const content = generatePlaywrightScript(spec.id, scenarios);
+    return { content, format: 'js', guide };
+  }
+
+  const format = options.format === 'json' ? 'json' : 'markdown';
+  return {
+    content: format === 'json' ? formatGuideAsJSON(guide) : formatGuideAsMarkdown(guide),
+    format,
+    guide
+  };
+}
+
 export async function saveGuide(
   guide: TestGuide,
   format: 'markdown' | 'json' = 'markdown'
 ): Promise<string> {
-  const content = format === 'markdown' 
-    ? formatGuideAsMarkdown(guide) 
-    : formatGuideAsJSON(guide);
-  
-  const extension = format === 'markdown' ? 'md' : 'json';
-  const filename = `test-guide-${guide.specId}.${extension}`;
-  
-  // Note: Actual file writing is handled by the CLI layer
-  return content;
+  return format === 'markdown' ? formatGuideAsMarkdown(guide) : formatGuideAsJSON(guide);
 }
 
-/**
- * Filter scenarios by priority
- */
 export function filterScenariosByPriority(
   guide: TestGuide,
   priorities: ('P0' | 'P1' | 'P2')[]
@@ -306,16 +256,11 @@ export function filterScenariosByPriority(
   return guide.scenarios.filter(s => priorities.includes(s.priority));
 }
 
-/**
- * Get scenarios requiring screenshots
- */
 export function getScreenshotSteps(guide: TestGuide): TestStep[] {
   const steps: TestStep[] = [];
   for (const scenario of guide.scenarios) {
     for (const step of scenario.steps) {
-      if (step.screenshotRequired) {
-        steps.push(step);
-      }
+      if (step.screenshotRequired) steps.push(step);
     }
   }
   return steps;

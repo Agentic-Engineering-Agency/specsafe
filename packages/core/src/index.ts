@@ -153,11 +153,14 @@ export type {
   TestReportSummary,
   AnalysisConfig,
   GuideGenerationOptions,
-  TestSubmissionOptions
+  TestSubmissionOptions,
+  AutomationMode,
+  PlaywrightRunResult
 } from './e2e/types.js';
 
 export {
   generateGuide,
+  generateGuideContent,
   formatGuideAsMarkdown,
   formatGuideAsJSON,
   saveGuide,
@@ -170,11 +173,24 @@ export {
   analyzeSingleSubmission,
   compareWithExpected,
   generateReport,
+  generatePlaywrightReport,
   generateFixSuggestions,
   suggestFixes,
   formatReportAsMarkdown,
   DEFAULT_ANALYSIS_CONFIG
 } from './e2e/report-analyzer.js';
+
+export {
+  E2EEngine,
+  convertToPlaywrightScenarios,
+  generatePlaywrightScript
+} from './e2e/playwright.js';
+
+export type {
+  PlaywrightConfig,
+  PlaywrightAction,
+  PlaywrightScenario
+} from './e2e/playwright.js';
 
 // Elicitation System
 export type {
