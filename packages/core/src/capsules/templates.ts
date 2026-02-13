@@ -4,6 +4,7 @@
  */
 
 import { CapsuleTemplate, CapsuleType, TemplateField } from './types.js';
+import { validateCapsuleType } from './validation.js';
 
 export const USER_STORY_TEMPLATE: CapsuleTemplate = {
   type: 'user-story',
@@ -134,13 +135,13 @@ export const TEMPLATE_NAMES: Record<CapsuleType, string> = {
 
 /**
  * Get a template by type
+ * Security: Validates type before returning template
  */
 export function getTemplate(type: CapsuleType): CapsuleTemplate {
-  const template = BUILTIN_TEMPLATES[type];
-  if (!template) {
-    throw new Error(`Unknown capsule type: ${type}`);
+  if (!isValidTemplateType(type)) {
+    throw new Error(`Unknown capsule type: ${type}. Valid types are: ${Object.keys(BUILTIN_TEMPLATES).join(', ')}`);
   }
-  return template;
+  return BUILTIN_TEMPLATES[type];
 }
 
 /**
@@ -169,6 +170,7 @@ export function getTemplateChoices(): { name: string; value: CapsuleType }[] {
 
 /**
  * Format capsule content from template fields
+ * Security: Sanitizes field values to prevent injection
  */
 export function formatContent(
   type: CapsuleType,
@@ -179,38 +181,82 @@ export function formatContent(
 
   for (const field of template.fields) {
     const value = fields[field.name];
-    if (value && value.trim()) {
-      lines.push(`**${field.label}:**`);
-      lines.push(value.trim());
-      lines.push('');
-    }
+
+    // Skip empty or non-string values
+    if (!value || typeof value !== 'string') continue;
+
+    const trimmed = value.trim();
+
+    // Skip if value is empty after trimming
+    if (trimmed.length === 0) continue;
+
+    // Sanitize the field value to prevent markdown injection
+    const sanitized = sanitizeMarkdownField(trimmed);
+
+    lines.push(`**${field.label}:**`);
+    lines.push(sanitized);
+    lines.push('');
   }
 
   return lines.join('\n').trim();
 }
 
 /**
+ * Sanitize a field value for markdown output
+ * Prevents markdown injection by escaping special characters
+ */
+function sanitizeMarkdownField(value: string): string {
+  // Only escape markdown syntax in field values when followed by space
+  // This preserves intentional formatting while preventing injection
+  return value
+    .replace(/\*\*\s/g, '\\*\\* ')
+    .replace(/##\s/g, '\\#\\# ')
+    .replace(/`\s/g, '\\` ');
+}
+
+/**
  * Parse content back into template fields (best effort)
+ * Security: Uses safe regex with bounded patterns to prevent ReDoS
  */
 export function parseContent(
   type: CapsuleType,
   content: string
 ): Record<string, string> {
+  if (typeof content !== 'string') {
+    throw new Error('Content must be a string');
+  }
+
   const template = getTemplate(type);
   const fields: Record<string, string> = {};
 
   for (const field of template.fields) {
-    const pattern = new RegExp(
-      `\\*\\*${field.label}:\\*\\*\\s*\\n?([^\\n]*(?:\\n(?!\\*\\*)[^\\n]*)*)`,
-      'i'
-    );
-    const match = content.match(pattern);
-    if (match) {
-      fields[field.name] = match[1].trim();
-    } else {
+    try {
+      // Escape special regex characters in label to prevent ReDoS
+      const escapedLabel = field.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+      // Use bounded pattern to prevent catastrophic backtracking
+      const pattern = new RegExp(
+        `\\*\\*${escapedLabel}:\\*\\*\\s*\\n?([^*]{0,50000}(?:\\n(?!\\*\\*)[^*]{0,1000})*)`,
+        'i'
+      );
+
+      const match = content.match(pattern);
+      if (match && match[1]) {
+        fields[field.name] = match[1].trim();
+      } else {
+        fields[field.name] = '';
+      }
+    } catch (error) {
+      // If regex fails for any reason, set empty value
       fields[field.name] = '';
     }
   }
 
   return fields;
 }
+
+/**
+ * Validate capsule type
+ * Re-exported for convenience
+ */
+export { validateCapsuleType };

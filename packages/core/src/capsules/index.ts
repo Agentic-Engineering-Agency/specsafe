@@ -32,3 +32,17 @@ export {
   formatContent,
   parseContent,
 } from './templates.js';
+
+// Validation
+export {
+  VALIDATION_LIMITS,
+  sanitizeString,
+  validateSpecId,
+  validateTitle,
+  validateAuthor,
+  validateContent,
+  validateTags,
+  validateFilter,
+  validateCapsuleType,
+  isValidCapsuleType,
+} from './validation.js';

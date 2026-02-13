@@ -175,4 +175,13 @@ export {
   getTemplateChoices,
   formatContent,
   parseContent,
+  VALIDATION_LIMITS,
+  sanitizeString,
+  validateTitle,
+  validateAuthor,
+  validateContent,
+  validateTags,
+  validateFilter,
+  validateCapsuleType,
+  isValidCapsuleType,
 } from './capsules/index.js';
