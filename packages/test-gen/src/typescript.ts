@@ -3,7 +3,7 @@
  * Converts spec scenarios to Vitest test files
  */
 
-import type { Spec, Scenario } from '@specsafe/core';
+import type { Spec, Scenario, Requirement } from '@specsafe/core';
 
 export interface TestGenerationOptions {
   framework: 'vitest' | 'jest';
@@ -41,25 +41,63 @@ export class TypeScriptTestGenerator {
   }
 
   private generateDescribe(spec: Spec): string {
-    const tests = spec.requirements
-      .flatMap(r => r.scenarios)
+    const requirements = spec.requirements;
+
+    // If no requirements, produce empty describe
+    if (requirements.length === 0) {
+      return `describe('${this.escapeString(spec.name)}', () => {\n});`;
+    }
+
+    // Generate a nested describe block per requirement
+    const requirementBlocks = requirements
+      .map(r => this.generateRequirementBlock(r))
+      .join('\n\n');
+
+    return `describe('${this.escapeString(spec.name)}', () => {\n${requirementBlocks}\n});`;
+  }
+
+  private generateRequirementBlock(req: Requirement): string {
+    const label = `[${req.id}] ${req.text}`;
+    
+    if (req.scenarios.length === 0) {
+      // Generate stub test from requirement text
+      const stubTest = this.generateRequirementTest(req);
+      return `  describe('${this.escapeString(label)}', () => {\n${stubTest}\n  });`;
+    }
+
+    const tests = req.scenarios
       .map(s => this.generateTest(s))
       .join('\n\n');
 
-    return `describe('${this.escapeString(spec.name)}', () => {\n${tests}\n});`;
+    return `  describe('${this.escapeString(label)}', () => {\n${tests}\n  });`;
+  }
+
+  /**
+   * Generate a stub test for a requirement without scenarios
+   */
+  generateRequirementTest(req: Requirement): string {
+    const testName = this.escapeString(`should ${req.text.toLowerCase()}`);
+    const body = this.options.generatePlaceholders
+      ? `      // TODO: Implement test for requirement ${req.id}\n      // Verify: ${req.text}\n      expect(true).toBe(true); // TODO: Replace with actual assertion`
+      : '';
+
+    return `    it('${testName}', () => {\n${body}\n    });`;
   }
 
   private generateTest(scenario: Scenario): string {
     const testName = this.escapeString(this.scenarioToTestName(scenario));
     const comments = this.options.includeComments
-      ? `  // GIVEN: ${scenario.given}\n  // WHEN: ${scenario.when}\n  // THEN: ${scenario.thenOutcome}\n`
+      ? `    // GIVEN: ${scenario.given}\n    // WHEN: ${scenario.when}\n    // THEN: ${scenario.thenOutcome}\n`
       : '';
     
-    const body = this.options.generatePlaceholders
-      ? `    expect(true).toBe(true); // TODO: Implement test`
-      : '';
+    let body: string;
+    if (this.options.generatePlaceholders) {
+      body = `      // Arrange\n      // ${scenario.given}\n\n      // Act\n      // ${scenario.when}\n\n      // Assert\n      // ${scenario.thenOutcome}\n      expect(true).toBe(true); // TODO: Implement test`;
+    } else {
+      body = '';
+    }
 
-    return `${comments}  it('${testName}', () => {\n${body}\n  });`;
+    return `${comments}    it('${testName}', () => {\n${body}\n    });`;
   }
 
   private scenarioToTestName(scenario: Scenario): string {
