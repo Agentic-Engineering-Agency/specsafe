@@ -167,6 +167,51 @@ describe('EARS Parser', () => {
       });
     });
 
+    describe('Diverse subjects', () => {
+      it('should parse "the API shall" as ubiquitous', () => {
+        const result = parseEARSRequirement('The API shall return JSON responses');
+        expect(result.type).toBe('ubiquitous');
+        expect(result.action).toBe('return JSON responses');
+      });
+
+      it('should parse "the module must" as ubiquitous', () => {
+        const result = parseEARSRequirement('The module must validate all inputs');
+        expect(result.type).toBe('ubiquitous');
+        expect(result.action).toBe('validate all inputs');
+      });
+
+      it('should parse "the component shall" as ubiquitous', () => {
+        const result = parseEARSRequirement('The component shall render within 100ms');
+        expect(result.type).toBe('ubiquitous');
+        expect(result.action).toBe('render within 100ms');
+      });
+
+      it('should parse "the server shall" in event pattern', () => {
+        const result = parseEARSRequirement('When request is received, the server shall process it');
+        expect(result.type).toBe('event');
+        expect(result.event).toBe('request is received');
+        expect(result.action).toBe('process it');
+      });
+
+      it('should parse "the platform shall" in state pattern', () => {
+        const result = parseEARSRequirement('While under load, the platform shall maintain response times');
+        expect(result.type).toBe('state');
+        expect(result.action).toBe('maintain response times');
+      });
+    });
+
+    describe('Complex pattern edge cases', () => {
+      it('should not misparse "when" inside condition text', () => {
+        // "when the user completes action and when timeout occurs" — two conditions
+        const text = 'When the download completes, while the user is on the page, the system shall show notification';
+        const result = parseEARSRequirement(text);
+        expect(result.type).toBe('complex');
+        expect(result.conditions!.length).toBe(2);
+        expect(result.conditions![0].value).toBe('the download completes');
+        expect(result.conditions![1].value).toBe('the user is on the page');
+      });
+    });
+
     describe('Unknown pattern', () => {
       it('should return unknown for non-EARS text', () => {
         const text = 'Users like fast applications';
@@ -188,16 +233,25 @@ describe('EARS Parser', () => {
   describe('hasEARSKeywords', () => {
     it('should detect EARS keywords', () => {
       expect(hasEARSKeywords('The system shall validate')).toBe(true);
-      expect(hasEARSKeywords('When user clicks')).toBe(true);
-      expect(hasEARSKeywords('While processing')).toBe(true);
-      expect(hasEARSKeywords('Where condition exists')).toBe(true);
-      expect(hasEARSKeywords('If error then handle')).toBe(true);
+      expect(hasEARSKeywords('When user clicks, the system shall respond')).toBe(true);
+      expect(hasEARSKeywords('While processing, the system shall show progress')).toBe(true);
+      expect(hasEARSKeywords('Where condition exists, the system shall act')).toBe(true);
+      expect(hasEARSKeywords('If error then the system shall handle it')).toBe(true);
       expect(hasEARSKeywords('System must process')).toBe(true);
+      expect(hasEARSKeywords('The API shall return 200')).toBe(true);
+      expect(hasEARSKeywords('The module will handle requests')).toBe(true);
     });
 
     it('should not detect keywords in non-EARS text', () => {
       expect(hasEARSKeywords('This is a description')).toBe(false);
       expect(hasEARSKeywords('Users want speed')).toBe(false);
+      // Bare trigger keywords without modal verbs should not match
+      expect(hasEARSKeywords('When user clicks')).toBe(false);
+      expect(hasEARSKeywords('While processing')).toBe(false);
+      // Bare "will" without subject pattern should not match
+      expect(hasEARSKeywords('This will be fun')).toBe(false);
+      // "if...then" without modal verb should not match
+      expect(hasEARSKeywords('If error then handle')).toBe(false);
     });
   });
 
@@ -219,6 +273,20 @@ Where premium enabled, the system shall unlock features
       expect(requirements.some(r => r.includes('encrypt data'))).toBe(true);
       expect(requirements.some(r => r.includes('create session'))).toBe(true);
       expect(requirements.some(r => r.includes('sync data'))).toBe(true);
+    });
+
+    it('should extract requirements with diverse subjects', () => {
+      const text = `
+The API shall return JSON responses
+The module must validate input parameters
+The component will render correctly
+The server shall handle 1000 concurrent connections
+      `.trim();
+      
+      const requirements = extractRequirements(text);
+      expect(requirements.length).toBe(4);
+      expect(requirements.some(r => r.includes('return JSON'))).toBe(true);
+      expect(requirements.some(r => r.includes('handle 1000'))).toBe(true);
     });
 
     it('should handle bullet points', () => {

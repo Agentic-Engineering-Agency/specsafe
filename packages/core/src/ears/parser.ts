@@ -6,9 +6,16 @@
 import type { EARSRequirement, EARSType } from './types.js';
 
 /**
- * Common subject pattern for EARS requirements
+ * Flexible subject pattern for EARS requirements.
+ * Matches "the <word> shall/must/will" where <word> can be any noun acting as a subject.
+ * This avoids hardcoding a fixed list of subjects.
  */
-const SUBJECT_PATTERN = '(?:system|application|service|software|product)';
+const SUBJECT_PATTERN = '(?:[A-Za-z][A-Za-z0-9_-]*)';
+
+/**
+ * The modal verbs that indicate a requirement action clause.
+ */
+const MODAL = '(?:shall|must|will)';
 
 /**
  * Parse a requirement text and extract EARS structure
@@ -64,25 +71,27 @@ export function parseEARSRequirement(text: string): EARSRequirement {
 }
 
 /**
+ * Build a regex that matches "the <subject> shall/must/will" flexibly.
+ * Accepts an optional "the" and any single-word subject before the modal verb.
+ */
+function subjectModalRegex(): string {
+  return `(?:the\\s+)?${SUBJECT_PATTERN}\\s+${MODAL}`;
+}
+
+/**
  * Match ubiquitous pattern: "The system shall [action]"
  */
 function matchUbiquitous(text: string): EARSRequirement | null {
-  const patterns = [
-    new RegExp(`^(?:the\\s+)?${SUBJECT_PATTERN}\\s+(?:shall|must|will)\\s+(.+)$`, 'i')
-  ];
-  
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
-    if (match) {
-      return {
-        text,
-        type: 'ubiquitous',
-        action: match[1].trim(),
-        confidence: 0.9
-      };
-    }
+  const pattern = new RegExp(`^${subjectModalRegex()}\\s+(.+)$`, 'i');
+  const match = text.match(pattern);
+  if (match) {
+    return {
+      text,
+      type: 'ubiquitous',
+      action: match[1].trim(),
+      confidence: 0.9
+    };
   }
-  
   return null;
 }
 
@@ -90,9 +99,10 @@ function matchUbiquitous(text: string): EARSRequirement | null {
  * Match event-driven pattern: "When [event], the system shall [action]"
  */
 function matchEvent(text: string): EARSRequirement | null {
+  const smr = subjectModalRegex();
   const patterns = [
-    new RegExp(`^when\\s+(.+?),\\s*(?:the\\s+)?${SUBJECT_PATTERN}\\s+(?:shall|must|will)\\s+(.+)$`, 'i'),
-    new RegExp(`^(?:upon|on)\\s+(.+?),\\s*(?:the\\s+)?${SUBJECT_PATTERN}\\s+(?:shall|must|will)\\s+(.+)$`, 'i')
+    new RegExp(`^when\\s+(.+?),\\s*${smr}\\s+(.+)$`, 'i'),
+    new RegExp(`^(?:upon|on)\\s+(.+?),\\s*${smr}\\s+(.+)$`, 'i')
   ];
   
   for (const pattern of patterns) {
@@ -115,10 +125,11 @@ function matchEvent(text: string): EARSRequirement | null {
  * Match state-driven pattern: "While [state], the system shall [action]"
  */
 function matchState(text: string): EARSRequirement | null {
+  const smr = subjectModalRegex();
   const patterns = [
-    new RegExp(`^while\\s+(.+?),\\s*(?:the\\s+)?${SUBJECT_PATTERN}\\s+(?:shall|must|will)\\s+(.+)$`, 'i'),
-    new RegExp(`^(?:during|throughout)\\s+(.+?),\\s*(?:the\\s+)?${SUBJECT_PATTERN}\\s+(?:shall|must|will)\\s+(.+)$`, 'i'),
-    new RegExp(`^as long as\\s+(.+?),\\s*(?:the\\s+)?${SUBJECT_PATTERN}\\s+(?:shall|must|will)\\s+(.+)$`, 'i')
+    new RegExp(`^while\\s+(.+?),\\s*${smr}\\s+(.+)$`, 'i'),
+    new RegExp(`^(?:during|throughout)\\s+(.+?),\\s*${smr}\\s+(.+)$`, 'i'),
+    new RegExp(`^as long as\\s+(.+?),\\s*${smr}\\s+(.+)$`, 'i')
   ];
   
   for (const pattern of patterns) {
@@ -141,9 +152,10 @@ function matchState(text: string): EARSRequirement | null {
  * Match optional pattern: "Where [condition], the system shall [action]"
  */
 function matchOptional(text: string): EARSRequirement | null {
+  const smr = subjectModalRegex();
   const patterns = [
-    new RegExp(`^where\\s+(.+?),\\s*(?:the\\s+)?${SUBJECT_PATTERN}\\s+(?:shall|must|will)\\s+(.+)$`, 'i'),
-    new RegExp(`^in case(?:s)?\\s+(?:where\\s+)?(.+?),\\s*(?:the\\s+)?${SUBJECT_PATTERN}\\s+(?:shall|must|will)\\s+(.+)$`, 'i')
+    new RegExp(`^where\\s+(.+?),\\s*${smr}\\s+(.+)$`, 'i'),
+    new RegExp(`^in case(?:s)?\\s+(?:where\\s+)?(.+?),\\s*${smr}\\s+(.+)$`, 'i')
   ];
   
   for (const pattern of patterns) {
@@ -166,9 +178,10 @@ function matchOptional(text: string): EARSRequirement | null {
  * Match unwanted behavior pattern: "If [unwanted], then the system shall [action]"
  */
 function matchUnwanted(text: string): EARSRequirement | null {
+  const smr = subjectModalRegex();
   const patterns = [
-    new RegExp(`^if\\s+(.+?),\\s*then\\s+(?:the\\s+)?${SUBJECT_PATTERN}\\s+(?:shall|must|will)\\s+(.+)$`, 'i'),
-    new RegExp(`^(?:in the event that|should)\\s+(.+?),\\s*(?:the\\s+)?${SUBJECT_PATTERN}\\s+(?:shall|must|will)\\s+(.+)$`, 'i')
+    new RegExp(`^if\\s+(.+?),\\s*then\\s+${smr}\\s+(.+)$`, 'i'),
+    new RegExp(`^(?:in the event that|should)\\s+(.+?),\\s*${smr}\\s+(.+)$`, 'i')
   ];
   
   for (const pattern of patterns) {
@@ -190,9 +203,14 @@ function matchUnwanted(text: string): EARSRequirement | null {
 /**
  * Match complex pattern: combination of triggers
  * Example: "When [event], while [state], the system shall [action]"
+ *
+ * Uses a smarter approach: find the subject+modal anchor first, then parse
+ * the prefix for conditions using comma-delimited segments.
  */
 function matchComplex(text: string): EARSRequirement | null {
-  const complexPattern = new RegExp(`^((?:when|while|where|if).+?(?:,\\s*(?:and|while|where|when)\\s+.+?)*),\\s*(?:the\\s+)?${SUBJECT_PATTERN}\\s+(?:shall|must|will)\\s+(.+)$`, 'i');
+  const smr = subjectModalRegex();
+  // Match: <triggers prefix>, <subject modal> <action>
+  const complexPattern = new RegExp(`^((?:when|while|where|if)\\s+.+?),\\s*${smr}\\s+(.+)$`, 'i');
   const match = text.match(complexPattern);
   
   if (!match) {
@@ -202,63 +220,23 @@ function matchComplex(text: string): EARSRequirement | null {
   const triggersText = match[1].trim();
   const action = match[2].trim();
   
-  // Parse individual triggers
+  // Parse individual triggers by splitting on comma boundaries that are followed by a keyword.
+  // This avoids splitting on keywords that appear inside condition text.
   const conditions: { type: 'event' | 'state' | 'optional'; value: string }[] = [];
   
-  // Split by "and", "while", "where", "when", "if" (keeping the keyword)
-  const triggerParts = triggersText.split(/,?\s+(and|while|where|when|if)\s+/i);
+  // Split on ", <keyword>" or ", and <keyword>" boundaries
+  const segments = triggersText.split(/,\s+(?:and\s+)?(?=(?:when|while|where|if)\s)/i);
   
-  let currentKeyword = '';
-  let lastKeywordType: 'event' | 'state' | 'optional' | null = null;
-  
-  for (let i = 0; i < triggerParts.length; i++) {
-    const part = triggerParts[i].trim();
-    
-    if (/^(and|while|where|when|if)$/i.test(part)) {
-      const keyword = part.toLowerCase();
-      // 'and' continues with the previous keyword type
-      if (keyword !== 'and') {
-        currentKeyword = keyword;
-      }
-      continue;
-    }
-    
-    // First part might not have a keyword if it starts with one
-    if (i === 0) {
-      if (/^if\s+/i.test(part)) {
-        conditions.push({ type: 'optional', value: part.replace(/^if\s+/i, '').trim() });
-        lastKeywordType = 'optional';
-      } else if (/^when\s+/i.test(part)) {
-        conditions.push({ type: 'event', value: part.replace(/^when\s+/i, '').trim() });
-        lastKeywordType = 'event';
-      } else if (/^while\s+/i.test(part)) {
-        conditions.push({ type: 'state', value: part.replace(/^while\s+/i, '').trim() });
-        lastKeywordType = 'state';
-      } else if (/^where\s+/i.test(part)) {
-        conditions.push({ type: 'optional', value: part.replace(/^where\s+/i, '').trim() });
-        lastKeywordType = 'optional';
-      }
-    } else {
-      // Use the current keyword (or last type if 'and')
-      let conditionType: 'event' | 'state' | 'optional' | null = null;
-      
-      if (currentKeyword === 'if') {
-        conditionType = 'optional';
-      } else if (currentKeyword === 'when') {
-        conditionType = 'event';
-      } else if (currentKeyword === 'while') {
-        conditionType = 'state';
-      } else if (currentKeyword === 'where') {
-        conditionType = 'optional';
-      } else if (currentKeyword === '' && lastKeywordType) {
-        // Handle 'and' by using last keyword type
-        conditionType = lastKeywordType;
-      }
-      
-      if (conditionType) {
-        conditions.push({ type: conditionType, value: part });
-        lastKeywordType = conditionType;
-      }
+  for (const segment of segments) {
+    const trimmed = segment.trim();
+    if (/^when\s+/i.test(trimmed)) {
+      conditions.push({ type: 'event', value: trimmed.replace(/^when\s+/i, '').trim() });
+    } else if (/^while\s+/i.test(trimmed)) {
+      conditions.push({ type: 'state', value: trimmed.replace(/^while\s+/i, '').trim() });
+    } else if (/^where\s+/i.test(trimmed)) {
+      conditions.push({ type: 'optional', value: trimmed.replace(/^where\s+/i, '').trim() });
+    } else if (/^if\s+/i.test(trimmed)) {
+      conditions.push({ type: 'optional', value: trimmed.replace(/^if\s+/i, '').trim() });
     }
   }
   
@@ -277,19 +255,42 @@ function matchComplex(text: string): EARSRequirement | null {
 }
 
 /**
- * Check if a requirement text contains any EARS keywords
+ * Check if a requirement text contains EARS keywords.
  * 
- * Note: This is a permissive heuristic designed to detect potential EARS patterns.
- * It may produce false positives and should be used as an initial filter rather than
- * a strict validator.
+ * Tightened to reduce false positives:
+ * - "shall" and "must" are strong requirement indicators on their own
+ * - "if...then" only matches when combined with shall/must/will
+ * - "when/while/where" only match when combined with shall/must/will
+ * - bare "will" requires a subject pattern to avoid matching casual sentences
  */
 export function hasEARSKeywords(text: string): boolean {
-  const keywords = /\b(when|while|where|if\s+.+\s+then|system\s+shall|shall|must|will)\b/i;
-  return keywords.test(text);
+  // Strong indicators: shall/must always indicate requirements
+  if (/\b(?:shall|must)\b/i.test(text)) {
+    return true;
+  }
+  
+  // "will" only counts when preceded by a subject-like pattern (e.g., "the X will")
+  if (/\b(?:the\s+\w+\s+will)\b/i.test(text)) {
+    return true;
+  }
+  
+  // Conditional keywords only count when combined with a modal verb
+  if (/\b(?:when|while|where)\b/i.test(text) && /\b(?:shall|must|will)\b/i.test(text)) {
+    return true;
+  }
+  
+  // "if...then" only counts with a modal verb
+  if (/\bif\s+.+\s+then\b/i.test(text) && /\b(?:shall|must|will)\b/i.test(text)) {
+    return true;
+  }
+  
+  return false;
 }
 
 /**
- * Extract all "system shall" statements from a text block
+ * Extract all requirement statements from a text block.
+ * Uses flexible subject matching — any "the <word> shall/must/will" pattern,
+ * or lines starting with EARS trigger keywords that contain a modal verb.
  */
 export function extractRequirements(text: string): string[] {
   const lines = text.split('\n');
@@ -297,11 +298,16 @@ export function extractRequirements(text: string): string[] {
   
   for (const line of lines) {
     const trimmed = line.trim();
-    // Look for lines that look like requirements (must have EARS action clause)
-    if (trimmed && /(?:shall|must|will)/i.test(trimmed) && (
-      /(?:system|application|service)/i.test(trimmed) ||
-      /(?:when|while|where|if)\s+/i.test(trimmed)
-    )) {
+    if (!trimmed) continue;
+    
+    // Must contain a modal verb
+    if (!/\b(?:shall|must|will)\b/i.test(trimmed)) continue;
+    
+    // Match if it has a subject+modal pattern OR starts with an EARS trigger keyword
+    const hasSubjectModal = /\b(?:the\s+)?\w+\s+(?:shall|must|will)\b/i.test(trimmed);
+    const hasTriggerKeyword = /\b(?:when|while|where|if)\s+/i.test(trimmed);
+    
+    if (hasSubjectModal || hasTriggerKeyword) {
       requirements.push(trimmed.replace(/^[-*•]\s*/, '')); // Remove bullet points
     }
   }
