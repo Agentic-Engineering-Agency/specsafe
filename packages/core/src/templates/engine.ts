@@ -6,6 +6,13 @@
 import type { Constraint, RenderOptions, ValidationResult, ConstraintFailure } from './types.js';
 
 /**
+ * Escape special regex characters
+ */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
  * Template engine for processing SpecSafe templates
  */
 export class TemplateEngine {
@@ -45,16 +52,28 @@ export class TemplateEngine {
   /**
    * Process include directives: {{> partial-name}}
    */
-  private processIncludes(template: string, partials: Record<string, string>): string {
+  private processIncludes(template: string, partials: Record<string, string>, visited: Set<string> = new Set()): string {
     const includeRegex = /\{\{>\s*([a-zA-Z0-9_-]+)\s*\}\}/g;
     
     return template.replace(includeRegex, (match, partialName) => {
+      // Detect circular includes
+      if (visited.has(partialName)) {
+        console.warn(`Warning: Circular include detected for "${partialName}"`);
+        return match; // Keep the original to prevent infinite loop
+      }
+      
       const partial = partials[partialName];
       if (!partial) {
         console.warn(`Warning: Partial "${partialName}" not found`);
         return match; // Keep the original if not found
       }
-      return partial;
+      
+      // Track this partial to prevent recursion
+      const newVisited = new Set(visited);
+      newVisited.add(partialName);
+      
+      // Recursively process includes in the partial
+      return this.processIncludes(partial, partials, newVisited);
     });
   }
 
@@ -216,8 +235,24 @@ export class TemplateEngine {
       
       case 'max-section-length': {
         // Format: "SectionName:maxWords"
-        const [sectionName, maxWordsStr] = (constraint.param as string).split(':');
+        const param = constraint.param as string;
+        if (!param || typeof param !== 'string' || !param.includes(':')) {
+          return {
+            valid: false,
+            reason: `Invalid max-section-length parameter format: "${param}". Expected "SectionName:maxWords"`,
+          };
+        }
+        
+        const [sectionName, maxWordsStr] = param.split(':');
         const maxWords = parseInt(maxWordsStr, 10);
+        
+        if (!Number.isFinite(maxWords) || maxWords <= 0) {
+          return {
+            valid: false,
+            reason: `Invalid maxWords value: "${maxWordsStr}". Must be a positive number`,
+          };
+        }
+        
         const sectionContent = this.extractSection(spec, sectionName);
         
         if (sectionContent) {
@@ -277,7 +312,7 @@ export class TemplateEngine {
    */
   private hasSection(spec: string, sectionName: string): boolean {
     // Match ## Section Name or # Section Name
-    const sectionRegex = new RegExp(`^#{1,3}\\s+${sectionName}\\s*$`, 'im');
+    const sectionRegex = new RegExp(`^#{1,3}\\s+${escapeRegex(sectionName)}\\s*$`, 'im');
     return sectionRegex.test(spec);
   }
 
@@ -286,7 +321,7 @@ export class TemplateEngine {
    */
   private extractSection(spec: string, sectionName: string): string | null {
     const lines = spec.split('\n');
-    const sectionRegex = new RegExp(`^#{1,3}\\s+${sectionName}\\s*$`, 'i');
+    const sectionRegex = new RegExp(`^#{1,3}\\s+${escapeRegex(sectionName)}\\s*$`, 'i');
     
     let inSection = false;
     let sectionContent: string[] = [];

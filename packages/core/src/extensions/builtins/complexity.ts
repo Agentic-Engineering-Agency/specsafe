@@ -1,6 +1,13 @@
 import type { Extension, ExtensionContext, ExtensionResult } from '../types.js';
 
 /**
+ * Escape special regex characters
+ */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
  * Complexity Scorer Extension
  * Analyzes spec complexity based on various factors
  */
@@ -28,13 +35,13 @@ export const complexityExtension: Extension = {
       const descLower = spec.description.toLowerCase();
       const integrationKeywords = ['api', 'service', 'integration', 'external', 'third-party', 'webhook'];
       const integrationPoints = integrationKeywords.filter(keyword => 
-        descLower.includes(keyword)
+        new RegExp(`\\b${escapeRegex(keyword)}\\b`, 'i').test(descLower)
       ).length;
 
       // Count dependencies (mentions of other systems/modules)
       const dependencyKeywords = ['depends', 'requires', 'dependency', 'module', 'component'];
       const dependencies = dependencyKeywords.filter(keyword => 
-        descLower.includes(keyword)
+        new RegExp(`\\b${escapeRegex(keyword)}\\b`, 'i').test(descLower)
       ).length;
 
       // Calculate complexity score (0-100)

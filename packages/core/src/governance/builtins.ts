@@ -33,9 +33,10 @@ export const BUILTIN_GATES: Gate[] = [
           }
         }
         if (p.id === 'require-acceptance-criteria') {
-          const bad = spec.requirements.filter(r => !r.scenarios || r.scenarios.length === 0);
+          // Check for meaningful requirement text (minimum 20 characters)
+          const bad = spec.requirements.filter(r => !r.text || r.text.trim().length < 20);
           if (bad.length > 0) {
-            const v = checkViolation(spec, p, true, `Requirements without acceptance criteria: ${bad.map(r => r.id).join(', ')}`, 'Define acceptance criteria as test scenarios (Given/When/Then)');
+            const v = checkViolation(spec, p, true, `Requirements with insufficient acceptance criteria: ${bad.map(r => r.id).join(', ')}`, 'Provide detailed acceptance criteria text (minimum 20 characters) describing what constitutes "done"');
             if (v) violations.push(v);
           }
         }

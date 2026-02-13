@@ -19,10 +19,12 @@ export const owaspExtension: Extension = {
       const errors: string[] = [];
 
       // Convert spec description and requirements to lowercase for checking
-      const descLower = spec.description.toLowerCase();
-      const reqTexts = spec.requirements.map(r => 
-        `${r.text || ''} ${r.scenarios?.map(s => s.when).join(' ') || ''}`.toLowerCase()
-      );
+      const descLower = (spec.description || '').toLowerCase();
+      const reqTexts = Array.isArray(spec.requirements) 
+        ? spec.requirements.map(r => 
+            `${r.text || ''} ${(r.scenarios || []).map(s => s.when).join(' ')}`.toLowerCase()
+          )
+        : [];
       const allText = [descLower, ...reqTexts].join(' ');
 
       // Security keywords to check

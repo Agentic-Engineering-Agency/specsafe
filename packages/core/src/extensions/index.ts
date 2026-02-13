@@ -93,10 +93,6 @@ export function clearExtensions(): void {
 // Loader exports
 export { validateExtension, loadExtension, loadExtensions, loadBuiltinExtensions } from './loader.js';
 
-// Builtin extensions
-export { owaspExtension } from './builtins/owasp.js';
-export { complexityExtension } from './builtins/complexity.js';
-
 // Type-only exports for better tree-shaking
 export type { Extension as ExtensionConfig } from './types.js';
 export type { ExtensionHook as ExtensionPhase } from './types.js';
