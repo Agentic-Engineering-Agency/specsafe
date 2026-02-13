@@ -26,22 +26,17 @@ export const BUILTIN_GATES: Gate[] = [
       const violations: Violation[] = [];
       for (const p of principles) {
         if (p.id === 'tdd-mandatory') {
-          const bad = spec.requirements.filter((r: { scenarios?: unknown[] }) => !r.scenarios || r.scenarios.length === 0);
+          const bad = spec.requirements.filter(r => !r.scenarios || r.scenarios.length === 0);
           if (bad.length > 0) {
-            const v = checkViolation(spec, p, true, `Requirements without test scenarios: ${bad.map((r: { id: string }) => r.id).join(', ')}`, 'Add at least one test scenario (Given/When/Then) for each requirement');
+            const v = checkViolation(spec, p, true, `Requirements without test scenarios: ${bad.map(r => r.id).join(', ')}`, 'Add at least one test scenario (Given/When/Then) for each requirement');
             if (v) violations.push(v);
           }
         }
         if (p.id === 'require-acceptance-criteria') {
-          const bad = spec.requirements.filter((r: { text: string }) => {
-            const text = r.text.trim();
-            // Check for meaningful requirement text (min 20 chars and acceptance-related keywords)
-            const hasMinLength = text.length >= 20;
-            const hasAcceptanceKeywords = /\b(accept|criteria|verify|validate|ensure|must|shall|should)\b/i.test(text);
-            return !hasMinLength || !hasAcceptanceKeywords;
-          });
+          // Check for meaningful requirement text (minimum 20 characters)
+          const bad = spec.requirements.filter(r => !r.text || r.text.trim().length < 20);
           if (bad.length > 0) {
-            const v = checkViolation(spec, p, true, `Requirements without clear acceptance criteria: ${bad.map((r: { id: string }) => r.id).join(', ')}`, 'Write requirements with clear acceptance criteria using keywords like "must", "shall", "verify", "accept"');
+            const v = checkViolation(spec, p, true, `Requirements with insufficient acceptance criteria: ${bad.map(r => r.id).join(', ')}`, 'Provide detailed acceptance criteria text (minimum 20 characters) describing what constitutes "done"');
             if (v) violations.push(v);
           }
         }
@@ -55,7 +50,7 @@ export const BUILTIN_GATES: Gate[] = [
           if (v) violations.push(v);
         }
       }
-      const errors = violations.filter((v: Violation) => v.severity === 'error');
+      const errors = violations.filter(v => v.severity === 'error');
       return {
         passed: errors.length === 0,
         violations,
@@ -81,12 +76,12 @@ export const BUILTIN_GATES: Gate[] = [
         }
         if (p.id === 'security-review-required') {
           const descLower = spec.description.toLowerCase();
-          const hasPositive = ['## security', '# security', 'security considerations:', 'authentication:', 'authorization:', 'access control', 'encryption', 'security requirements'].some((term: string) => descLower.includes(term));
+          const hasPositive = ['## security', '# security', 'security considerations:', 'authentication:', 'authorization:', 'access control', 'encryption', 'security requirements'].some(term => descLower.includes(term));
           const v = checkViolation(spec, p, !hasPositive, 'Spec lacks security considerations section', 'Add a section describing security considerations, auth requirements, and data protection');
           if (v) violations.push(v);
         }
       }
-      const errors = violations.filter((v: Violation) => v.severity === 'error');
+      const errors = violations.filter(v => v.severity === 'error');
       return {
         passed: errors.length === 0,
         violations,
@@ -99,13 +94,13 @@ export const BUILTIN_GATES: Gate[] = [
 ];
 
 export function getBuiltinPrinciple(id: string): Principle | undefined {
-  return BUILTIN_PRINCIPLES.find((p: Principle) => p.id === id);
+  return BUILTIN_PRINCIPLES.find(p => p.id === id);
 }
 
 export function getBuiltinGate(id: string): Gate | undefined {
-  return BUILTIN_GATES.find((g: Gate) => g.id === id);
+  return BUILTIN_GATES.find(g => g.id === id);
 }
 
 export function getGatesForPhase(phase: GatePhase): Gate[] {
-  return BUILTIN_GATES.filter((g: Gate) => g.phase === phase);
+  return BUILTIN_GATES.filter(g => g.phase === phase);
 }

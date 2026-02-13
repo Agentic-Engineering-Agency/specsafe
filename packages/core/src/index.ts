@@ -1,23 +1,5 @@
 /**
  * SpecSafe Core - Workflow Engine and Types
- * 
- * This package provides the core types and workflow engine for the SpecSafe
- * Test-Driven Development framework.
- * 
- * @example
- * ```typescript
- * import { Workflow, ProjectTracker } from '@specsafe/core';
- * 
- * const workflow = new Workflow();
- * const spec = workflow.createSpec('auth-001', 'User Authentication', '...', 'dev', 'myapp');
- * 
- * workflow.moveToTest(spec.id);
- * workflow.moveToCode(spec.id);
- * workflow.moveToQA(spec.id);
- * 
- * // After QA passes
- * workflow.moveToComplete(spec.id, qaReport);
- * ```
  */
 
 // Types
@@ -97,29 +79,20 @@ export {
   generateEARSExamples,
 } from './ears/index.js';
 
-// Governance system
+// Template System v2
 export type {
-  Constitution,
-  Principle,
-  PrincipleSeverity,
-  Gate,
-  GatePhase,
-  GateResult,
-  Violation,
-  ConstitutionLoadOptions,
-  ValidationOptions,
-  GenerateConstitutionOptions,
-} from './governance/index.js';
+  Template,
+  TemplateVariable,
+  RenderOptions,
+  Constraint,
+  ConstraintType,
+  ValidationResult,
+  ConstraintFailure,
+  Checklist,
+  ChecklistItem,
+  ChecklistResult,
+  ChecklistItemFailure,
+} from './templates/types.js';
 
-export {
-  ConstitutionManager,
-  BUILTIN_PRINCIPLES,
-  BUILTIN_GATES,
-  getBuiltinPrinciple,
-  getBuiltinGate,
-  getGatesForPhase,
-  generateConstitution,
-  generateMinimalConstitution,
-  generateStrictConstitution,
-  generateConstitutionReadme,
-} from './governance/index.js';
+export { TemplateEngine } from './templates/engine.js';
+export { parseChecklists, evaluateChecklists } from './templates/checklist.js';
