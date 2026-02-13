@@ -175,12 +175,24 @@ export type {
   CapsuleCollection,
 } from './capsules/types.js';
 export { CapsuleManager } from './capsules/capsules.js';
-export { formatCapsuleContent } from './capsules/templates.js';
 export {
-  validateCapsule,
-  validateSpecId,
+  USER_STORY_TEMPLATE,
+  TECHNICAL_CONTEXT_TEMPLATE,
+  BUSINESS_JUSTIFICATION_TEMPLATE,
+  DISCOVERY_NOTE_TEMPLATE,
+  BUILTIN_TEMPLATES,
+  TEMPLATE_NAMES,
+  getTemplate,
+  listTemplates,
+  isValidTemplateType,
+  getTemplateChoices,
+  formatContent,
+  parseContent,
+} from './capsules/templates.js';
+export {
   validateTitle,
   validateAuthor,
   validateTags,
   validateFilter,
+  validateCapsuleType,
 } from './capsules/validation.js';
