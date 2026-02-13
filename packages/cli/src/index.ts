@@ -35,6 +35,7 @@ import { exportCommand } from './commands/export.js';
 import { memoryCommand } from './commands/memory.js';
 import { capsuleCommand } from './commands/capsule.js';
 import { shardCommand } from './commands/shard.js';
+import { createCommand } from './commands/create.js';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
@@ -84,6 +85,7 @@ program.addCommand(exportCommand);          // Export specs in multiple formats
 program.addCommand(memoryCommand);          // Project memory commands
 program.addCommand(capsuleCommand);         // Manage context capsules
 program.addCommand(shardCommand);           // Spec sharding for AI consumption
+program.addCommand(createCommand);          // Interactive spec creation via elicitation
 
 // Workflow command group
 program

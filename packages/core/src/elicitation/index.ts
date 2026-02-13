@@ -39,3 +39,6 @@ export { quickFlow, fullFlow, earsFlow } from './flows.js';
 
 // Export generator
 export { generateSpec } from './generator.js';
+
+// Export path utilities
+export { defaultOutputPath } from './paths.js';
