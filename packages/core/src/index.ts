@@ -150,74 +150,24 @@ export { ElicitationEngine } from './elicitation/engine.js';
 export { quickFlow, fullFlow, earsFlow } from './elicitation/flows.js';
 export { generateSpec } from './elicitation/generator.js';
 
-// Export System
+// Sharding System
 export type {
-  ExportFormat,
-  ExportOptions,
-  ExportResult,
-  StakeholderBundle,
-  ParsedSpec,
-  ExportConfig,
-} from './export/types.js';
+  ShardStrategy,
+  ShardType,
+  SpecShard,
+  ShardPlan,
+  ShardOptions,
+  ShardResult,
+  MergeResult as ShardMergeResult,
+  ShardAnalysis,
+  CrossReference,
+} from './sharding/index.js';
 
 export {
-  parseSpec,
-  parseSpecFromFile,
-  exportToMarkdown,
-  exportToJSON,
-  exportSpecsToJSON,
-  exportToHTML,
-  generateStakeholderBundle,
-  generateStakeholderView,
-  exportSpec,
-  validatePath,
-  sanitizeFilename,
-  validateFilePath,
-  validateExportFormat,
-  isValidSpecId,
-  validateOutputPath,
-} from './export/index.js';
-
-// Memory & Steering System
-export type {
-  ProjectMemory,
-  Decision,
-  Pattern,
-  SteeringInput,
-  SteeringOutput,
-  MemoryConstraint,
-} from './memory/types.js';
-
-export { ProjectMemoryManager } from './memory/memory.js';
-export { SteeringEngine } from './memory/steering.js';
-
-// Capsules System
-export type {
-  Capsule,
-  CapsuleType,
-  CapsuleFilter,
-  CapsuleCollection,
-} from './capsules/types.js';
-
-export { CapsuleManager } from './capsules/capsules.js';
-export {
-  USER_STORY_TEMPLATE,
-  TECHNICAL_CONTEXT_TEMPLATE,
-  BUSINESS_JUSTIFICATION_TEMPLATE,
-  DISCOVERY_NOTE_TEMPLATE,
-  BUILTIN_TEMPLATES,
-  TEMPLATE_NAMES,
-  getTemplate,
-  listTemplates,
-  isValidTemplateType,
-  getTemplateChoices,
-  formatContent,
-  parseContent,
-} from './capsules/templates.js';
-export {
-  validateTitle,
-  validateAuthor,
-  validateTags,
-  validateFilter,
-  validateCapsuleType,
-} from './capsules/validation.js';
+  ShardEngine,
+  shardBySection,
+  shardByRequirement,
+  shardByScenario,
+  shardAuto,
+  DEFAULT_SHARD_OPTIONS,
+} from './sharding/index.js';

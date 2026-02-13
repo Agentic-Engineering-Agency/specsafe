@@ -27,9 +27,7 @@ import { deltaCommand } from './commands/delta.js';
 import { applyCommand } from './commands/apply.js';
 import { diffCommand } from './commands/diff.js';
 import { extendCommand } from './commands/extend.js';
-import { exportCommand } from './commands/export.js';
-import { memoryCommand } from './commands/memory.js';
-import { capsuleCommand } from './commands/capsule.js';
+import { shardCommand } from './commands/shard.js';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
@@ -65,13 +63,11 @@ program.addCommand(deltaCommand);       // Create delta spec
 program.addCommand(applyCommand);       // Apply delta specs
 program.addCommand(diffCommand);        // Preview delta changes
 
-// Export system
-program.addCommand(exportCommand);       // Export specs in multiple formats
-program.addCommand(memoryCommand);       // Project memory commands
-program.addCommand(capsuleCommand);      // Manage context capsules
-
 // Extension system
 program.addCommand(extendCommand);      // Manage extensions
+
+// Sharding system
+program.addCommand(shardCommand);      // Shard specs for AI consumption
 
 // Workflow command group
 program
