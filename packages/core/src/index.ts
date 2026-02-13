@@ -1,23 +1,5 @@
 /**
  * SpecSafe Core - Workflow Engine and Types
- * 
- * This package provides the core types and workflow engine for the SpecSafe
- * Test-Driven Development framework.
- * 
- * @example
- * ```typescript
- * import { Workflow, ProjectTracker } from '@specsafe/core';
- * 
- * const workflow = new Workflow();
- * const spec = workflow.createSpec('auth-001', 'User Authentication', '...', 'dev', 'myapp');
- * 
- * workflow.moveToTest(spec.id);
- * workflow.moveToCode(spec.id);
- * workflow.moveToQA(spec.id);
- * 
- * // After QA passes
- * workflow.moveToComplete(spec.id, qaReport);
- * ```
  */
 
 // Types
@@ -97,30 +79,20 @@ export {
   generateEARSExamples,
 } from './ears/index.js';
 
-// Extension system
+// Template System v2
 export type {
-  Extension,
-  ExtensionPhase,
-  ExtensionHook,
-  ExtensionContext,
-  ExtensionResult,
-  ExtensionRegistryEntry,
-  ExtensionConfig,
-} from './extensions/index.js';
+  Template,
+  TemplateVariable,
+  RenderOptions,
+  Constraint,
+  ConstraintType,
+  ValidationResult,
+  ConstraintFailure,
+  Checklist,
+  ChecklistItem,
+  ChecklistResult,
+  ChecklistItemFailure,
+} from './templates/types.js';
 
-export {
-  registerExtension,
-  unregisterExtension,
-  getExtension,
-  listExtensions,
-  listEnabledExtensions,
-  hasExtension,
-  enableExtension,
-  disableExtension,
-  executeHooks,
-  clearExtensions,
-  validateExtension,
-  loadExtension,
-  loadExtensions,
-  loadBuiltinExtensions,
-} from './extensions/index.js';
+export { TemplateEngine } from './templates/engine.js';
+export { parseChecklists, evaluateChecklists } from './templates/checklist.js';
