@@ -14,6 +14,11 @@ import {
   generateStakeholderBundle,
   type ExportFormat,
   type ExportResult,
+  type ParsedSpec,
+  validateFilePath,
+  validateOutputPath,
+  sanitizeFilename,
+  validateExportFormat,
 } from '@specsafe/core';
 
 export const exportCommand = new Command('export')
@@ -39,22 +44,32 @@ export const exportCommand = new Command('export')
     const spinner = ora('Loading spec...').start();
 
     try {
+      // Validate export format
+      try {
+        validateExportFormat(options.format);
+      } catch (error: any) {
+        spinner.fail(chalk.red(error.message));
+        process.exit(1);
+      }
+
       // Determine spec file path
       let specFilePath = specPathOrId;
 
       // If it looks like a spec ID, find the file
       if (!specFilePath.includes('/') && !specFilePath.includes('.md')) {
-        const specId = specFilePath.toUpperCase();
+        const specId = specPathOrId.toUpperCase();
 
         // Try active folder first
         try {
-          await access(`specs/active/${specId}.md`);
-          specFilePath = `specs/active/${specId}.md`;
+          const activePath = `specs/active/${specId}.md`;
+          await access(activePath);
+          specFilePath = activePath;
         } catch {
           // Try completed folder
           try {
-            await access(`specs/completed/${specId}.md`);
-            specFilePath = `specs/completed/${specId}.md`;
+            const completedPath = `specs/completed/${specId}.md`;
+            await access(completedPath);
+            specFilePath = completedPath;
           } catch {
             // Try as is (full path)
             specFilePath = `${specPathOrId}.md`;
@@ -64,7 +79,7 @@ export const exportCommand = new Command('export')
 
       spinner.text = 'Parsing spec...';
 
-      // Parse spec from file
+      // Parse spec from file (with path validation)
       const spec = await parseSpecFromFile(specFilePath);
 
       spinner.text = 'Generating export...';
@@ -101,7 +116,7 @@ export const exportCommand = new Command('export')
  * Export spec in a single format
  */
 async function exportSingleFormat(
-  spec: any,
+  spec: ParsedSpec,
   format: ExportFormat,
   outputPath?: string,
   includeMetadata: boolean = true,
@@ -112,15 +127,26 @@ async function exportSingleFormat(
     includeHistory,
   }) as ExportResult;
 
-  // Determine output path
-  let finalPath = outputPath;
-  if (!finalPath) {
+  // Determine output path with validation
+  let finalPath: string;
+  if (!outputPath) {
     // Default to current directory with generated filename
     finalPath = result.filename;
+  } else {
+    // Validate and sanitize the output path
+    try {
+      finalPath = validateFilePath(outputPath);
+    } catch (error: any) {
+      throw new Error(`Invalid output path: ${error.message}`);
+    }
   }
 
-  // Write the file
-  await writeFile(finalPath, result.content);
+  // Write the file with error handling
+  try {
+    await writeFile(finalPath, result.content);
+  } catch (error: any) {
+    throw new Error(`Failed to write export file: ${error.message}`);
+  }
 
   // Display result info
   console.log(chalk.blue('\n📄 Export Details:'));
@@ -133,16 +159,29 @@ async function exportSingleFormat(
 /**
  * Export all stakeholder bundles
  */
-async function exportStakeholderBundles(spec: any, outputDir?: string): Promise<void> {
+async function exportStakeholderBundles(spec: ParsedSpec, outputDir?: string): Promise<void> {
   const bundle = generateStakeholderBundle(spec);
 
-  // Determine output directory
-  const dir = outputDir || join(process.cwd(), 'bundles');
+  // Determine output directory with validation
+  let dir: string;
+  if (outputDir) {
+    try {
+      dir = validateOutputPath(outputDir);
+    } catch (error: any) {
+      throw new Error(`Invalid output directory: ${error.message}`);
+    }
+  } else {
+    dir = join(process.cwd(), 'bundles');
+  }
 
-  // Create directory if needed
-  await mkdir(dir, { recursive: true });
+  // Create directory if needed with error handling
+  try {
+    await mkdir(dir, { recursive: true });
+  } catch (error: any) {
+    throw new Error(`Failed to create output directory: ${error.message}`);
+  }
 
-  // Write each bundle file
+  // Write each bundle file with error handling
   const files = [
     { name: 'Executive Summary', result: bundle.executive },
     { name: 'Technical Specification', result: bundle.technical },
@@ -151,9 +190,14 @@ async function exportStakeholderBundles(spec: any, outputDir?: string): Promise<
   ];
 
   for (const file of files) {
-    const filePath = join(dir, file.result.filename);
-    await writeFile(filePath, file.result.content);
-    console.log(chalk.cyan(`  ✓ ${file.name}: ${filePath}`));
+    try {
+      const sanitizedFilename = sanitizeFilename(file.result.filename);
+      const filePath = join(dir, sanitizedFilename);
+      await writeFile(filePath, file.result.content);
+      console.log(chalk.cyan(`  ✓ ${file.name}: ${filePath}`));
+    } catch (error: any) {
+      throw new Error(`Failed to write ${file.name}: ${error.message}`);
+    }
   }
 
   console.log(chalk.blue(`\n📦 Generated ${files.length} stakeholder bundles in: ${dir}`));

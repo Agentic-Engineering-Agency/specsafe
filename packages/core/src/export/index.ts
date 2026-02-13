@@ -22,6 +22,16 @@ export type {
 // Parser
 export { parseSpec, parseSpecFromFile } from './parser.js';
 
+// Path utilities
+export {
+  validatePath,
+  sanitizeFilename,
+  validateFilePath,
+  validateExportFormat,
+  isValidSpecId,
+  validateOutputPath,
+} from './path-utils.js';
+
 // Exporters
 export { exportToMarkdown } from './exporters/markdown.js';
 export { exportToJSON, exportSpecsToJSON } from './exporters/json.js';

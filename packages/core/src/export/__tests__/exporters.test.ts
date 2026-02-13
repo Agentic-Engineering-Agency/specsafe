@@ -331,6 +331,68 @@ describe('HTML Exporter', () => {
     expect(content).toContain('&lt;');
   });
 
+  it('should prevent XSS attacks in spec name', () => {
+    const xssSpec: ParsedSpec = {
+      ...mockSpec,
+      name: '<script>alert("XSS")</script>',
+      metadata: {
+        ...mockSpec.metadata,
+        author: '<img src=x onerror=alert(1)>',
+      },
+      requirements: [
+        {
+          id: 'XSS-1',
+          text: '<script>document.cookie="stolen"</script>',
+          priority: 'P0',
+        },
+      ],
+    };
+    const result = exportToHTML(xssSpec);
+    const content = result.content as string;
+    expect(content).not.toContain('<script>');
+    expect(content).toContain('&lt;script&gt;');
+    expect(content).toContain('&lt;img');
+    // Note: onerror appears in escaped form within the img tag text
+    expect(content).toContain('onerror=alert(1)');
+    // But it should be inside an escaped tag, not executable
+    expect(content).toContain('&lt;img');
+  });
+
+  it('should handle various XSS payloads', () => {
+    const xssPayloads = [
+      '<script>alert("XSS")</script>',
+      '<img src=x onerror=alert(1)>',
+      '<svg onload=alert(1)>',
+      '<iframe src=javascript:alert(1)>',
+      '<body onload=alert(1)>',
+      '&lt;script&gt;alert(1)&lt;/script&gt;', // Double-encoded
+    ];
+
+    xssPayloads.forEach(payload => {
+      const spec: ParsedSpec = {
+        ...mockSpec,
+        name: payload,
+        description: payload,
+      };
+      const result = exportToHTML(spec);
+      const content = result.content as string;
+      expect(content).not.toContain(payload);
+      expect(content).toMatch(/&lt;|&amp;lt;/);
+    });
+
+    // Test javascript: URI separately (it doesn't contain <)
+    const javascriptPayload = 'javascript:alert("XSS")';
+    const specWithJS: ParsedSpec = {
+      ...mockSpec,
+      name: javascriptPayload,
+      description: javascriptPayload,
+    };
+    const result = exportToHTML(specWithJS);
+    const content = result.content as string;
+    // The javascript: text is in the title which is escaped in HTML context
+    expect(content).toContain('javascript:alert(&quot;XSS&quot;)');
+  });
+
   it('should include footer with timestamp', () => {
     const result = exportToHTML(mockSpec);
     const content = result.content as string;

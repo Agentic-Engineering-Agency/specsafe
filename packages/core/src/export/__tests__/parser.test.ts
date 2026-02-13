@@ -2,8 +2,9 @@
  * Parser Tests
  */
 
-import { describe, it, expect } from 'vitest';
-import { parseSpec } from '../parser.js';
+import { describe, it, expect, vi } from 'vitest';
+import { parseSpec, parseSpecFromFile } from '../parser.js';
+import { readFile } from 'fs/promises';
 
 describe('parseSpec', () => {
   it('should parse spec ID from markdown content', () => {
@@ -341,5 +342,24 @@ The system uses a microservices architecture.
     expect(spec.id).toBe('SPEC-20260212-001');
     expect(spec.name).toBe('My Spec');
     expect(spec.stage).toBe('spec'); // default
+  });
+});
+
+describe('parseSpecFromFile - Security', () => {
+  it('should reject path traversal attacks', async () => {
+    await expect(parseSpecFromFile('../../../etc/passwd')).rejects.toThrow();
+    await expect(parseSpecFromFile('../secrets.txt')).rejects.toThrow();
+  });
+
+  it('should reject null byte injection', async () => {
+    await expect(parseSpecFromFile('file\x00.txt')).rejects.toThrow('Contains suspicious pattern');
+  });
+
+  it('should reject URL-encoded path traversal', async () => {
+    await expect(parseSpecFromFile('%2e%2e/passwd')).rejects.toThrow('Contains suspicious pattern');
+  });
+
+  it('should reject absolute paths outside working directory', async () => {
+    await expect(parseSpecFromFile('/etc/passwd')).rejects.toThrow('Path must be within');
   });
 });

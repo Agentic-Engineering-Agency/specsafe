@@ -5,12 +5,15 @@
 
 import { readFile } from 'fs/promises';
 import type { ParsedSpec } from './types.js';
+import { validateFilePath } from './path-utils.js';
 
 /**
  * Parse a markdown spec file into ParsedSpec format
  */
 export async function parseSpecFromFile(filePath: string): Promise<ParsedSpec> {
-  const content = await readFile(filePath, 'utf-8');
+  // Validate and sanitize file path to prevent path traversal
+  const safePath = validateFilePath(filePath);
+  const content = await readFile(safePath, 'utf-8');
   return parseSpec(content);
 }
 

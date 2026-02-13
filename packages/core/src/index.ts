@@ -170,4 +170,10 @@ export {
   generateStakeholderBundle,
   generateStakeholderView,
   exportSpec,
+  validatePath,
+  sanitizeFilename,
+  validateFilePath,
+  validateExportFormat,
+  isValidSpecId,
+  validateOutputPath,
 } from './export/index.js';
