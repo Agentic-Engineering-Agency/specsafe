@@ -91,10 +91,12 @@ function validateAcceptanceCriteriaTestable(spec: string): ChecklistResult {
   const vagueWords = /(properly|correctly|appropriate)/i;
   if (!vagueWords.test(spec) && hasScenarios) passed.push(checklist.items[1]);
   else if (hasScenarios) failed.push({ item: checklist.items[1], reason: 'Scenarios contain vague terms' });
+  else failed.push({ item: checklist.items[1], reason: 'Cannot validate scenario specificity without scenarios' });
   
   const thenStatements = spec.match(/Then\s+(.+)/gi);
   if (thenStatements?.length) passed.push(checklist.items[2]);
   else if (hasScenarios) failed.push({ item: checklist.items[2], reason: 'Then statements not clearly defined' });
+  else failed.push({ item: checklist.items[2], reason: 'No Then statements found without scenarios' });
   
   return { checklist, passed, failed, skipped: [], valid: !failed.length, score: Math.round((passed.length / checklist.items.length) * 100) };
 }
@@ -128,6 +130,7 @@ function validatePerformanceTargets(spec: string): ChecklistResult {
   else failed.push({ item: checklist.items[1], reason: 'No throughput requirements specified' });
   
   if (/\d+\s*(GB|MB|CPU|core)/i.test(spec)) passed.push(checklist.items[2]);
+  else failed.push({ item: checklist.items[2], reason: 'No resource limit quantifications found' });
   
   return { checklist, passed, failed, skipped: [], valid: !failed.filter(f => f.item.required).length, score: Math.round((passed.length / checklist.items.length) * 100) };
 }

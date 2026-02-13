@@ -1,7 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { TemplateEngine } from '../engine.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 describe('Built-in Templates', () => {
   const engine = new TemplateEngine();

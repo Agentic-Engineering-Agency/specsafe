@@ -6,7 +6,6 @@
 
 <!-- @constraint: require-section "Migration Plan" -->
 <!-- @constraint: require-section "Rollback Plan" -->
-<!-- @checklist: acceptance-criteria-testable -->
 
 ---
 

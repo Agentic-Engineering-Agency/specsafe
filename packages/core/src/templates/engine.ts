@@ -162,8 +162,21 @@ export class TemplateEngine {
         return { valid: true };
       }
       
-      default:
+      case 'max-section-length': {
+        const maxLength = constraint.param as number;
+        const sections = this.extractAllSections(spec);
+        for (const [sectionName, content] of Object.entries(sections)) {
+          const length = content.length;
+          if (length > maxLength) {
+            return { valid: false, reason: `Section "${sectionName}" exceeds max length: ${length} > ${maxLength}`, actualValue: length };
+          }
+        }
         return { valid: true };
+      }
+      
+      default:
+        console.warn(`Warning: Unknown constraint type "${constraint.type}"`);
+        return { valid: false, reason: `Unknown constraint type: ${constraint.type}` };
     }
   }
 
@@ -174,7 +187,31 @@ export class TemplateEngine {
   }
 
   private hasSection(spec: string, sectionName: string): boolean {
-    const sectionRegex = new RegExp(`^#{1,3}\\s+${sectionName}\\s*$`, 'im');
+    const escapedName = this.escapeRegExp(sectionName);
+    const sectionRegex = new RegExp(`^#{1,3}\\s+${escapedName}\\s*$`, 'im');
     return sectionRegex.test(spec);
+  }
+
+  private escapeRegExp(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  private extractSection(spec: string, sectionName: string): string | null {
+    const escapedName = this.escapeRegExp(sectionName);
+    const sectionRegex = new RegExp(`^#{1,3}\\s+${escapedName}\\s*$(.+?)(?=^#{1,3}\\s+|$)`, 'ims');
+    const match = spec.match(sectionRegex);
+    return match ? match[1].trim() : null;
+  }
+
+  private extractAllSections(spec: string): Record<string, string> {
+    const sections: Record<string, string> = {};
+    const sectionRegex = /^(#{1,3})\s+(.+?)$\n([\s\S]*?)(?=^#{1,3}\s+|$)/gim;
+    let match;
+    while ((match = sectionRegex.exec(spec)) !== null) {
+      const sectionName = match[2].trim();
+      const content = match[3].trim();
+      sections[sectionName] = content;
+    }
+    return sections;
   }
 }
