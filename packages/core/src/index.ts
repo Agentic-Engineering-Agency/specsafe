@@ -150,49 +150,30 @@ export { ElicitationEngine } from './elicitation/engine.js';
 export { quickFlow, fullFlow, earsFlow } from './elicitation/flows.js';
 export { generateSpec } from './elicitation/generator.js';
 
-// Memory & Steering System
+// Export System
 export type {
-  ProjectMemory,
-  Decision,
-  Pattern,
-  PatternExample,
-  MemoryConstraint,
-  HistoryEntry,
-  SteeringInput,
-  SteeringOutput,
-  Warning,
-  Recommendation,
-} from './memory/types.js';
+  ExportFormat,
+  ExportOptions,
+  ExportResult,
+  StakeholderBundle,
+  ParsedSpec,
+  ExportConfig,
+} from './export/types.js';
 
-export { ProjectMemoryManager } from './memory/memory.js';
-export { SteeringEngine } from './memory/steering.js';
-
-// Capsules System
-export type {
-  Capsule,
-  CapsuleType,
-  CapsuleFilter,
-  CapsuleCollection,
-} from './capsules/types.js';
-export { CapsuleManager } from './capsules/capsules.js';
 export {
-  USER_STORY_TEMPLATE,
-  TECHNICAL_CONTEXT_TEMPLATE,
-  BUSINESS_JUSTIFICATION_TEMPLATE,
-  DISCOVERY_NOTE_TEMPLATE,
-  BUILTIN_TEMPLATES,
-  TEMPLATE_NAMES,
-  getTemplate,
-  listTemplates,
-  isValidTemplateType,
-  getTemplateChoices,
-  formatContent,
-  parseContent,
-} from './capsules/templates.js';
-export {
-  validateTitle,
-  validateAuthor,
-  validateTags,
-  validateFilter,
-  validateCapsuleType,
-} from './capsules/validation.js';
+  parseSpec,
+  parseSpecFromFile,
+  exportToMarkdown,
+  exportToJSON,
+  exportSpecsToJSON,
+  exportToHTML,
+  generateStakeholderBundle,
+  generateStakeholderView,
+  exportSpec,
+  validatePath,
+  sanitizeFilename,
+  validateFilePath,
+  validateExportFormat,
+  isValidSpecId,
+  validateOutputPath,
+} from './export/index.js';
