@@ -203,6 +203,7 @@ export type {
 export { ElicitationEngine } from './elicitation/engine.js';
 export { quickFlow, fullFlow, earsFlow } from './elicitation/flows.js';
 export { generateSpec } from './elicitation/generator.js';
+export { defaultOutputPath } from './elicitation/paths.js';
 
 // Sharding System
 export type {
