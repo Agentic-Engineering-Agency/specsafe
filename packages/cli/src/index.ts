@@ -30,6 +30,11 @@ import { extendCommand } from './commands/extend.js';
 import { testGuideCommand } from './commands/test-guide.js';
 import { testSubmitCommand } from './commands/test-submit.js';
 import { testReportCommand } from './commands/test-report.js';
+import { constitutionCommand } from './commands/constitution.js';
+import { exportCommand } from './commands/export.js';
+import { memoryCommand } from './commands/memory.js';
+import { capsuleCommand } from './commands/capsule.js';
+import { shardCommand } from './commands/shard.js';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
@@ -71,7 +76,14 @@ program.addCommand(extendCommand);
 // E2E Testing commands
 program.addCommand(testGuideCommand);
 program.addCommand(testSubmitCommand);
-program.addCommand(testReportCommand);      // Manage extensions
+program.addCommand(testReportCommand);
+
+// Governance & Export
+program.addCommand(constitutionCommand);    // Constitutional governance
+program.addCommand(exportCommand);          // Export specs in multiple formats
+program.addCommand(memoryCommand);          // Project memory commands
+program.addCommand(capsuleCommand);         // Manage context capsules
+program.addCommand(shardCommand);           // Spec sharding for AI consumption
 
 // Workflow command group
 program
