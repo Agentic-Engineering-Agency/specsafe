@@ -6,6 +6,7 @@ import { describe, it, expect } from 'vitest';
 import { ElicitationEngine } from '../engine.js';
 import { quickFlow } from '../flows.js';
 import { generateSpec } from '../generator.js';
+import { defaultOutputPath } from '../paths.js';
 
 describe('generateSpec output', () => {
   it('generates valid markdown from quick flow result', () => {
@@ -63,12 +64,23 @@ describe('generateSpec output', () => {
   });
 
   it('default output path pattern uses timestamp', () => {
-    // Verify the default path pattern logic (mirrors create.ts defaultOutputPath)
-    const ts = Date.now();
-    const defaultPath = `specs/active/SPEC-${ts}.md`;
+    const ts = 1707700000000;
+    const result = defaultOutputPath(ts);
 
-    expect(defaultPath).toMatch(/^specs\/active\/SPEC-\d+\.md$/);
-    expect(defaultPath).toContain('SPEC-');
-    expect(defaultPath.endsWith('.md')).toBe(true);
+    expect(result).toBe(`specs/active/SPEC-${ts}.md`);
+    expect(result).toMatch(/^specs\/active\/SPEC-\d+\.md$/);
+    expect(result.endsWith('.md')).toBe(true);
+  });
+
+  it('defaultOutputPath uses Date.now when no timestamp provided', () => {
+    const before = Date.now();
+    const result = defaultOutputPath();
+    const after = Date.now();
+
+    const match = result.match(/SPEC-(\d+)\.md$/);
+    expect(match).not.toBeNull();
+    const ts = Number(match![1]);
+    expect(ts).toBeGreaterThanOrEqual(before);
+    expect(ts).toBeLessThanOrEqual(after);
   });
 });

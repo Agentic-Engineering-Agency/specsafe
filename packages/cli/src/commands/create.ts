@@ -14,6 +14,7 @@ import {
   fullFlow,
   earsFlow,
   generateSpec,
+  defaultOutputPath,
 } from '@specsafe/core';
 import { input, select, editor, confirm, checkbox } from '@inquirer/prompts';
 import type { ElicitationStep } from '@specsafe/core';
@@ -80,10 +81,6 @@ async function promptStep(step: ElicitationStep): Promise<any> {
 /**
  * Generate default output path
  */
-function defaultOutputPath(): string {
-  const ts = Date.now();
-  return `specs/active/SPEC-${ts}.md`;
-}
 
 export const createCommand = new Command('create')
   .description('Create a new spec via interactive elicitation')
@@ -138,11 +135,16 @@ export const createCommand = new Command('create')
       // Determine output path
       const outputPath = resolve(options.output ?? defaultOutputPath());
 
-      // Ensure directory exists
-      await mkdir(dirname(outputPath), { recursive: true });
+      try {
+        // Ensure directory exists
+        await mkdir(dirname(outputPath), { recursive: true });
 
-      // Write spec
-      await writeFile(outputPath, spec, 'utf-8');
+        // Write spec
+        await writeFile(outputPath, spec, 'utf-8');
+      } catch (err) {
+        spinner.fail(chalk.red(`Failed to write spec to ${chalk.bold(outputPath)}`));
+        throw err;
+      }
 
       spinner.succeed(
         chalk.green(`Spec written to ${chalk.bold(outputPath)}`)
