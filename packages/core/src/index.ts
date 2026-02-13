@@ -149,3 +149,20 @@ export type {
 export { ElicitationEngine } from './elicitation/engine.js';
 export { quickFlow, fullFlow, earsFlow } from './elicitation/flows.js';
 export { generateSpec } from './elicitation/generator.js';
+
+// Memory & Steering System
+export type {
+  ProjectMemory,
+  Decision,
+  Pattern,
+  PatternExample,
+  MemoryConstraint,
+  HistoryEntry,
+  SteeringInput,
+  SteeringOutput,
+  Warning,
+  Recommendation,
+} from './memory/types.js';
+
+export { ProjectMemoryManager } from './memory/memory.js';
+export { SteeringEngine } from './memory/steering.js';

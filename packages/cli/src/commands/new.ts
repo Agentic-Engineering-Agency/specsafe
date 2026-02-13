@@ -3,10 +3,11 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { writeFile, mkdir, readdir } from 'fs/promises';
 import { join, basename } from 'path';
-import { Workflow, ProjectTracker, generateEARSTemplate } from '@specsafe/core';
+import { Workflow, ProjectTracker, generateEARSTemplate, SteeringEngine, ProjectMemoryManager } from '@specsafe/core';
 import { input, editor, select, confirm } from '@inquirer/prompts';
 
 export const newCommand = new Command('new')
+  .alias('create')
   .description('Create a new spec with interactive PRD creation')
   .argument('[name]', 'Spec name (kebab-case)')
   .option('-d, --description <desc>', 'Spec description')
@@ -53,6 +54,36 @@ export const newCommand = new Command('new')
 
       const id = `SPEC-${date}-${String(maxSuffix + 1).padStart(3, '0')}`;
 
+      // Load project memory for context
+      let steeringEngine: SteeringEngine | null = null;
+      let memoryContext: {
+        patterns: { name: string; usageCount: number; description: string }[];
+        warnings: { type: string; message: string; severity: string }[];
+        recommendations: { type: string; message: string; confidence: string }[];
+      } | null = null;
+
+      try {
+        steeringEngine = new SteeringEngine(process.cwd());
+        await steeringEngine.initialize(basename(process.cwd()));
+        
+        const analysis = steeringEngine.analyze({ currentSpec: id });
+        
+        // Get top patterns
+        const patterns = steeringEngine.recommendPatterns(id, 3).map(p => ({
+          name: p.name,
+          usageCount: p.usageCount,
+          description: p.description
+        }));
+
+        memoryContext = {
+          patterns,
+          warnings: analysis.warnings,
+          recommendations: analysis.recommendations
+        };
+      } catch {
+        // Memory not available yet, that's fine
+      }
+
       // Interactive mode or defaults
       spinner.stop();
 
@@ -65,6 +96,43 @@ export const newCommand = new Command('new')
         });
       } else if (!featureName) {
         featureName = 'untitled-feature';
+      }
+
+      // Display project memory context if available
+      if (memoryContext && (memoryContext.patterns.length > 0 || memoryContext.recommendations.length > 0)) {
+        console.log(chalk.blue('\n🧠 Project Memory Context\n'));
+        
+        if (memoryContext.patterns.length > 0) {
+          console.log(chalk.cyan('Reusable patterns from project:'));
+          for (const pattern of memoryContext.patterns) {
+            const color = pattern.usageCount >= 3 ? chalk.green : chalk.yellow;
+            console.log(color(`  • ${pattern.name} ${chalk.gray(`(${pattern.usageCount} specs)`)}`));
+            console.log(chalk.gray(`    ${pattern.description}`));
+          }
+          console.log();
+        }
+
+        if (memoryContext.recommendations.length > 0) {
+          console.log(chalk.cyan('Recommendations:'));
+          for (const rec of memoryContext.recommendations.slice(0, 3)) {
+            const icon = rec.confidence === 'high' ? '✓' : rec.confidence === 'medium' ? '~' : '?';
+            console.log(chalk.gray(`  ${icon} ${rec.message}`));
+          }
+          console.log();
+        }
+
+        if (memoryContext.warnings.length > 0) {
+          const highSeverity = memoryContext.warnings.filter(w => w.severity === 'high');
+          if (highSeverity.length > 0) {
+            console.log(chalk.yellow('⚠️  Warnings:'));
+            for (const warning of highSeverity.slice(0, 2)) {
+              console.log(chalk.yellow(`  • ${warning.message}`));
+            }
+            console.log();
+          }
+        }
+
+        console.log(chalk.gray('─'.repeat(63)));
       }
 
       // Interactive PRD + BRD creation
@@ -440,6 +508,16 @@ When assisting with this project:
 
       // Update project state
       await tracker.addSpec(spec);
+
+      // Update project memory
+      try {
+        const memoryManager = new ProjectMemoryManager(process.cwd());
+        await memoryManager.load(basename(process.cwd()));
+        memoryManager.addSpec(id);
+        await memoryManager.save();
+      } catch {
+        // Memory update failed, but spec was created - don't fail
+      }
 
       spinner.succeed(chalk.green(`Created spec: ${id}${options.ears ? ' (EARS format)' : ''}`));
       console.log(chalk.blue(`  Location: ${specPath}`));
