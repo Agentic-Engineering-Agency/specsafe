@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ConstitutionManager } from '../constitution.js';
-import type { Principle, Spec } from '../../types.js';
+import type { Spec } from '../../types.js';
+import type { Principle } from '../types.js';
 
 describe('ConstitutionManager', () => {
   let manager: ConstitutionManager;

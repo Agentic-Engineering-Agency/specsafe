@@ -203,7 +203,11 @@ export const constitutionCommand = new Command('constitution')
           };
 
           mgr.addPrinciple(principle);
-          spinner.succeed(chalk.green('Added'));
+          
+          spinner.text = 'Saving...';
+          await mgr.save();
+          
+          spinner.succeed(chalk.green('Added and saved'));
           console.log(chalk.gray(`\n${principle.id}: ${principle.name}`));
         } catch (error: any) {
           spinner.fail(chalk.red(error.message));

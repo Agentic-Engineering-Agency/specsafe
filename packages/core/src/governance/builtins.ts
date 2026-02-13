@@ -33,9 +33,15 @@ export const BUILTIN_GATES: Gate[] = [
           }
         }
         if (p.id === 'require-acceptance-criteria') {
-          const bad = spec.requirements.filter((r: { scenarios?: unknown[] }) => !r.scenarios || r.scenarios.length === 0);
+          const bad = spec.requirements.filter((r: { text: string }) => {
+            const text = r.text.trim();
+            // Check for meaningful requirement text (min 20 chars and acceptance-related keywords)
+            const hasMinLength = text.length >= 20;
+            const hasAcceptanceKeywords = /\b(accept|criteria|verify|validate|ensure|must|shall|should)\b/i.test(text);
+            return !hasMinLength || !hasAcceptanceKeywords;
+          });
           if (bad.length > 0) {
-            const v = checkViolation(spec, p, true, `Requirements without acceptance criteria: ${bad.map((r: { id: string }) => r.id).join(', ')}`, 'Define acceptance criteria as test scenarios (Given/When/Then)');
+            const v = checkViolation(spec, p, true, `Requirements without clear acceptance criteria: ${bad.map((r: { id: string }) => r.id).join(', ')}`, 'Write requirements with clear acceptance criteria using keywords like "must", "shall", "verify", "accept"');
             if (v) violations.push(v);
           }
         }

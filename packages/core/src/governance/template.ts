@@ -19,11 +19,14 @@ export function generateConstitution(options: GenerateConstitutionOptions = {}):
   }
 
   const now = new Date().toISOString();
+  
+  // Helper to safely quote YAML string values
+  const quoteValue = (val: string) => JSON.stringify(val);
 
   let content = `---
 # SpecSafe Project Constitution
-projectName: ${projectName}
-author: ${author}
+projectName: ${quoteValue(projectName)}
+author: ${quoteValue(author)}
 version: "1.0.0"
 createdAt: ${now}
 updatedAt: ${now}
@@ -32,8 +35,14 @@ principles:
 `;
 
   for (const principle of principles) {
-    content += `- id: ${principle.id}\n  name: ${principle.name}\n  description: ${principle.description}\n  severity: ${principle.severity}\n  immutable: ${principle.immutable}\n`;
-    if (principle.metadata?.rationale) content += `  rationale: ${principle.metadata.rationale}\n`;
+    content += `- id: ${principle.id}\n`;
+    content += `  name: ${quoteValue(principle.name)}\n`;
+    content += `  description: ${quoteValue(principle.description)}\n`;
+    content += `  severity: ${principle.severity}\n`;
+    content += `  immutable: ${principle.immutable}\n`;
+    if (principle.metadata?.rationale) {
+      content += `  rationale: ${quoteValue(principle.metadata.rationale)}\n`;
+    }
     content += `\n`;
   }
 
