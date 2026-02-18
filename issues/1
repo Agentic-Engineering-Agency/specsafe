@@ -1,0 +1,22 @@
+### Title: Add real test suites to all packages
+
+## Overview
+
+All three packages (`@specsafe/core`, `@specsafe/cli`, `@specsafe/test-gen`) currently have `"test": "vitest --passWithNoTests"` — meaning zero actual tests are required to pass CI. This is a critical gap for a tool whose core value proposition is TDD.
+
+## Tasks
+
+- [ ] Write unit tests for `@specsafe/core` (Workflow, ProjectTracker, validation utilities)
+- [ ] Write unit tests for `@specsafe/test-gen` (ScenarioParser, TypeScriptTestGenerator)
+- [ ] Write integration/e2e tests for `@specsafe/cli` (all commands: `init`, `new`, `spec`, `test`, `code`, `qa`, `complete`, `archive`)
+- [ ] Remove `--passWithNoTests` flag once tests are in place
+- [ ] Ensure CI fails on test failure
+- [ ] Target meaningful coverage (e.g. ≥80% for core and test-gen)
+
+## Acceptance Criteria
+
+- All packages have real test files
+- `pnpm test` passes with actual assertions
+- CI enforces test passage
+
+**Priority:** P0 — Blocker for v1.0
