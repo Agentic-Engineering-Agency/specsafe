@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-engineering-agency/specsafe",
+  "name": "@specsafe/specsafe",
   "version": "2.0.2",
   "description": "Skills-first TDD framework for AI-assisted development",
   "type": "module",
@@ -37,9 +37,6 @@
       "rollup": ">=4.59.0",
       "picomatch": ">=4.0.4"
     }
-  },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
   },
   "repository": {
     "type": "git",
