@@ -29,8 +29,8 @@ Additional utility skills:
 ## Quick Start
 
 ```bash
-# Install
-pnpm add specsafe
+# Install globally
+npm install -g @specsafe/cli
 
 # Initialize a project
 specsafe init my-project
@@ -83,9 +83,9 @@ All 12 canonical skills:
 | `cursor` | 1 — Full Skills | `.cursor/skills/*/SKILL.md` + `.cursorrules` |
 | `continue` | 3 — Prompts | `.continue/prompts/*.md` + agent config |
 | `aider` | 2 — Conventions | `.aider.conf.yml` + `CONVENTIONS.md` |
-| `zed` | 2 — Conventions | `.zed/prompts/*.md` |
-| `gemini` | 2 — Conventions | `GEMINI.md` |
-| `antigravity` | 2 — Conventions | `AGENTS.md` |
+| `zed` | 2 — Conventions | `.rules` + `.zed/settings.json` |
+| `gemini` | 1 — Full Skills | `.gemini/skills/*/SKILL.md` + `.gemini/commands/*.toml` + `GEMINI.md` |
+| `antigravity` | 1 — Full Skills | `.agent/skills/*/SKILL.md` + `.agent/rules/specsafe.md` + `AGENTS.md` |
 
 ## Configuration
 

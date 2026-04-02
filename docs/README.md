@@ -29,8 +29,8 @@ Additional utility skills:
 ## Quick Start
 
 ```bash
-# Install
-pnpm add specsafe
+# Install globally
+npm install -g @specsafe/cli
 
 # Initialize a project
 specsafe init my-project
