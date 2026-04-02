@@ -1,0 +1,5 @@
+name: SpecSafe TDD
+version: 1.0.0
+schema: v1
+rules:
+  - uses: file://prompts/specsafe-rules.md
