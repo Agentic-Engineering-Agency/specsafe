@@ -127,5 +127,5 @@ Tracks the current state of all specs in the project:
 
 ## Further Reading
 
-- [Tool Support Guide](./tool-support.md) — per-tool setup details
-- [Persona Guide](./personas.md) — how each persona works
+- [Tool Support Guide](./docs/tool-support.md) — per-tool setup details
+- [Persona Guide](./docs/personas.md) — how each persona works
