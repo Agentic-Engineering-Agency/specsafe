@@ -11,6 +11,19 @@ overrides:
 importers:
 
   .:
+    dependencies:
+      '@clack/prompts':
+        specifier: 1.0.1
+        version: 1.0.1
+      ansis:
+        specifier: ^4.2.0
+        version: 4.2.0
+      cli-table3:
+        specifier: ^0.6.5
+        version: 0.6.5
+      commander:
+        specifier: ^12.0.0
+        version: 12.1.0
     devDependencies:
       '@types/node':
         specifier: ^20.0.0

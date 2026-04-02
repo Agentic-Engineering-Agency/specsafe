@@ -2,12 +2,25 @@
   "name": "specsafe",
   "version": "2.0.0",
   "description": "Skills-first TDD framework for AI-assisted development",
-  "private": true,
   "type": "module",
+  "bin": {
+    "specsafe": "generators/dist/index.js"
+  },
+  "files": [
+    "generators/dist",
+    "canonical",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck"
+  },
+  "dependencies": {
+    "@clack/prompts": "1.0.1",
+    "ansis": "^4.2.0",
+    "cli-table3": "^0.6.5",
+    "commander": "^12.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
@@ -24,5 +37,11 @@
       "rollup": ">=4.59.0",
       "picomatch": ">=4.0.4"
     }
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Agentic-Engineering-Agency/specsafe"
+  },
+  "keywords": ["tdd", "spec-driven", "ai", "testing", "skills", "claude", "opencode", "cursor"],
+  "license": "MIT"
 }
