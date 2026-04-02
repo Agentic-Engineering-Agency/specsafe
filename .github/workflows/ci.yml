@@ -45,43 +45,90 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          registry-url: https://npm.pkg.github.com
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm build
 
-      - name: Check if version already published
-        id: version-check
+      - name: Get package version
+        id: pkg
         run: |
-          PKG_NAME=$(node -p "require('./package.json').name")
-          PKG_VERSION=$(node -p "require('./package.json').version")
-          if npm view "${PKG_NAME}@${PKG_VERSION}" version 2>/dev/null; then
-            echo "already_published=true" >> "$GITHUB_OUTPUT"
+          echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+          echo "name=$(node -p "require('./package.json').name")" >> "$GITHUB_OUTPUT"
+
+      - name: Check if version already published on GitHub Packages
+        id: ghpkg-check
+        run: |
+          npm config set //npm.pkg.github.com/:_authToken "$NODE_AUTH_TOKEN"
+          if npm view "${{ steps.pkg.outputs.name }}@${{ steps.pkg.outputs.version }}" version --registry https://npm.pkg.github.com 2>/dev/null; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
           else
-            echo "already_published=false" >> "$GITHUB_OUTPUT"
+            echo "published=false" >> "$GITHUB_OUTPUT"
           fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish to GitHub Packages
-        if: steps.version-check.outputs.already_published == 'false'
-        run: npm publish --access public
+        if: steps.ghpkg-check.outputs.published == 'false'
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=$NODE_AUTH_TOKEN" > .npmrc
+          npm publish --access public --registry https://npm.pkg.github.com
+          rm -f .npmrc
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Publish to npmjs.org
+        if: steps.ghpkg-check.outputs.published == 'false' && secrets.NPM_TOKEN != ''
+        run: |
+          echo "//registry.npmjs.org/:_authToken=$NODE_AUTH_TOKEN" > .npmrc
+          npm publish --access public --registry https://registry.npmjs.org
+          rm -f .npmrc
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Create GitHub Release
-        if: steps.version-check.outputs.already_published == 'false'
+        if: steps.ghpkg-check.outputs.published == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PKG_VERSION: ${{ steps.version-check.outputs.already_published }}
         run: |
-          VERSION=$(node -p "require('./package.json').version")
-          gh release create "v${VERSION}" --title "v${VERSION}" --generate-notes
+          VERSION="${{ steps.pkg.outputs.version }}"
+          cat > /tmp/release-notes.md << 'NOTES'
+          ## SpecSafe v${VERSION}
+
+          Skills-first TDD framework for AI-assisted development.
+
+          ### Install
+
+          ```bash
+          npm install @agentic-engineering-agency/specsafe
+          ```
+
+          ### Quick Start
+
+          ```bash
+          specsafe init my-project
+          specsafe install claude-code   # or: opencode, cursor, gemini, antigravity, aider, zed, continue
+          specsafe doctor
+          ```
+
+          ### What's Included
+
+          - 12 canonical skills with 6 agent personas
+          - 8 tool adapters (Claude Code, OpenCode, Cursor, Continue.dev, Aider, Zed, Gemini CLI, Google Antigravity)
+          - Interactive CLI with `init`, `install`, `update`, `doctor`
+          - 291 tests, 0 vulnerabilities
+
+          **Full Changelog**: https://github.com/Agentic-Engineering-Agency/specsafe/compare/v0.8.0...v${VERSION}
+          NOTES
+          gh release create "v${VERSION}" \
+            --title "v${VERSION} — Skills-First TDD Framework" \
+            --notes-file /tmp/release-notes.md
