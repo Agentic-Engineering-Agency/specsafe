@@ -29,6 +29,8 @@ jobs:
 
       - run: pnpm typecheck
 
-      - run: pnpm test -- --run
+      - name: Generator tests
+        run: pnpm test -- --run
 
-      - run: npx vitest run --project content
+      - name: Content tests
+        run: npx vitest run -c vitest.config.ts

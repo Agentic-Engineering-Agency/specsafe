@@ -3,6 +3,7 @@
   "version": "2.0.0",
   "description": "Skills-first TDD framework for AI-assisted development",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "pnpm -r build",
     "test": "pnpm -r test",
