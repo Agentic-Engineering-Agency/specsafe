@@ -59,76 +59,61 @@ jobs:
 
       - run: pnpm build
 
-      - name: Get package version
+      - name: Get package info
         id: pkg
         run: |
           echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
           echo "name=$(node -p "require('./package.json').name")" >> "$GITHUB_OUTPUT"
 
-      - name: Check if version already published on GitHub Packages
-        id: ghpkg-check
+      - name: Check if version exists on npm
+        id: check
         run: |
-          npm config set //npm.pkg.github.com/:_authToken "$NODE_AUTH_TOKEN"
-          if npm view "${{ steps.pkg.outputs.name }}@${{ steps.pkg.outputs.version }}" version --registry https://npm.pkg.github.com 2>/dev/null; then
-            echo "published=true" >> "$GITHUB_OUTPUT"
+          if npm view "${{ steps.pkg.outputs.name }}@${{ steps.pkg.outputs.version }}" version 2>/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
           else
-            echo "published=false" >> "$GITHUB_OUTPUT"
+            echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish to GitHub Packages
-        if: steps.ghpkg-check.outputs.published == 'false'
+      - name: Publish to npm
+        if: steps.check.outputs.exists == 'false'
         run: |
-          echo "//npm.pkg.github.com/:_authToken=$NODE_AUTH_TOKEN" > .npmrc
-          npm publish --access public --registry https://npm.pkg.github.com
-          rm -f .npmrc
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish to npmjs.org
-        if: steps.ghpkg-check.outputs.published == 'false' && secrets.NPM_TOKEN != ''
-        run: |
-          echo "//registry.npmjs.org/:_authToken=$NODE_AUTH_TOKEN" > .npmrc
-          npm publish --access public --registry https://registry.npmjs.org
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > .npmrc
+          npm publish --access public
           rm -f .npmrc
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
-        if: steps.ghpkg-check.outputs.published == 'false'
+        if: steps.check.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="${{ steps.pkg.outputs.version }}"
-          cat > /tmp/release-notes.md << 'NOTES'
-          ## SpecSafe v${VERSION}
+          gh release create "v${VERSION}" \
+            --title "v${VERSION} — SpecSafe Skills-First TDD" \
+            --notes "## @specsafe/cli v${VERSION}
 
           Skills-first TDD framework for AI-assisted development.
 
           ### Install
 
-          ```bash
-          npm install @agentic-engineering-agency/specsafe
-          ```
+          \`\`\`bash
+          npm install -g @specsafe/cli
+          \`\`\`
 
           ### Quick Start
 
-          ```bash
+          \`\`\`bash
           specsafe init my-project
-          specsafe install claude-code   # or: opencode, cursor, gemini, antigravity, aider, zed, continue
+          specsafe install claude-code
           specsafe doctor
-          ```
+          \`\`\`
 
-          ### What's Included
+          ### Highlights
 
           - 12 canonical skills with 6 agent personas
           - 8 tool adapters (Claude Code, OpenCode, Cursor, Continue.dev, Aider, Zed, Gemini CLI, Google Antigravity)
-          - Interactive CLI with `init`, `install`, `update`, `doctor`
+          - Interactive CLI: init, install, update, doctor
           - 291 tests, 0 vulnerabilities
 
-          **Full Changelog**: https://github.com/Agentic-Engineering-Agency/specsafe/compare/v0.8.0...v${VERSION}
-          NOTES
-          gh release create "v${VERSION}" \
-            --title "v${VERSION} — Skills-First TDD Framework" \
-            --notes-file /tmp/release-notes.md
+          **Full Changelog**: https://github.com/Agentic-Engineering-Agency/specsafe/compare/v0.8.0...v${VERSION}"
