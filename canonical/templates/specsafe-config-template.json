@@ -1,0 +1,10 @@
+{
+  "project": "{{project-name}}",
+  "version": "1.0.0",
+  "tools": [],
+  "testFramework": "vitest",
+  "testCommand": "pnpm test",
+  "coverageCommand": "pnpm test --coverage",
+  "language": "typescript",
+  "specsafeVersion": "2.0.0"
+}
