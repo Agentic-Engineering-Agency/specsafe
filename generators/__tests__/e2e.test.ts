@@ -125,7 +125,7 @@ describe('E2E: full CLI workflow', () => {
     await install('claude-code', { cwd: tmpDir, canonicalDir });
 
     const skillDirs = await readdir(join(tmpDir, '.claude', 'skills'));
-    expect(skillDirs.length).toBe(12); // All 12 canonical skills
+    expect(skillDirs.length).toBe(18); // All 18 canonical skills
 
     for (const dir of skillDirs) {
       const skillPath = join(tmpDir, '.claude', 'skills', dir, 'SKILL.md');
