@@ -1,10 +1,25 @@
-import { mkdtempSync, mkdirSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, existsSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import type { CanonicalSkill } from '../../src/adapters/types.js';
 
+const tempDirs: string[] = [];
+
 export function createTempDir(): string {
-  return mkdtempSync(join(tmpdir(), 'specsafe-test-'));
+  const dir = mkdtempSync(join(tmpdir(), 'specsafe-test-'));
+  tempDirs.push(dir);
+  return dir;
+}
+
+export function cleanupTempDirs(): void {
+  for (const dir of tempDirs) {
+    try {
+      rmSync(dir, { recursive: true, force: true });
+    } catch {
+      // Ignore cleanup errors
+    }
+  }
+  tempDirs.length = 0;
 }
 
 export function setupDetectDir(tmpDir: string, paths: string[]): void {

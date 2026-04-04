@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { antigravityAdapter } from '../../src/adapters/antigravity.js';
-import { createTempDir, setupDetectDir, createTestSkills, findFile, createCanonicalDir } from './helpers.js';
+import { createTempDir, setupDetectDir, createTestSkills, findFile, createCanonicalDir, cleanupTempDirs } from './helpers.js';
 
 describe('antigravity adapter', () => {
+  afterEach(cleanupTempDirs);
   describe('detect', () => {
     it('returns true when .agent/ exists', async () => {
       const tmp = createTempDir();

@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { geminiAdapter } from '../../src/adapters/gemini.js';
-import { createTempDir, setupDetectDir, createTestSkills, findFile, createCanonicalDir } from './helpers.js';
+import { createTempDir, setupDetectDir, createTestSkills, findFile, createCanonicalDir, cleanupTempDirs } from './helpers.js';
 
 describe('gemini adapter', () => {
+  afterEach(cleanupTempDirs);
   describe('detect', () => {
     it('returns true when .gemini/ exists', async () => {
       const tmp = createTempDir();

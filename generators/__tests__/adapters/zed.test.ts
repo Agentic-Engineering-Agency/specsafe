@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { zedAdapter } from '../../src/adapters/zed.js';
-import { createTempDir, setupDetectDir, createTestSkills, findFile, createCanonicalDir } from './helpers.js';
+import { createTempDir, setupDetectDir, createTestSkills, findFile, createCanonicalDir, cleanupTempDirs } from './helpers.js';
 
 describe('zed adapter', () => {
+  afterEach(cleanupTempDirs);
   describe('detect', () => {
     it('returns true when .zed/ exists', async () => {
       const tmp = createTempDir();

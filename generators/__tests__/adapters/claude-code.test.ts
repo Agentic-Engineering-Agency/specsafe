@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { claudeCodeAdapter } from '../../src/adapters/claude-code.js';
-import { createTempDir, setupDetectDir, createTestSkills, findFile, createCanonicalDir } from './helpers.js';
+import { createTempDir, setupDetectDir, createTestSkills, findFile, createCanonicalDir, cleanupTempDirs } from './helpers.js';
 
 describe('claude-code adapter', () => {
+  afterEach(cleanupTempDirs);
   describe('detect', () => {
     it('returns true when .claude/ exists', async () => {
       const tmp = createTempDir();

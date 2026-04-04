@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { continueAdapter } from '../../src/adapters/continue.js';
-import { createTempDir, setupDetectDir, createTestSkills, findFile, createCanonicalDir } from './helpers.js';
+import { createTempDir, setupDetectDir, createTestSkills, findFile, createCanonicalDir, cleanupTempDirs } from './helpers.js';
 
 describe('continue adapter', () => {
+  afterEach(cleanupTempDirs);
   describe('detect', () => {
     it('returns true when .continue/ exists', async () => {
       const tmp = createTempDir();
