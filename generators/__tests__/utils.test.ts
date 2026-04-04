@@ -44,6 +44,12 @@ describe('parseFrontmatter', () => {
     expect(result.frontmatter.url).toBe('https://example.com');
   });
 
+  it('preserves full description containing multiple colons', () => {
+    const content = '---\ndescription: TDD implementation: red-green-refactor cycle. Uses pattern: test first.\n---\nBody.';
+    const result = parseFrontmatter(content);
+    expect(result.frontmatter.description).toBe('TDD implementation: red-green-refactor cycle. Uses pattern: test first.');
+  });
+
   it('strips double quotes from values', () => {
     const content = '---\nname: "quoted-value"\n---\nBody.';
     const result = parseFrontmatter(content);
@@ -121,6 +127,19 @@ describe('reconstructSkillMd', () => {
       directory: 'test',
     });
     expect(md).toContain('disable-model-invocation: true');
+  });
+
+  it('round-trip preserves description with colons', () => {
+    const skill = {
+      name: 'test',
+      description: 'TDD: red-green-refactor. Pattern: test first',
+      disableModelInvocation: true,
+      content: 'Body.',
+      directory: 'test',
+    };
+    const md = reconstructSkillMd(skill);
+    const { frontmatter } = parseFrontmatter(md);
+    expect(frontmatter.description).toBe(skill.description);
   });
 
   it('omits disable-model-invocation when false', () => {
