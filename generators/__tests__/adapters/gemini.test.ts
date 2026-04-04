@@ -56,6 +56,18 @@ describe('gemini adapter', () => {
       expect(gemini!.content).toContain('# Gemini Rules');
     });
 
+    it('escapes quotes in TOML command files', async () => {
+      const tmp = createTempDir();
+      const canonical = createCanonicalDir(tmp);
+      const skills = createTestSkills();
+      skills[0].description = 'A "special" skill with \\ backslash';
+      const files = await geminiAdapter.generate(skills, canonical);
+
+      const cmd = findFile(files, '.gemini/commands/specsafe-init.toml');
+      expect(cmd).toBeDefined();
+      expect(cmd!.content).toContain('A \\"special\\" skill with \\\\ backslash');
+    });
+
     it('generates workflow.md when present', async () => {
       const tmp = createTempDir();
       const canonical = createCanonicalDir(tmp);
