@@ -50,7 +50,7 @@ describe('E2E: full CLI workflow', () => {
     expect(config.project).toBe('structure-test');
     expect(config.version).toBe('1.0.0');
     expect(config.tools).toEqual([]);
-    expect(config.specsafeVersion).toBe('2.0.0');
+    expect(config.specsafeVersion).toBe('2.1.0');
   });
 
   describe('install generates correct files for each tier', () => {

@@ -20,7 +20,7 @@ describe('specsafe install', () => {
       testCommand: 'pnpm test',
       coverageCommand: 'pnpm test --coverage',
       language: 'typescript',
-      specsafeVersion: '2.0.0',
+      specsafeVersion: '2.1.0',
     }, null, 2) + '\n', 'utf-8');
   });
 
