@@ -8,7 +8,7 @@ import { loadCanonicalSkills } from './adapters/utils.js';
 import { getAdapter } from './registry.js';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = import.meta.dirname ?? resolve(__filename, '..');
+const __dirname = import.meta.dirname ?? dirname(__filename);
 
 function defaultCanonicalDir(): string {
   return resolve(__dirname, '..', '..', 'canonical');
