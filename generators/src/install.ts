@@ -45,7 +45,7 @@ export async function install(tool: string, opts: InstallOptions = {}): Promise<
   const s = p.spinner();
   s.start(`Installing ${tool}...`);
 
-  const files = await adapter.generate(skills, canonicalDir);
+  const files = await adapter.generate(skills, canonicalDir, cwd);
 
   // Write generated files with path containment check
   const resolvedCwd = resolve(cwd);

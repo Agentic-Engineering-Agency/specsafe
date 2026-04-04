@@ -32,7 +32,7 @@ export interface ToolAdapter {
   detect(projectRoot: string): Promise<boolean>;
 
   /** Generate all files for this tool from canonical skills */
-  generate(skills: CanonicalSkill[], canonicalDir: string): Promise<GeneratedFile[]>;
+  generate(skills: CanonicalSkill[], canonicalDir: string, projectRoot?: string): Promise<GeneratedFile[]>;
 }
 
 /**
