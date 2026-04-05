@@ -1,16 +1,32 @@
-# SpecSafe — TDD Workflow Rules
+# SpecSafe — Two-Phase Workflow Rules
 
-SpecSafe enforces a strict 5-stage TDD workflow for every feature: **SPEC → TEST → CODE → QA → COMPLETE**. No stage may be skipped. Each stage has a dedicated skill and persona.
+SpecSafe is a two-phase software engineering framework. Phase 1 (Planning) reduces ambiguity before implementation. Phase 2 (Development) enforces strict test-driven execution through small spec slices. No stage may be skipped. Each stage has a dedicated skill and persona.
 
-## Workflow Stages
+## Phase 1: Planning
+
+Planning precedes development. Each step produces an artifact that informs the next.
+
+| Step | Skill | What Happens |
+|------|-------|--------------|
+| 1 | `specsafe-brainstorm` | Divergent exploration of possibilities *(coming soon)* |
+| 2 | `specsafe-principles` | Product principles, non-goals, quality priorities *(coming soon)* |
+| 3 | `specsafe-brief` | Concise product/business framing document |
+| 4 | `specsafe-prd` | Testable requirements with user journeys and acceptance criteria |
+| 5 | `specsafe-ux` | UX design: tokens, components, flows, accessibility |
+| 6 | `specsafe-architecture` | System architecture with ADRs and technology decisions |
+| 7 | `specsafe-readiness` | Pre-development coherence check *(coming soon)* |
+
+Canonical order: brainstorm → principles → brief → PRD → UX → architecture → readiness. UX always precedes architecture.
+
+## Phase 2: Development Stages
 
 | Stage | Skill | Persona | What Happens |
-|-------|-------|---------|--------------|
-| SPEC | `/specsafe-new`, `/specsafe-spec` | Mason (Kai) | Create and refine specification with requirements and scenarios |
-| TEST | `/specsafe-test` | Forge (Reva) | Generate test files from spec scenarios (all tests fail) |
-| CODE | `/specsafe-code` | Bolt (Zane) | Implement code using TDD red-green-refactor |
-| QA | `/specsafe-verify`, `/specsafe-qa` | Warden (Lyra) | Validate tests pass, check coverage, generate QA report |
-| COMPLETE | `/specsafe-complete` | Herald (Cass) | Human approval gate, move to completed |
+|-------|-------|---------|--------------| 
+| SPEC | `specsafe-new`, `specsafe-spec` | Mason (Kai) | Create and refine specification with requirements and scenarios |
+| TEST | `specsafe-test` | Forge (Reva) | Generate test files from spec scenarios (all tests fail) |
+| CODE | `specsafe-code` | Bolt (Zane) | Implement code using TDD red-green-refactor |
+| QA | `specsafe-verify`, `specsafe-qa` | Warden (Lyra) | Validate tests pass, check coverage, generate QA report |
+| COMPLETE | `specsafe-complete` | Herald (Cass) | Human approval gate, move to completed |
 
 ## Key Files
 
@@ -24,18 +40,24 @@ SpecSafe enforces a strict 5-stage TDD workflow for every feature: **SPEC → TE
 
 | Skill | Description |
 |-------|-------------|
-| `/specsafe-init` | Initialize a new SpecSafe project with directory structure and config |
-| `/specsafe-explore` | Pre-spec research, spikes, and feasibility assessment |
-| `/specsafe-new <name>` | Create a new spec from template with unique ID |
-| `/specsafe-spec <id>` | Refine an existing spec with requirements and scenarios |
-| `/specsafe-test <id>` | Generate test files from spec scenarios (SPEC → TEST) |
-| `/specsafe-code <id>` | Implement code via TDD to pass tests (TEST → CODE) |
-| `/specsafe-verify <id>` | Run tests and validate against spec (CODE → QA) |
-| `/specsafe-qa <id>` | Generate full QA report with GO/NO-GO recommendation |
-| `/specsafe-complete <id>` | Complete spec with human approval (QA → COMPLETE) |
-| `/specsafe-status` | Show project dashboard with all specs and metrics |
-| `/specsafe-archive <id>` | Archive an obsolete spec with reason |
-| `/specsafe-doctor` | Validate project health and diagnose issues |
+| `specsafe-init` | Initialize a new SpecSafe project with directory structure and config |
+| `specsafe-explore` | Pre-spec research, spikes, and feasibility assessment |
+| `specsafe-brief` | Create a concise product brief |
+| `specsafe-prd` | Expand brief into full PRD with user journeys and requirements |
+| `specsafe-ux` | UX design foundations — tokens, components, accessibility, flows |
+| `specsafe-architecture` | System architecture — components, data model, ADRs |
+| `specsafe-new <name>` | Create a new spec from template with unique ID |
+| `specsafe-spec <id>` | Refine an existing spec with requirements and scenarios |
+| `specsafe-test <id>` | Generate test files from spec scenarios (SPEC → TEST) |
+| `specsafe-code <id>` | Implement code via TDD to pass tests (TEST → CODE) |
+| `specsafe-verify <id>` | Run tests and validate against spec (CODE → QA) |
+| `specsafe-qa <id>` | Generate full QA report with GO/NO-GO recommendation |
+| `specsafe-complete <id>` | Complete spec with human approval (QA → COMPLETE) |
+| `specsafe-status` | Show project dashboard with all specs and metrics |
+| `specsafe-archive <id>` | Archive an obsolete spec with reason |
+| `specsafe-doctor` | Validate project health and diagnose issues |
+| `specsafe-context` | Gather and present project context for AI agents |
+| `specsafe-skill-creator` | Create new SpecSafe skills with proper structure |
 
 ## Project Constraints
 
@@ -43,6 +65,7 @@ SpecSafe enforces a strict 5-stage TDD workflow for every feature: **SPEC → TE
 2. **Never modify `PROJECT_STATE.md` directly** — only update it through skill workflows
 3. **Tests define implementation** — code exists only to make tests pass
 4. **One spec at a time** — complete or park a spec before starting another
-5. **No stage skipping** — every spec must progress through all 5 stages in order
+5. **No stage skipping** — every spec must progress through all 5 development stages in order
 6. **Evidence required** — QA verdicts require concrete test evidence, not assertions
 7. **Normative language** — specs use SHALL/MUST/SHOULD per RFC 2119
+8. **Planning precedes development** — reduce ambiguity before writing code

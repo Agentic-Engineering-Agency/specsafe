@@ -1,4 +1,4 @@
-name: SpecSafe TDD
+name: SpecSafe Two-Phase Workflow
 version: 1.0.0
 schema: v1
 rules:
