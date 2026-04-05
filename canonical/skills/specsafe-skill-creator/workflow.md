@@ -18,7 +18,7 @@ Ask the user these questions one at a time. Wait for answers before proceeding:
 
 1. **"What should this skill do?"** — Get a one-sentence description.
 2. **"When would someone use it?"** — Understand the trigger or context (e.g., "after writing tests", "when starting a new feature", "to check code quality").
-3. **"Does it fit between existing pipeline stages, or is it a standalone utility?"** — Determine pipeline position. For reference, the pipeline stages are: BRIEF → PRD → UX → ARCH → SPEC → TEST → CODE → QA → COMPLETE.
+3. **"Does it fit between existing pipeline stages, or is it a standalone utility?"** — Determine pipeline position. For reference, the pipeline stages are: BRAINSTORM → PRINCIPLES → BRIEF → PRD → UX → ARCH → READINESS → SPEC → TEST → CODE → QA → COMPLETE.
 4. **"Which persona should it use?"** — Present the available personas:
    - **Scout / Elena** — Research & Discovery (BRIEF, PRD, EXPLORE)
    - **Mason / Kai** — Architecture & Design (UX, ARCH)
