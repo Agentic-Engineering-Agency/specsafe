@@ -70,9 +70,9 @@ describe('parseFrontmatter', () => {
 });
 
 describe('loadCanonicalSkills', () => {
-  it('loads all 18 skills from the real canonical directory', () => {
+  it('loads all 21 skills from the real canonical directory', () => {
     const skills = loadCanonicalSkills(REAL_CANONICAL_DIR);
-    expect(skills).toHaveLength(18);
+    expect(skills).toHaveLength(21);
   });
 
   it('each skill has name, description, directory fields', () => {
