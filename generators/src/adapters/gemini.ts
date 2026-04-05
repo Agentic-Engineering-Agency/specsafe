@@ -10,7 +10,9 @@ function escapeToml(value: string): string {
     .replace(/"/g, '\\"')
     .replace(/\n/g, '\\n')
     .replace(/\r/g, '\\r')
-    .replace(/\t/g, '\\t');
+    .replace(/\t/g, '\\t')
+    .replace(/\x08/g, '\\b')
+    .replace(/\x0c/g, '\\f');
 }
 
 export const geminiAdapter: ToolAdapter = {
