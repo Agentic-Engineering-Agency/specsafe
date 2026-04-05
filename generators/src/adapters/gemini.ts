@@ -5,14 +5,18 @@ import { readCanonicalRule, reconstructSkillMd } from './utils.js';
 
 /** Escape a string for use inside a TOML double-quoted value */
 function escapeToml(value: string): string {
-  return value
-    .replace(/\\/g, '\\\\')
-    .replace(/"/g, '\\"')
-    .replace(/\n/g, '\\n')
-    .replace(/\r/g, '\\r')
-    .replace(/\t/g, '\\t')
-    .replace(/\x08/g, '\\b')
-    .replace(/\x0c/g, '\\f');
+  return (
+    value
+      .replace(/\\/g, '\\\\')
+      .replace(/"/g, '\\"')
+      .replace(/\n/g, '\\n')
+      .replace(/\r/g, '\\r')
+      .replace(/\t/g, '\\t')
+      // biome-ignore lint/suspicious/noControlCharactersInRegex: intentional backspace/form-feed escaping for TOML
+      .replace(/\x08/g, '\\b')
+      // biome-ignore lint/suspicious/noControlCharactersInRegex: intentional backspace/form-feed escaping for TOML
+      .replace(/\x0c/g, '\\f')
+  );
 }
 
 export const geminiAdapter: ToolAdapter = {
