@@ -46,7 +46,7 @@ describe('specsafe doctor', () => {
       project: 'test',
       version: '1.0.0',
       tools: [],
-      specsafeVersion: '2.1.0',
+      specsafeVersion: '2.2.0',
     }), 'utf-8');
     await mkdir(join(tmpDir, 'specs', 'active'), { recursive: true });
     await mkdir(join(tmpDir, 'specs', 'completed'), { recursive: true });
@@ -62,7 +62,7 @@ describe('specsafe doctor', () => {
       project: 'test',
       version: '1.0.0',
       tools: [],
-      specsafeVersion: '2.1.0',
+      specsafeVersion: '2.2.0',
     }), 'utf-8');
     await writeFile(join(tmpDir, 'PROJECT_STATE.md'), '# State', 'utf-8');
 
