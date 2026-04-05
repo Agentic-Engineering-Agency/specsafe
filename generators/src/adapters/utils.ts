@@ -71,7 +71,7 @@ export function readCanonicalRule(canonicalDir: string, filename: string): strin
 export function reconstructSkillMd(skill: CanonicalSkill): string {
   let fm = '---\n';
   fm += `name: ${skill.name}\n`;
-  fm += `description: ${skill.description}\n`;
+  fm += `description: '${skill.description.replace(/'/g, "''")}'\n`;
   if (skill.disableModelInvocation) {
     fm += `disable-model-invocation: true\n`;
   }
