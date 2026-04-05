@@ -244,4 +244,4 @@ On **GO**: Next skill is `/specsafe-new` to create the first spec slice and begi
 
 On **NEEDS REVISION**: Recommend specific planning skills to re-run (e.g., `/specsafe-prd`, `/specsafe-ux`, `/specsafe-architecture`).
 
-On **BLOCKED**: Recommend investigation or decision-making steps to unblock (e.g., `/specsafe-explore` for technical unknowns, `/specsafe-party-mode` for major design disagreements).
+On **BLOCKED**: Recommend investigation or decision-making steps to unblock (e.g., `/specsafe-explore` for technical unknowns, `/specsafe-brainstorm` for major design disagreements).
