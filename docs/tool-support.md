@@ -10,6 +10,8 @@ SpecSafe supports 8 AI coding tools across 3 tiers. Each tier determines how ski
 | **2 — Conventions** | Single conventions/rules file with all SpecSafe guidance baked in | aider, zed, gemini, antigravity |
 | **3 — Prompts** | Prompt files that can be invoked from the tool's prompt system | continue |
 
+**Note:** Planning skills (brainstorm, principles, brief, prd, ux, architecture, readiness, party-mode) are included in the generated output for Tier 1 tools alongside the development skills.
+
 ## Tier 1 Tools
 
 ### claude-code
@@ -17,7 +19,7 @@ SpecSafe supports 8 AI coding tools across 3 tiers. Each tier determines how ski
 **Install:** `specsafe install claude-code`
 
 **Generated files:**
-- `.claude/skills/<skill-name>/SKILL.md` — one per canonical skill (12 total)
+- `.claude/skills/<skill-name>/SKILL.md` — one per canonical skill (20+ total, including planning skills)
 - `.claude/skills/<skill-name>/workflow.md` — workflow files where applicable
 - `CLAUDE.md` — project-level rules
 
