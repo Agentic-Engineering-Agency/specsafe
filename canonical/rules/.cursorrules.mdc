@@ -13,13 +13,13 @@ Planning precedes development. Each step produces an artifact that informs the n
 
 | Step | Skill | What Happens |
 |------|-------|--------------|
-| 1 | `specsafe-brainstorm` | Divergent exploration of possibilities *(coming soon)* |
-| 2 | `specsafe-principles` | Product principles, non-goals, quality priorities *(coming soon)* |
+| 1 | `specsafe-brainstorm` | Divergent exploration of possibilities |
+| 2 | `specsafe-principles` | Product principles, non-goals, quality priorities |
 | 3 | `specsafe-brief` | Concise product/business framing document |
 | 4 | `specsafe-prd` | Testable requirements with user journeys and acceptance criteria |
 | 5 | `specsafe-ux` | UX design: tokens, components, flows, accessibility |
 | 6 | `specsafe-architecture` | System architecture with ADRs and technology decisions |
-| 7 | `specsafe-readiness` | Pre-development coherence check *(coming soon)* |
+| 7 | `specsafe-readiness` | Pre-development coherence check |
 
 Canonical order: brainstorm → principles → brief → PRD → UX → architecture → readiness. UX always precedes architecture.
 

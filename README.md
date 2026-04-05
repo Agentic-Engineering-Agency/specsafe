@@ -20,13 +20,13 @@ Planning removes ambiguity before implementation begins. Each planning skill pro
 
 | Step | Skill | Description |
 |------|-------|-------------|
-| 1 | `specsafe-brainstorm` | Divergent exploration of possibilities *(coming soon)* |
-| 2 | `specsafe-principles` | Product principles, non-goals, quality priorities *(coming soon)* |
+| 1 | `specsafe-brainstorm` | Divergent exploration of possibilities |
+| 2 | `specsafe-principles` | Product principles, non-goals, quality priorities |
 | 3 | `specsafe-brief` | Concise product/business framing document |
 | 4 | `specsafe-prd` | Testable requirements with user journeys and acceptance criteria |
 | 5 | `specsafe-ux` | UX design: tokens, components, flows, accessibility |
 | 6 | `specsafe-architecture` | System architecture with ADRs and technology decisions |
-| 7 | `specsafe-readiness` | Pre-development coherence check: GO / NEEDS REVISION / BLOCKED *(coming soon)* |
+| 7 | `specsafe-readiness` | Pre-development coherence check: GO / NEEDS REVISION / BLOCKED |
 
 ## Phase 2: Development
 
@@ -60,19 +60,19 @@ specsafe doctor
 
 ## Skills Reference
 
-18 canonical skills (+ 3 planned):
+21 canonical skills:
 
 ### Planning Skills
 
 | Skill | Description |
 |-------|-------------|
-| `specsafe-brainstorm` | Divergent exploration before converging on a solution *(coming soon)* |
-| `specsafe-principles` | Product principles, non-goals, and quality priorities *(coming soon)* |
+| `specsafe-brainstorm` | Divergent exploration before converging on a solution |
+| `specsafe-principles` | Product principles, non-goals, and quality priorities |
 | `specsafe-brief` | Create a concise product brief — problem, users, scope, success criteria |
 | `specsafe-prd` | Expand brief into full PRD with user journeys, FRs, NFRs |
 | `specsafe-ux` | UX design foundations — tokens, components, accessibility, flows |
 | `specsafe-architecture` | System architecture — components, data model, ADRs, technology stack |
-| `specsafe-readiness` | Pre-development coherence and readiness check *(coming soon)* |
+| `specsafe-readiness` | Pre-development coherence and readiness check |
 
 ### Development Skills
 

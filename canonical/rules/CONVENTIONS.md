@@ -8,14 +8,11 @@ SpecSafe uses a two-phase model: Planning reduces ambiguity, then Development en
 
 Canonical order: brainstorm → principles → brief → PRD → UX → architecture → readiness.
 
-- **Brainstorm**: Divergent exploration *(coming soon)*
-- **Principles**: Product principles and non-goals *(coming soon)*
-- **Brief**: Concise product/business framing (`specsafe-brief`)
+- **Brainstorm**: Divergent exploration- **Principles**: Product principles and non-goals- **Brief**: Concise product/business framing (`specsafe-brief`)
 - **PRD**: Testable requirements with user journeys (`specsafe-prd`)
 - **UX**: Design foundations, tokens, accessibility (`specsafe-ux`)
 - **Architecture**: System design with ADRs (`specsafe-architecture`)
-- **Readiness**: Pre-development coherence check *(coming soon)*
-
+- **Readiness**: Pre-development coherence check
 UX always precedes architecture. Planning precedes development.
 
 ### Phase 2: Development (5 Stages)
@@ -60,11 +57,10 @@ Every feature follows: **SPEC → TEST → CODE → QA → COMPLETE**. No skippi
 17. `specsafe-doctor` — Validate project health
 18. `specsafe-skill-creator` — Create new skills
 
-### Planned
-- `specsafe-brainstorm` — Divergent exploration *(coming soon)*
-- `specsafe-principles` — Product principles *(coming soon)*
-- `specsafe-readiness` — Pre-development coherence check *(coming soon)*
-
+### Planning (continued)
+19. `specsafe-brainstorm` — Divergent exploration
+20. `specsafe-principles` — Product principles
+21. `specsafe-readiness` — Pre-development coherence check
 ## Rules
 
 - Always read `PROJECT_STATE.md` before any operation
