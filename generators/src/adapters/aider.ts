@@ -21,22 +21,32 @@ export const aiderAdapter: ToolAdapter = {
     const files: GeneratedFile[] = [];
 
     const readEntries = [...SPECSAFE_READ_ENTRIES];
+    let otherLines: string[] = [];
     if (projectRoot) {
       const confPath = join(projectRoot, '.aider.conf.yml');
       if (existsSync(confPath)) {
         try {
           const existing = readFileSync(confPath, 'utf-8');
-          // Extract existing read entries and merge
-          const readMatch = existing.match(/^read:\n((?:\s+-\s+.+\n?)*)/m);
-          if (readMatch) {
-            const existingEntries = readMatch[1]
-              .split('\n')
-              .map((l) => l.replace(/^\s+-\s+/, '').trim())
-              .filter(Boolean);
-            for (const entry of existingEntries) {
-              if (!readEntries.includes(entry)) {
+          // Separate "read:" block from all other config lines
+          const lines = existing.split('\n');
+          let inReadBlock = false;
+          for (const line of lines) {
+            if (/^read:\s*$/.test(line)) {
+              inReadBlock = true;
+              continue;
+            }
+            if (inReadBlock && /^\s+-\s+/.test(line)) {
+              // Read entry — merge with dedup
+              const entry = line.replace(/^\s+-\s+/, '').trim();
+              if (entry && !readEntries.includes(entry)) {
                 readEntries.push(entry);
               }
+              continue;
+            }
+            // Any non-read line ends the read block
+            inReadBlock = false;
+            if (line.trim() !== '') {
+              otherLines.push(line);
             }
           }
         } catch {
@@ -46,9 +56,10 @@ export const aiderAdapter: ToolAdapter = {
     }
 
     const readYaml = readEntries.map((e) => `  - ${e}`).join('\n');
+    const otherYaml = otherLines.length > 0 ? `\n${otherLines.join('\n')}\n` : '';
     files.push({
       path: '.aider.conf.yml',
-      content: `read:\n${readYaml}\n`,
+      content: `read:\n${readYaml}\n${otherYaml}`,
     });
 
     const conventions = readCanonicalRule(canonicalDir, 'CONVENTIONS.md');

@@ -39,7 +39,26 @@ export const zedAdapter: ToolAdapter = {
       if (existsSync(settingsPath)) {
         try {
           const existing = JSON.parse(readFileSync(settingsPath, 'utf-8'));
-          merged = { ...existing, ...specsafeSettings };
+          // Deep merge: preserve user settings, layer specsafe on top
+          merged = { ...existing };
+          for (const [key, value] of Object.entries(specsafeSettings)) {
+            if (
+              typeof value === 'object' &&
+              value !== null &&
+              !Array.isArray(value) &&
+              typeof (merged as Record<string, unknown>)[key] === 'object' &&
+              (merged as Record<string, unknown>)[key] !== null &&
+              !Array.isArray((merged as Record<string, unknown>)[key])
+            ) {
+              // Merge nested objects (e.g. assistant)
+              (merged as Record<string, unknown>)[key] = {
+                ...((merged as Record<string, unknown>)[key] as Record<string, unknown>),
+                ...(value as Record<string, unknown>),
+              };
+            } else {
+              (merged as Record<string, unknown>)[key] = value;
+            }
+          }
         } catch {
           // Invalid JSON — overwrite
         }
