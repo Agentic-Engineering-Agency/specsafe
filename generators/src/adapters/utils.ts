@@ -1,9 +1,12 @@
-import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { CanonicalSkill } from './types.js';
 
 /** Parse YAML frontmatter from markdown content */
-export function parseFrontmatter(content: string): { frontmatter: Record<string, string>; body: string } {
+export function parseFrontmatter(content: string): {
+  frontmatter: Record<string, string>;
+  body: string;
+} {
   // Normalize line endings to handle Windows \r\n
   const normalized = content.replace(/\r\n/g, '\n');
   const match = normalized.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
@@ -15,7 +18,10 @@ export function parseFrontmatter(content: string): { frontmatter: Record<string,
       const key = line.slice(0, colonIdx).trim();
       let value = line.slice(colonIdx + 1).trim();
       // Remove quotes
-      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
         value = value.slice(1, -1);
       }
       frontmatter[key] = value;
@@ -65,7 +71,7 @@ export function readCanonicalRule(canonicalDir: string, filename: string): strin
 export function reconstructSkillMd(skill: CanonicalSkill): string {
   let fm = '---\n';
   fm += `name: ${skill.name}\n`;
-  fm += `description: ${skill.description}\n`;
+  fm += `description: '${skill.description.replace(/'/g, "''")}'\n`;
   if (skill.disableModelInvocation) {
     fm += `disable-model-invocation: true\n`;
   }

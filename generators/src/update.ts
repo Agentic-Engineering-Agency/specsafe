@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { SpecSafeConfig } from './adapters/types.js';
 import { install } from './install.js';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = import.meta.dirname ?? resolve(__filename, '..');
+const __dirname = import.meta.dirname ?? dirname(__filename);
 
 function defaultCanonicalDir(): string {
   return resolve(__dirname, '..', '..', 'canonical');

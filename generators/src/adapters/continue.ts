@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import type { ToolAdapter, CanonicalSkill, GeneratedFile } from './types.js';
+import type { CanonicalSkill, GeneratedFile, ToolAdapter } from './types.js';
 import { readCanonicalRule } from './utils.js';
 
 export const continueAdapter: ToolAdapter = {
@@ -17,7 +17,7 @@ export const continueAdapter: ToolAdapter = {
     for (const skill of skills) {
       let body = skill.content;
       if (skill.workflowContent) {
-        body += '\n' + skill.workflowContent;
+        body += `\n${skill.workflowContent}`;
       }
 
       const displayName = skill.name

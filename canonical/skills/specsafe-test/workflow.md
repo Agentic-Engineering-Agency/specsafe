@@ -9,6 +9,9 @@
 
 - [ ] Verify `specsafe.config.json` exists in the project root
 - [ ] Read `specsafe.config.json` and extract: `testFramework`, `language`, `testCommand`
+- [ ] Check whether the spec names any frameworks, SDKs, platforms, tools, or MCPs that shape the expected tests
+- [ ] If named tools exist, note that current official documentation should be consulted before or during test design
+- [ ] This is a reminder, not a blocker — continue even if documentation review has not happened yet
 - [ ] Verify the spec file exists at `specs/active/<SPEC-ID>.md`
 - [ ] Verify the spec's `Stage` field is `SPEC`
 - [ ] Verify the spec has requirements with acceptance criteria (GIVEN/WHEN/THEN format)

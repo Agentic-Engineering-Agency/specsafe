@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import type { ToolAdapter, CanonicalSkill, GeneratedFile } from './types.js';
+import type { CanonicalSkill, GeneratedFile, ToolAdapter } from './types.js';
 import { readCanonicalRule, reconstructSkillMd } from './utils.js';
 
 export const cursorAdapter: ToolAdapter = {
@@ -9,8 +9,7 @@ export const cursorAdapter: ToolAdapter = {
 
   async detect(projectRoot: string): Promise<boolean> {
     return (
-      existsSync(join(projectRoot, '.cursor')) ||
-      existsSync(join(projectRoot, '.cursorrules'))
+      existsSync(join(projectRoot, '.cursor')) || existsSync(join(projectRoot, '.cursorrules'))
     );
   },
 

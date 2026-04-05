@@ -10,6 +10,9 @@
 - [ ] A SPEC-ID is provided. If not, STOP and ask: "Which spec should I implement? Provide the SPEC-ID (e.g., SPEC-20260402-001)."
 - [ ] Verify `specsafe.config.json` exists in the project root
 - [ ] Read `specsafe.config.json` and extract: `testFramework`, `language`, `testCommand`
+- [ ] Check whether the spec names any frameworks, SDKs, platforms, tools, or MCPs that affect implementation
+- [ ] If named tools exist, note that current official documentation should be consulted before or during implementation
+- [ ] This is a reminder, not a blocker — continue the workflow even if documentation review still needs to happen
 - [ ] Verify the spec file exists at `specs/active/<SPEC-ID>.md`
 - [ ] Verify the spec's `Stage` field is `TEST`, `CODE`, or `QA` — if not, STOP and inform the user:
   - If SPEC: "Tests haven't been generated yet. Run `/specsafe-test <SPEC-ID>` first."

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { join, resolve } from 'node:path';
 import { parseFrontmatter, loadCanonicalSkills, reconstructSkillMd, readCanonicalRule } from '../src/adapters/utils.js';
 import { createCanonicalDir } from './adapters/helpers.js';
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 
 const REAL_CANONICAL_DIR = resolve(__dirname, '..', '..', 'canonical');
@@ -44,6 +44,12 @@ describe('parseFrontmatter', () => {
     expect(result.frontmatter.url).toBe('https://example.com');
   });
 
+  it('preserves full description containing multiple colons', () => {
+    const content = '---\ndescription: TDD implementation: red-green-refactor cycle. Uses pattern: test first.\n---\nBody.';
+    const result = parseFrontmatter(content);
+    expect(result.frontmatter.description).toBe('TDD implementation: red-green-refactor cycle. Uses pattern: test first.');
+  });
+
   it('strips double quotes from values', () => {
     const content = '---\nname: "quoted-value"\n---\nBody.';
     const result = parseFrontmatter(content);
@@ -64,9 +70,11 @@ describe('parseFrontmatter', () => {
 });
 
 describe('loadCanonicalSkills', () => {
-  it('loads all 18 skills from the real canonical directory', () => {
+  it('loads all skills from the real canonical directory', () => {
     const skills = loadCanonicalSkills(REAL_CANONICAL_DIR);
-    expect(skills).toHaveLength(18);
+    const expectedCount = readdirSync(join(REAL_CANONICAL_DIR, 'skills'), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory()).length;
+    expect(skills).toHaveLength(expectedCount);
   });
 
   it('each skill has name, description, directory fields', () => {
@@ -121,6 +129,19 @@ describe('reconstructSkillMd', () => {
       directory: 'test',
     });
     expect(md).toContain('disable-model-invocation: true');
+  });
+
+  it('round-trip preserves description with colons', () => {
+    const skill = {
+      name: 'test',
+      description: 'TDD: red-green-refactor. Pattern: test first',
+      disableModelInvocation: true,
+      content: 'Body.',
+      directory: 'test',
+    };
+    const md = reconstructSkillMd(skill);
+    const { frontmatter } = parseFrontmatter(md);
+    expect(frontmatter.description).toBe(skill.description);
   });
 
   it('omits disable-model-invocation when false', () => {

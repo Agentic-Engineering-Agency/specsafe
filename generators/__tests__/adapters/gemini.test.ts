@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { geminiAdapter } from '../../src/adapters/gemini.js';
-import { createTempDir, setupDetectDir, createTestSkills, findFile, createCanonicalDir } from './helpers.js';
+import { createTempDir, setupDetectDir, createTestSkills, findFile, createCanonicalDir, cleanupTempDirs } from './helpers.js';
 
 describe('gemini adapter', () => {
+  afterEach(cleanupTempDirs);
   describe('detect', () => {
     it('returns true when .gemini/ exists', async () => {
       const tmp = createTempDir();
@@ -54,6 +55,18 @@ describe('gemini adapter', () => {
       const gemini = findFile(files, 'GEMINI.md');
       expect(gemini).toBeDefined();
       expect(gemini!.content).toContain('# Gemini Rules');
+    });
+
+    it('escapes quotes in TOML command files', async () => {
+      const tmp = createTempDir();
+      const canonical = createCanonicalDir(tmp);
+      const skills = createTestSkills();
+      skills[0].description = 'A "special" skill with \\ backslash';
+      const files = await geminiAdapter.generate(skills, canonical);
+
+      const cmd = findFile(files, '.gemini/commands/specsafe-init.toml');
+      expect(cmd).toBeDefined();
+      expect(cmd!.content).toContain('A \\"special\\" skill with \\\\ backslash');
     });
 
     it('generates workflow.md when present', async () => {

@@ -19,8 +19,7 @@ describe('specsafe install', () => {
       testFramework: 'vitest',
       testCommand: 'pnpm test',
       coverageCommand: 'pnpm test --coverage',
-      language: 'typescript',
-      specsafeVersion: '2.0.0',
+      specsafeVersion: '2.2.0',
     }, null, 2) + '\n', 'utf-8');
   });
 

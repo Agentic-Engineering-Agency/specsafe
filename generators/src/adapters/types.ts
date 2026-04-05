@@ -5,17 +5,17 @@ export interface CanonicalSkill {
   name: string;
   description: string;
   disableModelInvocation: boolean;
-  content: string;         // Full SKILL.md content (after frontmatter)
+  content: string; // Full SKILL.md content (after frontmatter)
   workflowContent?: string; // workflow.md content if exists
-  directory: string;        // Directory name (e.g., "specsafe-init")
+  directory: string; // Directory name (e.g., "specsafe-init")
 }
 
 /**
  * Result of generating files for a tool
  */
 export interface GeneratedFile {
-  path: string;      // Relative path from project root
-  content: string;   // File content
+  path: string; // Relative path from project root
+  content: string; // File content
 }
 
 /**
@@ -32,7 +32,11 @@ export interface ToolAdapter {
   detect(projectRoot: string): Promise<boolean>;
 
   /** Generate all files for this tool from canonical skills */
-  generate(skills: CanonicalSkill[], projectRoot: string): Promise<GeneratedFile[]>;
+  generate(
+    skills: CanonicalSkill[],
+    canonicalDir: string,
+    projectRoot?: string,
+  ): Promise<GeneratedFile[]>;
 }
 
 /**
@@ -63,4 +67,4 @@ export const TOOL_NAMES = [
   'antigravity',
 ] as const;
 
-export type ToolName = typeof TOOL_NAMES[number];
+export type ToolName = (typeof TOOL_NAMES)[number];

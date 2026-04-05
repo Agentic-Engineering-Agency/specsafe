@@ -1,12 +1,36 @@
 # SpecSafe
 
-SpecSafe is a skills-first TDD framework for AI-assisted development. It provides a structured 5-stage workflow that keeps AI agents aligned with human intent through specifications, test-driven implementation, and QA gates — regardless of which AI coding tool you use.
+SpecSafe is a two-phase software engineering framework for AI-assisted development. It provides structured planning workflows to reduce ambiguity, then enforces test-driven implementation through small spec slices — regardless of which AI coding tool you use.
 
-## The 5-Stage Workflow
+For the full canonical workflow, see [docs/SPECSAFE-CANONICAL-WORKFLOW.md](./docs/SPECSAFE-CANONICAL-WORKFLOW.md).
+
+## Two-Phase Workflow
 
 ```
-SPEC → TEST → CODE → VERIFY → QA → COMPLETE
+PHASE 1: PLANNING
+brainstorm → principles → brief → PRD → UX → architecture → readiness
+
+PHASE 2: DEVELOPMENT
+spec slice → tests → implementation → verify/QA → complete (or loop back)
 ```
+
+## Phase 1: Planning
+
+Planning removes ambiguity before implementation begins. Each planning skill produces an artifact that informs the next stage.
+
+| Step | Skill | Description |
+|------|-------|-------------|
+| 1 | `specsafe-brainstorm` | Divergent exploration of possibilities |
+| 2 | `specsafe-principles` | Product principles, non-goals, quality priorities |
+| 3 | `specsafe-brief` | Concise product/business framing document |
+| 4 | `specsafe-prd` | Testable requirements with user journeys and acceptance criteria |
+| 5 | `specsafe-ux` | UX design: tokens, components, flows, accessibility |
+| 6 | `specsafe-architecture` | System architecture with ADRs and technology decisions |
+| 7 | `specsafe-readiness` | Pre-development coherence check: GO / NEEDS REVISION / BLOCKED |
+
+## Phase 2: Development
+
+Development begins only after the change is understood well enough to be implemented as a small spec slice.
 
 | Stage | Skill | Persona | What happens |
 |-------|-------|---------|-------------|
@@ -15,16 +39,6 @@ SPEC → TEST → CODE → VERIFY → QA → COMPLETE
 | **CODE** | `specsafe-code` | Zane (Bolt) | TDD red-green-refactor: unskip one test, write code to pass, repeat |
 | **VERIFY** | `specsafe-verify` | Lyra (Warden) | Run tests, validate against spec, loop back on failure |
 | **QA** | `specsafe-qa`, `specsafe-complete` | Lyra (Warden), Cass (Herald) | Full QA report with GO/NO-GO, then human approval gate |
-
-Additional utility skills:
-
-| Skill | Persona | Purpose |
-|-------|---------|---------|
-| `specsafe-init` | Cass (Herald) | Initialize a new SpecSafe project |
-| `specsafe-explore` | Elena (Scout) | Pre-spec exploration and research |
-| `specsafe-status` | Cass (Herald) | Project dashboard with spec counts and metrics |
-| `specsafe-doctor` | Cass (Herald) | Validate project health |
-| `specsafe-archive` | Cass (Herald) | Archive obsolete specs |
 
 ## Quick Start
 
@@ -46,12 +60,24 @@ specsafe doctor
 
 ## Skills Reference
 
-All 12 canonical skills:
+21 canonical skills:
+
+### Planning Skills
 
 | Skill | Description |
-|-------|------------|
-| `specsafe-init` | Initialize project — creates dirs, config, PROJECT_STATE.md |
-| `specsafe-explore` | Pre-spec exploration and research mode |
+|-------|-------------|
+| `specsafe-brainstorm` | Divergent exploration before converging on a solution |
+| `specsafe-principles` | Product principles, non-goals, and quality priorities |
+| `specsafe-brief` | Create a concise product brief — problem, users, scope, success criteria |
+| `specsafe-prd` | Expand brief into full PRD with user journeys, FRs, NFRs |
+| `specsafe-ux` | UX design foundations — tokens, components, accessibility, flows |
+| `specsafe-architecture` | System architecture — components, data model, ADRs, technology stack |
+| `specsafe-readiness` | Pre-development coherence and readiness check |
+
+### Development Skills
+
+| Skill | Description |
+|-------|-------------|
 | `specsafe-new` | Create a new spec with unique ID and initial requirements |
 | `specsafe-spec` | Refine spec with detailed requirements, criteria, scenarios |
 | `specsafe-test` | Generate test files from spec scenarios (all tests start skipped) |
@@ -59,20 +85,31 @@ All 12 canonical skills:
 | `specsafe-verify` | Run tests, validate against spec, loop on failure |
 | `specsafe-qa` | Full QA validation with report and GO/NO-GO recommendation |
 | `specsafe-complete` | Human approval gate — moves spec to COMPLETE |
+
+### Utility Skills
+
+| Skill | Description |
+|-------|-------------|
+| `specsafe-init` | Initialize project — creates dirs, config, PROJECT_STATE.md |
+| `specsafe-explore` | Pre-spec exploration and research mode |
+| `specsafe-context` | Gather and present project context for AI agents |
 | `specsafe-status` | Project dashboard with spec counts by stage |
 | `specsafe-archive` | Archive obsolete or abandoned specs |
 | `specsafe-doctor` | Validate project health and configuration |
+| `specsafe-skill-creator` | Create new SpecSafe skills with proper structure and validation |
 
 ## Agent Personas
 
 | Persona | Role | Archetype | Stages |
 |---------|------|-----------|--------|
 | **Elena** | Exploration Lead | Scout | EXPLORE |
-| **Kai** | Spec Architect | Mason | SPEC |
+| **Kai** | Spec Architect | Mason | SPEC, BRIEF, PRD |
 | **Reva** | Test Engineer | Forge | TEST |
 | **Zane** | Implementation Engineer | Bolt | CODE |
 | **Lyra** | QA Inspector | Warden | QA, VERIFY |
 | **Cass** | Release Manager | Herald | COMPLETE, STATUS, ARCHIVE, INIT, DOCTOR |
+| **Aria** | UX Designer | Prism | UX |
+| **Nolan** | System Architect | Sage | ARCHITECTURE |
 
 ## Supported Tools
 
@@ -127,5 +164,6 @@ Tracks the current state of all specs in the project:
 
 ## Further Reading
 
+- [Canonical Workflow](./docs/SPECSAFE-CANONICAL-WORKFLOW.md) — source of truth for the two-phase model
 - [Tool Support Guide](./docs/tool-support.md) — per-tool setup details
 - [Persona Guide](./docs/personas.md) — how each persona works

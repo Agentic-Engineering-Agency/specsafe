@@ -32,6 +32,9 @@ jobs:
       - name: Generator tests
         run: pnpm test -- --run
 
+      - name: Biome lint & format check
+        run: npx @biomejs/biome check generators/src/ tests/
+
       - name: Content tests
         run: npx vitest run -c vitest.config.ts
 

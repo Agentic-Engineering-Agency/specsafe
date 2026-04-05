@@ -1,11 +1,11 @@
-import { mkdir, readFile, writeFile, access } from 'node:fs/promises';
-import { basename, join, resolve } from 'node:path';
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as p from '@clack/prompts';
 import c from 'ansis';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = import.meta.dirname ?? resolve(__filename, '..');
+const __dirname = import.meta.dirname ?? dirname(__filename);
 
 function defaultCanonicalDir(): string {
   return resolve(__dirname, '..', '..', 'canonical');
@@ -17,7 +17,6 @@ export interface InitOptions {
   interactive?: boolean;
   tools?: string[];
   testFramework?: string;
-  language?: string;
 }
 
 const TOOL_DETECT_MAP: Record<string, string> = {
@@ -50,9 +49,13 @@ export async function init(name?: string, opts: InitOptions = {}): Promise<void>
   const configPath = join(cwd, 'specsafe.config.json');
   if (await fileExists(configPath)) {
     if (interactive) {
-      p.log.warn('SpecSafe is already initialized in this directory. Run `specsafe doctor` to check project health.');
+      p.log.warn(
+        'SpecSafe is already initialized in this directory. Run `specsafe doctor` to check project health.',
+      );
     } else {
-      console.log('SpecSafe is already initialized in this directory. Run `specsafe doctor` to check project health.');
+      console.log(
+        'SpecSafe is already initialized in this directory. Run `specsafe doctor` to check project health.',
+      );
     }
     return;
   }
@@ -60,69 +63,60 @@ export async function init(name?: string, opts: InitOptions = {}): Promise<void>
   let projectName = name ?? basename(cwd);
   let selectedTools = opts.tools ?? [];
   let testFramework = opts.testFramework ?? 'vitest';
-  let language = opts.language ?? 'typescript';
 
   if (interactive) {
     p.intro(c.cyan('SpecSafe — Initialize Project'));
 
-    const result = await p.group({
-      projectName: () =>
-        p.text({
-          message: 'Project name?',
-          placeholder: basename(cwd),
-          defaultValue: basename(cwd),
-        }),
-      tools: async () => {
-        const detected = await detectTools(cwd);
-        const allTools = Object.keys(TOOL_DETECT_MAP);
-        return p.multiselect({
-          message: 'Which tools to install?',
-          options: allTools.map(t => ({
-            value: t,
-            label: t,
-            hint: detected.includes(t) ? 'detected' : undefined,
-          })),
-          initialValues: detected,
-          required: false,
-        });
+    const result = await p.group(
+      {
+        projectName: () =>
+          p.text({
+            message: 'Project name?',
+            placeholder: basename(cwd),
+            defaultValue: basename(cwd),
+          }),
+        tools: async () => {
+          const detected = await detectTools(cwd);
+          const allTools = Object.keys(TOOL_DETECT_MAP);
+          return p.multiselect({
+            message: 'Which tools to install?',
+            options: allTools.map((t) => ({
+              value: t,
+              label: t,
+              hint: detected.includes(t) ? 'detected' : undefined,
+            })),
+            initialValues: detected,
+            required: false,
+          });
+        },
+        testFramework: () =>
+          p.select({
+            message: 'Test framework? (default: vitest)',
+            options: [
+              { value: 'vitest', label: 'vitest' },
+              { value: 'jest', label: 'jest' },
+              { value: 'pytest', label: 'pytest' },
+              { value: 'go test', label: 'go test' },
+            ],
+            initialValue: 'vitest',
+          }),
       },
-      testFramework: () =>
-        p.select({
-          message: 'Test framework?',
-          options: [
-            { value: 'vitest', label: 'vitest' },
-            { value: 'jest', label: 'jest' },
-            { value: 'pytest', label: 'pytest' },
-            { value: 'go test', label: 'go test' },
-          ],
-        }),
-      language: () =>
-        p.select({
-          message: 'Language?',
-          options: [
-            { value: 'typescript', label: 'typescript' },
-            { value: 'python', label: 'python' },
-            { value: 'go', label: 'go' },
-            { value: 'rust', label: 'rust' },
-            { value: 'other', label: 'other' },
-          ],
-        }),
-    }, {
-      onCancel: () => {
-        p.cancel('Setup cancelled.');
-        process.exit(0);
+      {
+        onCancel: () => {
+          p.cancel('Setup cancelled.');
+          process.exit(0);
+        },
       },
-    });
+    );
 
     projectName = (result.projectName as string) || basename(cwd);
     selectedTools = (result.tools as string[]) ?? [];
     testFramework = result.testFramework as string;
-    language = result.language as string;
 
     const s = p.spinner();
     s.start('Creating project files...');
 
-    await createProjectFiles(cwd, canonicalDir, projectName, testFramework, language);
+    await createProjectFiles(cwd, canonicalDir, projectName, testFramework);
 
     s.stop('Project files created.');
 
@@ -138,7 +132,7 @@ export async function init(name?: string, opts: InitOptions = {}): Promise<void>
 
     p.outro(c.green('Project initialized! Run /specsafe-new to create your first spec.'));
   } else {
-    await createProjectFiles(cwd, canonicalDir, projectName, testFramework, language);
+    await createProjectFiles(cwd, canonicalDir, projectName, testFramework);
 
     console.log(`SpecSafe initialized for project: ${projectName}
 
@@ -161,7 +155,6 @@ async function createProjectFiles(
   canonicalDir: string,
   projectName: string,
   testFramework: string,
-  language: string,
 ): Promise<void> {
   // Create directories
   const dirs = ['specs/active', 'specs/completed', 'specs/archive'];
@@ -170,17 +163,24 @@ async function createProjectFiles(
   }
 
   // Copy and populate config template
-  const configTemplate = await readFile(join(canonicalDir, 'templates', 'specsafe-config-template.json'), 'utf-8');
-  const config = configTemplate.replace(/\{\{project-name\}\}/g, projectName);
+  const configTemplate = await readFile(
+    join(canonicalDir, 'templates', 'specsafe-config-template.json'),
+    'utf-8',
+  );
+  const safeName = projectName.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  const config = configTemplate.replace(/\{\{project-name\}\}/g, safeName);
   const configPath = join(cwd, 'specsafe.config.json');
-  // Parse config to inject testFramework and language
+  // Parse config to inject testFramework
   const configObj = JSON.parse(config);
   configObj.testFramework = testFramework;
-  configObj.language = language;
-  await writeFile(configPath, JSON.stringify(configObj, null, 2) + '\n', 'utf-8');
+  delete configObj.language;
+  await writeFile(configPath, `${JSON.stringify(configObj, null, 2)}\n`, 'utf-8');
 
   // Copy and populate PROJECT_STATE.md template
-  const stateTemplate = await readFile(join(canonicalDir, 'templates', 'project-state-template.md'), 'utf-8');
+  const stateTemplate = await readFile(
+    join(canonicalDir, 'templates', 'project-state-template.md'),
+    'utf-8',
+  );
   const state = stateTemplate
     .replace(/\{\{project-name\}\}/g, projectName)
     .replace(/\{\{version\}\}/g, '1.0.0')

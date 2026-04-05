@@ -1,14 +1,14 @@
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { join, dirname, resolve } from 'node:path';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as p from '@clack/prompts';
-import { TOOL_NAMES } from './adapters/types.js';
 import type { SpecSafeConfig } from './adapters/types.js';
+import { TOOL_NAMES } from './adapters/types.js';
 import { loadCanonicalSkills } from './adapters/utils.js';
 import { getAdapter } from './registry.js';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = import.meta.dirname ?? resolve(__filename, '..');
+const __dirname = import.meta.dirname ?? dirname(__filename);
 
 function defaultCanonicalDir(): string {
   return resolve(__dirname, '..', '..', 'canonical');
@@ -24,7 +24,7 @@ export async function install(tool: string, opts: InstallOptions = {}): Promise<
   const canonicalDir = opts.canonicalDir ?? defaultCanonicalDir();
 
   // Validate tool name
-  if (!TOOL_NAMES.includes(tool as any)) {
+  if (!(TOOL_NAMES as readonly string[]).includes(tool)) {
     console.error(`Unknown tool: "${tool}". Valid tools: ${TOOL_NAMES.join(', ')}`);
     process.exitCode = 1;
     return;
@@ -33,7 +33,9 @@ export async function install(tool: string, opts: InstallOptions = {}): Promise<
   // Get adapter
   const adapter = getAdapter(tool);
   if (!adapter) {
-    console.error(`Adapter for "${tool}" not yet available. Check for updates or install a newer version.`);
+    console.error(
+      `Adapter for "${tool}" not yet available. Check for updates or install a newer version.`,
+    );
     process.exitCode = 1;
     return;
   }
@@ -45,13 +47,13 @@ export async function install(tool: string, opts: InstallOptions = {}): Promise<
   const s = p.spinner();
   s.start(`Installing ${tool}...`);
 
-  const files = await adapter.generate(skills, canonicalDir);
+  const files = await adapter.generate(skills, canonicalDir, cwd);
 
   // Write generated files with path containment check
   const resolvedCwd = resolve(cwd);
   for (const file of files) {
     const fullPath = resolve(cwd, file.path);
-    if (!fullPath.startsWith(resolvedCwd + '/') && fullPath !== resolvedCwd) {
+    if (!fullPath.startsWith(`${resolvedCwd}/`) && fullPath !== resolvedCwd) {
       console.error(`Security error: path "${file.path}" escapes project directory. Skipping.`);
       continue;
     }
@@ -68,11 +70,13 @@ export async function install(tool: string, opts: InstallOptions = {}): Promise<
     const config: SpecSafeConfig = JSON.parse(raw);
     if (!config.tools.includes(tool)) {
       config.tools.push(tool);
-      await writeFile(configPath, JSON.stringify(config, null, 2) + '\n', 'utf-8');
+      await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`, 'utf-8');
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.warn(`Warning: Could not update specsafe.config.json (${msg}). Run \`specsafe init\` first.`);
+    console.warn(
+      `Warning: Could not update specsafe.config.json (${msg}). Run \`specsafe init\` first.`,
+    );
   }
 
   console.log(`Installed ${tool} skills (${files.length} files):`);

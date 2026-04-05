@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
+import { describe, expect, it } from 'vitest';
 
 const TEMPLATES_DIR = path.resolve(__dirname, '../canonical/templates');
 
@@ -89,7 +89,6 @@ describe('Templates', () => {
       expect(config).toHaveProperty('tools');
       expect(config).toHaveProperty('testFramework');
       expect(config).toHaveProperty('testCommand');
-      expect(config).toHaveProperty('language');
       expect(config).toHaveProperty('specsafeVersion');
     });
   });

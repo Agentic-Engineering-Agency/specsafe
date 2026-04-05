@@ -260,7 +260,7 @@ Summary:
   User flows mapped: [count]
   Accessibility target: [WCAG level]
 
-Next: Run /specsafe-new to start creating feature specs informed by the UX design.
+Next: Run /specsafe-architecture to design the system architecture informed by the UX design.
 ```
 
 ## State Changes
@@ -280,4 +280,4 @@ Next: Run /specsafe-new to start creating feature specs informed by the UX desig
 
 ## Handoff
 
-Next skill: `/specsafe-new` to start creating feature specs informed by the UX design.
+Next skill: `/specsafe-architecture` to design the system architecture. Architecture is downstream of UX in the canonical workflow — it should support the intended experience.

@@ -225,7 +225,7 @@ Summary:
   Architecture decisions: [count] ADRs
   Technology stack: [brief summary, e.g., "TypeScript + Next.js + PostgreSQL + Vercel"]
 
-Next: Run /specsafe-ux to define UX design principles, or /specsafe-new to start creating feature specs.
+Next: Run /specsafe-readiness to validate planning coherence before development begins (or /specsafe-new if readiness is not yet available).
 ```
 
 ## State Changes
@@ -245,4 +245,4 @@ Next: Run /specsafe-ux to define UX design principles, or /specsafe-new to start
 
 ## Handoff
 
-Next skill: `/specsafe-ux` to define UX design principles, or `/specsafe-new` to start creating feature specs informed by the architecture.
+Next skill: `/specsafe-readiness` to validate planning coherence before development begins (or `/specsafe-new` if readiness is not yet available). UX is upstream of architecture — it should already be complete before this skill runs.

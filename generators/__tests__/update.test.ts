@@ -27,8 +27,7 @@ describe('specsafe update', () => {
       testFramework: 'vitest',
       testCommand: 'pnpm test',
       coverageCommand: 'pnpm test --coverage',
-      language: 'typescript',
-      specsafeVersion: '2.0.0',
+      specsafeVersion: '2.2.0',
     }, null, 2) + '\n', 'utf-8');
 
     await update({ cwd: tmpDir, canonicalDir });
@@ -49,7 +48,7 @@ describe('specsafe update', () => {
       project: 'test',
       version: '1.0.0',
       tools: [],
-      specsafeVersion: '2.0.0',
+      specsafeVersion: '2.2.0',
     }), 'utf-8');
 
     await update({ cwd: tmpDir, canonicalDir });
@@ -62,7 +61,7 @@ describe('specsafe update', () => {
       project: 'test',
       version: '1.0.0',
       tools: ['claude-code', 'aider'],
-      specsafeVersion: '2.0.0',
+      specsafeVersion: '2.2.0',
     }), 'utf-8');
 
     await update({ cwd: tmpDir, canonicalDir });

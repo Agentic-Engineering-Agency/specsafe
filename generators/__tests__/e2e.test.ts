@@ -50,7 +50,7 @@ describe('E2E: full CLI workflow', () => {
     expect(config.project).toBe('structure-test');
     expect(config.version).toBe('1.0.0');
     expect(config.tools).toEqual([]);
-    expect(config.specsafeVersion).toBe('2.0.0');
+    expect(config.specsafeVersion).toBe('2.2.0');
   });
 
   describe('install generates correct files for each tier', () => {
@@ -125,7 +125,8 @@ describe('E2E: full CLI workflow', () => {
     await install('claude-code', { cwd: tmpDir, canonicalDir });
 
     const skillDirs = await readdir(join(tmpDir, '.claude', 'skills'));
-    expect(skillDirs.length).toBe(18); // All 18 canonical skills
+    const canonicalSkillDirs = await readdir(join(canonicalDir, 'skills'));
+    expect(skillDirs.length).toBe(canonicalSkillDirs.length);
 
     for (const dir of skillDirs) {
       const skillPath = join(tmpDir, '.claude', 'skills', dir, 'SKILL.md');

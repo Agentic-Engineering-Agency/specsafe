@@ -173,7 +173,7 @@ Summary:
   Functional requirements: [count] (P0: [n], P1: [n], P2: [n])
   Non-functional requirements: [count]
 
-Next: Run /specsafe-architecture to design the system architecture, or /specsafe-ux to define UX design principles.
+Next: Run /specsafe-ux to define UX design foundations. UX precedes architecture in the canonical workflow.
 ```
 
 ## State Changes
@@ -193,4 +193,4 @@ Next: Run /specsafe-architecture to design the system architecture, or /specsafe
 
 ## Handoff
 
-Next skill: `/specsafe-architecture` to design the system architecture, or `/specsafe-ux` to define UX design principles. Both benefit from having the PRD completed first.
+Next skill: `/specsafe-ux` to define UX design foundations. UX precedes architecture in the canonical workflow — architecture should support the intended experience, not pre-empt it.
