@@ -9,6 +9,7 @@
 
 - [ ] A SpecSafe project is initialized (`specsafe.config.json` exists in the project root)
 - [ ] If not initialized, STOP and instruct the user: "Run `/specsafe-init` first."
+- [ ] Read `docs/product-principles.md` if it exists — this is recommended input from the principles stage. Use it to inform scope, non-goals, and quality priorities in the brief.
 - [ ] Check if `docs/product-brief.md` already exists. If it does, ask the user: "A product brief already exists. Would you like to update it or create a new one?"
 
 ## Workflow
