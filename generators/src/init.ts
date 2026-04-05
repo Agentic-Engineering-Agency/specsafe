@@ -181,7 +181,8 @@ async function createProjectFiles(
     join(canonicalDir, 'templates', 'specsafe-config-template.json'),
     'utf-8',
   );
-  const config = configTemplate.replace(/\{\{project-name\}\}/g, projectName);
+  const safeName = projectName.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  const config = configTemplate.replace(/\{\{project-name\}\}/g, safeName);
   const configPath = join(cwd, 'specsafe.config.json');
   // Parse config to inject testFramework and language
   const configObj = JSON.parse(config);
