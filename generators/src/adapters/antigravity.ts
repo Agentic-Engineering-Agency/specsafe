@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import type { ToolAdapter, CanonicalSkill, GeneratedFile } from './types.js';
+import type { CanonicalSkill, GeneratedFile, ToolAdapter } from './types.js';
 import { readCanonicalRule, reconstructSkillMd } from './utils.js';
 
 export const antigravityAdapter: ToolAdapter = {
@@ -8,10 +8,7 @@ export const antigravityAdapter: ToolAdapter = {
   displayName: 'Antigravity',
 
   async detect(projectRoot: string): Promise<boolean> {
-    return (
-      existsSync(join(projectRoot, '.agent')) ||
-      existsSync(join(projectRoot, 'AGENTS.md'))
-    );
+    return existsSync(join(projectRoot, '.agent')) || existsSync(join(projectRoot, 'AGENTS.md'));
   },
 
   async generate(skills: CanonicalSkill[], canonicalDir: string): Promise<GeneratedFile[]> {

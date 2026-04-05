@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import type { ToolAdapter, CanonicalSkill, GeneratedFile } from './types.js';
+import type { CanonicalSkill, GeneratedFile, ToolAdapter } from './types.js';
 import { reconstructSkillMd } from './utils.js';
 
 export const opencodeAdapter: ToolAdapter = {
@@ -9,8 +9,7 @@ export const opencodeAdapter: ToolAdapter = {
 
   async detect(projectRoot: string): Promise<boolean> {
     return (
-      existsSync(join(projectRoot, '.opencode')) ||
-      existsSync(join(projectRoot, 'OPENCODE.md'))
+      existsSync(join(projectRoot, '.opencode')) || existsSync(join(projectRoot, 'OPENCODE.md'))
     );
   },
 

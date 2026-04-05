@@ -1,13 +1,14 @@
-import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
+import { describe, expect, it } from 'vitest';
 
 const PERSONAS_DIR = path.resolve(__dirname, '../canonical/personas');
 
 // Dynamically discover all persona files
-const ALL_PERSONAS = fs.readdirSync(PERSONAS_DIR)
-  .filter(f => f.endsWith('.md'))
-  .map(f => f.replace('.md', ''))
+const ALL_PERSONAS = fs
+  .readdirSync(PERSONAS_DIR)
+  .filter((f) => f.endsWith('.md'))
+  .map((f) => f.replace('.md', ''))
   .sort();
 
 const REQUIRED_SECTIONS = [

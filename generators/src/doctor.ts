@@ -1,7 +1,7 @@
-import { readFile, access, readdir } from 'node:fs/promises';
+import { access, readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import Table from 'cli-table3';
 import c from 'ansis';
+import Table from 'cli-table3';
 import type { SpecSafeConfig } from './adapters/types.js';
 import { getAdapter } from './registry.js';
 
@@ -27,14 +27,18 @@ export async function doctor(opts: DoctorOptions = {}): Promise<Check[]> {
     config = JSON.parse(raw);
     // Validate required keys
     const requiredKeys = ['project', 'version', 'tools', 'specsafeVersion'];
-    const missing = requiredKeys.filter(k => !(k in config!));
+    const missing = requiredKeys.filter((k) => !(k in (config as SpecSafeConfig)));
     if (missing.length > 0) {
-      checks.push({ label: 'specsafe.config.json', status: 'ERROR', message: `Missing keys: ${missing.join(', ')}` });
+      checks.push({
+        label: 'specsafe.config.json',
+        status: 'ERROR',
+        message: `Missing keys: ${missing.join(', ')}`,
+      });
     } else {
       checks.push({ label: 'specsafe.config.json', status: 'OK' });
     }
-  } catch (err: any) {
-    if (err.code === 'ENOENT') {
+  } catch (err: unknown) {
+    if (err instanceof Error && 'code' in err && err.code === 'ENOENT') {
       checks.push({ label: 'specsafe.config.json', status: 'ERROR', message: 'File not found' });
     } else {
       checks.push({ label: 'specsafe.config.json', status: 'ERROR', message: 'Invalid JSON' });
@@ -99,11 +103,15 @@ export async function doctor(opts: DoctorOptions = {}): Promise<Check[]> {
 
   console.log(table.toString());
 
-  const errorCount = checks.filter(ch => ch.status === 'ERROR').length;
-  const warnCount = checks.filter(ch => ch.status === 'WARNING').length;
+  const errorCount = checks.filter((ch) => ch.status === 'ERROR').length;
+  const warnCount = checks.filter((ch) => ch.status === 'WARNING').length;
 
   if (errorCount > 0) {
-    console.log(c.red(`\n${errorCount} error(s)${warnCount > 0 ? `, ${warnCount} warning(s)` : ''} found. Run \`specsafe init\` to fix.`));
+    console.log(
+      c.red(
+        `\n${errorCount} error(s)${warnCount > 0 ? `, ${warnCount} warning(s)` : ''} found. Run \`specsafe init\` to fix.`,
+      ),
+    );
     process.exitCode = 1;
   } else if (warnCount > 0) {
     console.log(c.yellow(`\n${warnCount} warning(s), but project looks healthy.`));

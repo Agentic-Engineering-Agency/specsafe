@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { ToolAdapter, CanonicalSkill, GeneratedFile } from './types.js';
+import type { CanonicalSkill, GeneratedFile, ToolAdapter } from './types.js';
 import { readCanonicalRule } from './utils.js';
 
 export const zedAdapter: ToolAdapter = {
@@ -11,7 +11,11 @@ export const zedAdapter: ToolAdapter = {
     return existsSync(join(projectRoot, '.zed'));
   },
 
-  async generate(_skills: CanonicalSkill[], canonicalDir: string, projectRoot?: string): Promise<GeneratedFile[]> {
+  async generate(
+    _skills: CanonicalSkill[],
+    canonicalDir: string,
+    projectRoot?: string,
+  ): Promise<GeneratedFile[]> {
     const files: GeneratedFile[] = [];
 
     const rules = readCanonicalRule(canonicalDir, '.rules');
@@ -44,7 +48,7 @@ export const zedAdapter: ToolAdapter = {
 
     files.push({
       path: '.zed/settings.json',
-      content: JSON.stringify(merged, null, 2) + '\n',
+      content: `${JSON.stringify(merged, null, 2)}\n`,
     });
 
     return files;

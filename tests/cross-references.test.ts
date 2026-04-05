@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
+import { describe, expect, it } from 'vitest';
 
 const SKILLS_DIR = path.resolve(__dirname, '../canonical/skills');
 
@@ -17,9 +17,9 @@ const PERSONA_MAP: Record<string, { name: string; role: string }> = {
 };
 
 // All valid skill names for handoff validation
-const VALID_SKILL_NAMES = fs.readdirSync(SKILLS_DIR).filter((entry) =>
-  fs.statSync(path.join(SKILLS_DIR, entry)).isDirectory(),
-);
+const VALID_SKILL_NAMES = fs
+  .readdirSync(SKILLS_DIR)
+  .filter((entry) => fs.statSync(path.join(SKILLS_DIR, entry)).isDirectory());
 
 // Skills with workflow.md files
 const WORKFLOW_SKILLS = VALID_SKILL_NAMES.filter((skill) =>
@@ -60,7 +60,7 @@ describe('Cross-references', () => {
         const content = fs.readFileSync(workflowPath, 'utf-8');
         const personaLine = content.match(/> \*\*Persona:\*\* (.+)/);
         expect(personaLine).not.toBeNull();
-        expect(personaLine![1]).toContain(expected.name);
+        expect(personaLine?.[1]).toContain(expected.name);
       });
     }
   });
@@ -85,7 +85,7 @@ describe('Cross-references', () => {
         const handoffMatch = content.match(/## Handoff\n([\s\S]*?)(?=\n## |\n$|$)/);
         expect(handoffMatch).not.toBeNull();
 
-        const handoffSection = handoffMatch![1];
+        const handoffSection = handoffMatch?.[1];
         for (const target of expectedTargets) {
           expect(handoffSection).toContain(target);
         }

@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import type { ToolAdapter, CanonicalSkill, GeneratedFile } from './types.js';
+import type { CanonicalSkill, GeneratedFile, ToolAdapter } from './types.js';
 import { readCanonicalRule, reconstructSkillMd } from './utils.js';
 
 /** Escape a string for use inside a TOML double-quoted value */
@@ -18,10 +18,7 @@ export const geminiAdapter: ToolAdapter = {
   displayName: 'Gemini',
 
   async detect(projectRoot: string): Promise<boolean> {
-    return (
-      existsSync(join(projectRoot, '.gemini')) ||
-      existsSync(join(projectRoot, 'GEMINI.md'))
-    );
+    return existsSync(join(projectRoot, '.gemini')) || existsSync(join(projectRoot, 'GEMINI.md'));
   },
 
   async generate(skills: CanonicalSkill[], canonicalDir: string): Promise<GeneratedFile[]> {

@@ -1,22 +1,23 @@
-import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
+import { describe, expect, it } from 'vitest';
 
 const SKILLS_DIR = path.resolve(__dirname, '../canonical/skills');
 
 // Dynamically discover all skill directories
-const ALL_SKILLS = fs.readdirSync(SKILLS_DIR, { withFileTypes: true })
-  .filter(d => d.isDirectory())
-  .map(d => d.name)
+const ALL_SKILLS = fs
+  .readdirSync(SKILLS_DIR, { withFileTypes: true })
+  .filter((d) => d.isDirectory())
+  .map((d) => d.name)
   .sort();
 
 // Categorize by presence of workflow.md
-const WORKFLOW_SKILLS = ALL_SKILLS.filter(skill =>
+const WORKFLOW_SKILLS = ALL_SKILLS.filter((skill) =>
   fs.existsSync(path.join(SKILLS_DIR, skill, 'workflow.md')),
 );
 
-const SELF_CONTAINED_SKILLS = ALL_SKILLS.filter(skill =>
-  !fs.existsSync(path.join(SKILLS_DIR, skill, 'workflow.md')),
+const SELF_CONTAINED_SKILLS = ALL_SKILLS.filter(
+  (skill) => !fs.existsSync(path.join(SKILLS_DIR, skill, 'workflow.md')),
 );
 
 function parseFrontmatter(content: string): Record<string, string> | null {
@@ -56,22 +57,22 @@ describe('Canonical Skills', () => {
         const content = fs.readFileSync(skillMdPath, 'utf-8');
         const fm = parseFrontmatter(content);
         expect(fm).not.toBeNull();
-        expect(fm!.name).toBeDefined();
-        expect(fm!.name.length).toBeGreaterThan(0);
-        expect(fm!.description).toBeDefined();
-        expect(fm!.description.length).toBeGreaterThan(0);
+        expect(fm?.name).toBeDefined();
+        expect(fm?.name.length).toBeGreaterThan(0);
+        expect(fm?.description).toBeDefined();
+        expect(fm?.description.length).toBeGreaterThan(0);
       });
 
       it('SKILL.md name field matches directory name', () => {
         const content = fs.readFileSync(skillMdPath, 'utf-8');
         const fm = parseFrontmatter(content);
-        expect(fm!.name).toBe(skill);
+        expect(fm?.name).toBe(skill);
       });
 
       it('SKILL.md has disable-model-invocation: true', () => {
         const content = fs.readFileSync(skillMdPath, 'utf-8');
         const fm = parseFrontmatter(content);
-        expect(fm!['disable-model-invocation']).toBe('true');
+        expect(fm?.['disable-model-invocation']).toBe('true');
       });
     });
   }
