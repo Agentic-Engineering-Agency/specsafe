@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { join, resolve } from 'node:path';
 import { parseFrontmatter, loadCanonicalSkills, reconstructSkillMd, readCanonicalRule } from '../src/adapters/utils.js';
 import { createCanonicalDir } from './adapters/helpers.js';
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 
 const REAL_CANONICAL_DIR = resolve(__dirname, '..', '..', 'canonical');
@@ -70,9 +70,11 @@ describe('parseFrontmatter', () => {
 });
 
 describe('loadCanonicalSkills', () => {
-  it('loads all 21 skills from the real canonical directory', () => {
+  it('loads all skills from the real canonical directory', () => {
     const skills = loadCanonicalSkills(REAL_CANONICAL_DIR);
-    expect(skills).toHaveLength(21);
+    const expectedCount = readdirSync(join(REAL_CANONICAL_DIR, 'skills'), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory()).length;
+    expect(skills).toHaveLength(expectedCount);
   });
 
   it('each skill has name, description, directory fields', () => {
