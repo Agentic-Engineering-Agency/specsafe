@@ -89,7 +89,6 @@ describe('Templates', () => {
       expect(config).toHaveProperty('tools');
       expect(config).toHaveProperty('testFramework');
       expect(config).toHaveProperty('testCommand');
-      expect(config).toHaveProperty('language');
       expect(config).toHaveProperty('specsafeVersion');
     });
   });

@@ -17,7 +17,6 @@ export interface InitOptions {
   interactive?: boolean;
   tools?: string[];
   testFramework?: string;
-  language?: string;
 }
 
 const TOOL_DETECT_MAP: Record<string, string> = {
@@ -64,7 +63,6 @@ export async function init(name?: string, opts: InitOptions = {}): Promise<void>
   let projectName = name ?? basename(cwd);
   let selectedTools = opts.tools ?? [];
   let testFramework = opts.testFramework ?? 'vitest';
-  let language = opts.language ?? 'typescript';
 
   if (interactive) {
     p.intro(c.cyan('SpecSafe — Initialize Project'));
@@ -93,24 +91,14 @@ export async function init(name?: string, opts: InitOptions = {}): Promise<void>
         },
         testFramework: () =>
           p.select({
-            message: 'Test framework?',
+            message: 'Test framework? (default: vitest)',
             options: [
               { value: 'vitest', label: 'vitest' },
               { value: 'jest', label: 'jest' },
               { value: 'pytest', label: 'pytest' },
               { value: 'go test', label: 'go test' },
             ],
-          }),
-        language: () =>
-          p.select({
-            message: 'Language?',
-            options: [
-              { value: 'typescript', label: 'typescript' },
-              { value: 'python', label: 'python' },
-              { value: 'go', label: 'go' },
-              { value: 'rust', label: 'rust' },
-              { value: 'other', label: 'other' },
-            ],
+            initialValue: 'vitest',
           }),
       },
       {
@@ -124,12 +112,11 @@ export async function init(name?: string, opts: InitOptions = {}): Promise<void>
     projectName = (result.projectName as string) || basename(cwd);
     selectedTools = (result.tools as string[]) ?? [];
     testFramework = result.testFramework as string;
-    language = result.language as string;
 
     const s = p.spinner();
     s.start('Creating project files...');
 
-    await createProjectFiles(cwd, canonicalDir, projectName, testFramework, language);
+    await createProjectFiles(cwd, canonicalDir, projectName, testFramework);
 
     s.stop('Project files created.');
 
@@ -145,7 +132,7 @@ export async function init(name?: string, opts: InitOptions = {}): Promise<void>
 
     p.outro(c.green('Project initialized! Run /specsafe-new to create your first spec.'));
   } else {
-    await createProjectFiles(cwd, canonicalDir, projectName, testFramework, language);
+    await createProjectFiles(cwd, canonicalDir, projectName, testFramework);
 
     console.log(`SpecSafe initialized for project: ${projectName}
 
@@ -168,7 +155,6 @@ async function createProjectFiles(
   canonicalDir: string,
   projectName: string,
   testFramework: string,
-  language: string,
 ): Promise<void> {
   // Create directories
   const dirs = ['specs/active', 'specs/completed', 'specs/archive'];
@@ -184,10 +170,10 @@ async function createProjectFiles(
   const safeName = projectName.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
   const config = configTemplate.replace(/\{\{project-name\}\}/g, safeName);
   const configPath = join(cwd, 'specsafe.config.json');
-  // Parse config to inject testFramework and language
+  // Parse config to inject testFramework
   const configObj = JSON.parse(config);
   configObj.testFramework = testFramework;
-  configObj.language = language;
+  delete configObj.language;
   await writeFile(configPath, `${JSON.stringify(configObj, null, 2)}\n`, 'utf-8');
 
   // Copy and populate PROJECT_STATE.md template
