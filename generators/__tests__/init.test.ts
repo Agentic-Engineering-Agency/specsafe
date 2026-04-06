@@ -70,7 +70,7 @@ describe('specsafe init', () => {
     expect(config.project).toBe('json-test');
     expect(config.version).toBe('1.0.0');
     expect(config.tools).toEqual([]);
-    expect(config.specsafeVersion).toBe('2.2.1');
+    expect(config.specsafeVersion).toBe('2.2.3');
   });
 
   it('uses directory basename when no name is provided', async () => {

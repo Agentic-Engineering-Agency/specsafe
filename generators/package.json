@@ -1,6 +1,6 @@
 {
   "name": "specsafe",
-  "version": "2.2.1",
+  "version": "2.2.3",
   "private": true,
   "description": "Skills-first TDD framework for AI-assisted development",
   "type": "module",
