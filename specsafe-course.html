@@ -1,0 +1,2222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How SpecSafe Works — An Interactive Course</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== ROOT DESIGN TOKENS ===== */
+:root {
+  --color-bg:             #FAF7F2;
+  --color-bg-warm:        #F5F0E8;
+  --color-bg-code:        #1E1E2E;
+  --color-text:           #2C2A28;
+  --color-text-secondary: #6B6560;
+  --color-text-muted:     #9E9790;
+  --color-border:         #E5DFD6;
+  --color-border-light:   #EEEBE5;
+  --color-surface:        #FFFFFF;
+  --color-surface-warm:   #FDF9F3;
+
+  --color-accent:         #2A7B9B;
+  --color-accent-hover:   #1F6A87;
+  --color-accent-light:   #E4F2F7;
+  --color-accent-muted:   #5BA3BD;
+
+  --color-success:        #2D8B55;
+  --color-success-light:  #E8F5EE;
+  --color-error:          #C93B3B;
+  --color-error-light:    #FDE8E8;
+  --color-info:           #2A7B9B;
+  --color-info-light:     #E4F2F7;
+
+  --color-actor-1:        #D94F30;
+  --color-actor-2:        #2A7B9B;
+  --color-actor-3:        #7B6DAA;
+  --color-actor-4:        #D4A843;
+  --color-actor-5:        #2D8B55;
+
+  --font-display:  'Bricolage Grotesque', Georgia, serif;
+  --font-body:     'DM Sans', -apple-system, sans-serif;
+  --font-mono:     'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1rem;
+  --text-lg:   1.125rem;
+  --text-xl:   1.25rem;
+  --text-2xl:  1.5rem;
+  --text-3xl:  1.875rem;
+  --text-4xl:  2.25rem;
+  --text-5xl:  3rem;
+  --text-6xl:  3.75rem;
+
+  --leading-tight:  1.15;
+  --leading-snug:   1.3;
+  --leading-normal: 1.6;
+  --leading-loose:  1.8;
+
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-5:  1.25rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  --content-width:     800px;
+  --content-width-wide: 1000px;
+  --nav-height:        50px;
+  --radius-sm:  8px;
+  --radius-md:  12px;
+  --radius-lg:  16px;
+  --radius-full: 9999px;
+
+  --shadow-sm:  0 1px 2px rgba(44, 42, 40, 0.05);
+  --shadow-md:  0 4px 12px rgba(44, 42, 40, 0.08);
+  --shadow-lg:  0 8px 24px rgba(44, 42, 40, 0.1);
+  --shadow-xl:  0 16px 48px rgba(44, 42, 40, 0.12);
+
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast:   150ms;
+  --duration-normal: 300ms;
+  --duration-slow:   500ms;
+  --stagger-delay:   120ms;
+}
+
+/* ===== RESET & GLOBALS ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html {
+  scroll-snap-type: y proximity;
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--color-text);
+  background: var(--color-bg);
+  background-image: radial-gradient(ellipse at 20% 50%, rgba(42, 123, 155, 0.03) 0%, transparent 50%);
+  -webkit-font-smoothing: antialiased;
+}
+pre, code {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: hidden;
+}
+pre::-webkit-scrollbar, .translation-code::-webkit-scrollbar { display: none; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: var(--radius-full); }
+img { max-width: 100%; }
+a { color: var(--color-accent); }
+
+/* ===== NAVIGATION ===== */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: rgba(250, 247, 242, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border-light);
+  height: var(--nav-height);
+}
+.progress-bar {
+  position: absolute; top: 0; left: 0; height: 3px; width: 0;
+  background: var(--color-accent);
+  transition: width 100ms linear;
+}
+.nav-inner {
+  max-width: var(--content-width-wide);
+  margin: 0 auto; height: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 var(--space-6);
+}
+.nav-title {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: var(--text-sm); color: var(--color-text);
+}
+.nav-dots { display: flex; gap: var(--space-3); }
+.nav-dot {
+  width: 12px; height: 12px; border-radius: 50%;
+  border: 2px solid var(--color-text-muted);
+  background: transparent; cursor: pointer;
+  transition: all var(--duration-fast);
+  padding: 0;
+}
+.nav-dot:hover { border-color: var(--color-accent); }
+.nav-dot.current { border-color: var(--color-accent); background: var(--color-accent-light); box-shadow: 0 0 8px rgba(42,123,155,0.3); }
+.nav-dot.visited { border-color: var(--color-accent); background: var(--color-accent); }
+
+/* ===== MODULE STRUCTURE ===== */
+.module {
+  min-height: 100dvh; min-height: 100vh;
+  scroll-snap-align: start;
+  padding: var(--space-16) var(--space-6);
+  padding-top: calc(var(--nav-height) + var(--space-12));
+}
+.module-content { max-width: var(--content-width); margin: 0 auto; }
+.module-header { text-align: center; margin-bottom: var(--space-12); }
+.module-number {
+  font-family: var(--font-display); font-size: var(--text-6xl);
+  font-weight: 800; color: var(--color-accent); opacity: 0.15;
+  line-height: var(--leading-tight);
+}
+.module-title {
+  font-family: var(--font-display); font-size: var(--text-4xl);
+  font-weight: 700; line-height: var(--leading-tight);
+  margin-top: var(--space-2);
+}
+.module-subtitle {
+  font-size: var(--text-lg); color: var(--color-text-secondary);
+  margin-top: var(--space-3); max-width: 600px; margin-left: auto; margin-right: auto;
+}
+.module-body { display: flex; flex-direction: column; gap: var(--space-16); }
+.screen { display: flex; flex-direction: column; gap: var(--space-6); }
+.screen-heading {
+  font-family: var(--font-display); font-size: var(--text-2xl);
+  font-weight: 600; line-height: var(--leading-snug);
+}
+
+/* ===== ANIMATIONS ===== */
+.animate-in {
+  opacity: 0; transform: translateY(20px);
+  transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out);
+}
+.animate-in.visible { opacity: 1; transform: translateY(0); }
+.stagger-children > .animate-in {
+  transition-delay: calc(var(--stagger-index, 0) * var(--stagger-delay));
+}
+
+/* ===== CODE TRANSLATION BLOCKS ===== */
+.translation-block {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+  border-radius: var(--radius-md); overflow: hidden;
+  box-shadow: var(--shadow-md); margin: var(--space-6) 0;
+}
+.translation-code {
+  background: var(--color-bg-code); color: #CDD6F4;
+  padding: var(--space-6); font-family: var(--font-mono);
+  font-size: var(--text-sm); line-height: 1.7;
+  position: relative; overflow-x: hidden;
+}
+.translation-code pre, .translation-code code {
+  white-space: pre-wrap; word-break: break-word; overflow-x: hidden;
+}
+.translation-english {
+  background: var(--color-surface-warm); padding: var(--space-6);
+  font-size: var(--text-sm); line-height: 1.7;
+  border-left: 3px solid var(--color-accent); position: relative;
+}
+.translation-label {
+  position: absolute; top: var(--space-2); right: var(--space-3);
+  font-size: var(--text-xs); text-transform: uppercase;
+  letter-spacing: 0.1em; opacity: 0.5; font-family: var(--font-mono);
+}
+.translation-english .translation-label { color: var(--color-text-muted); }
+.tl { margin-bottom: var(--space-3); color: var(--color-text-secondary); }
+.tl:last-child { margin-bottom: 0; }
+
+/* Syntax Highlighting */
+.code-keyword  { color: #CBA6F7; }
+.code-string   { color: #A6E3A1; }
+.code-function { color: #89B4FA; }
+.code-comment  { color: #6C7086; }
+.code-number   { color: #FAB387; }
+.code-property { color: #F9E2AF; }
+.code-operator { color: #94E2D5; }
+.code-tag      { color: #F38BA8; }
+.code-type     { color: #89DCEB; }
+
+/* ===== QUIZ ===== */
+.quiz-container { margin: var(--space-6) 0; }
+.quiz-question-block { margin-bottom: var(--space-6); }
+.quiz-question {
+  font-family: var(--font-display); font-size: var(--text-lg);
+  font-weight: 600; margin-bottom: var(--space-4);
+}
+.quiz-options { display: flex; flex-direction: column; gap: var(--space-2); }
+.quiz-option {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 2px solid var(--color-border); border-radius: var(--radius-sm);
+  background: var(--color-surface); cursor: pointer; width: 100%;
+  font-family: var(--font-body); font-size: var(--text-base);
+  text-align: left;
+  transition: border-color var(--duration-fast), background var(--duration-fast);
+}
+.quiz-option:hover { border-color: var(--color-accent-muted); }
+.quiz-option.selected { border-color: var(--color-accent); background: var(--color-accent-light); }
+.quiz-option.correct { border-color: var(--color-success); background: var(--color-success-light); }
+.quiz-option.incorrect { border-color: var(--color-error); background: var(--color-error-light); }
+.quiz-option-radio {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid var(--color-border);
+  transition: all var(--duration-fast); flex-shrink: 0;
+}
+.quiz-option.selected .quiz-option-radio {
+  border-color: var(--color-accent); background: var(--color-accent);
+  box-shadow: inset 0 0 0 3px white;
+}
+.quiz-option.correct .quiz-option-radio {
+  border-color: var(--color-success); background: var(--color-success);
+  box-shadow: inset 0 0 0 3px white;
+}
+.quiz-feedback {
+  max-height: 0; overflow: hidden; opacity: 0;
+  transition: max-height var(--duration-normal), opacity var(--duration-normal), padding var(--duration-normal);
+  border-radius: var(--radius-sm); font-size: var(--text-sm); line-height: var(--leading-normal);
+}
+.quiz-feedback.show { max-height: 200px; opacity: 1; padding: var(--space-3) var(--space-4); margin-top: var(--space-2); }
+.quiz-feedback.success { background: var(--color-success-light); color: var(--color-success); }
+.quiz-feedback.error { background: var(--color-error-light); color: var(--color-error); }
+.quiz-feedback.warning { background: var(--color-accent-light); color: var(--color-accent); }
+.quiz-check-btn {
+  margin-top: var(--space-4); padding: var(--space-3) var(--space-6);
+  background: var(--color-accent); color: white; border: none;
+  border-radius: var(--radius-sm); font-family: var(--font-body);
+  font-weight: 600; cursor: pointer; font-size: var(--text-base);
+  transition: background var(--duration-fast);
+}
+.quiz-check-btn:hover { background: var(--color-accent-hover); }
+.quiz-reset-btn {
+  margin-top: var(--space-4); margin-left: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  background: transparent; color: var(--color-text-secondary);
+  border: 2px solid var(--color-border); border-radius: var(--radius-sm);
+  font-family: var(--font-body); font-weight: 500; cursor: pointer; font-size: var(--text-base);
+}
+
+/* ===== GROUP CHAT ===== */
+.chat-window {
+  background: var(--color-surface); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg); overflow: hidden; margin: var(--space-6) 0;
+}
+.chat-header {
+  background: var(--color-bg-code); color: #CDD6F4;
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--font-mono); font-size: var(--text-sm);
+  display: flex; align-items: center; gap: var(--space-2);
+}
+.chat-header-dot { width: 8px; height: 8px; border-radius: 50%; }
+.chat-messages {
+  padding: var(--space-4); min-height: 200px; max-height: 450px;
+  overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-3);
+}
+.chat-message { display: flex; gap: var(--space-3); align-items: flex-start; }
+.chat-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 700; font-size: var(--text-sm);
+  font-family: var(--font-mono); flex-shrink: 0;
+}
+.chat-bubble {
+  background: var(--color-surface-warm); padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md); border-top-left-radius: 4px;
+  max-width: 80%; box-shadow: var(--shadow-sm);
+}
+.chat-sender {
+  font-weight: 600; font-size: var(--text-xs); text-transform: uppercase;
+  letter-spacing: 0.05em; display: block; margin-bottom: var(--space-1);
+}
+.chat-bubble p { font-size: var(--text-sm); color: var(--color-text-secondary); margin: 0; }
+.chat-bubble code {
+  font-family: var(--font-mono); font-size: var(--text-xs);
+  background: rgba(42,123,155,0.1); padding: 1px 4px; border-radius: 3px;
+}
+.chat-typing {
+  display: flex; gap: var(--space-3); align-items: center;
+  padding: 0 var(--space-4) var(--space-3);
+}
+.chat-typing-dots { display: flex; gap: 4px; }
+.typing-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--color-text-muted);
+  animation: typingBounce 1.4s infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px); }
+}
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.chat-controls {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border-light);
+  display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap;
+}
+.chat-controls button {
+  padding: var(--space-2) var(--space-4);
+  border: 2px solid var(--color-border); border-radius: var(--radius-sm);
+  background: var(--color-surface); cursor: pointer;
+  font-family: var(--font-body); font-size: var(--text-sm); font-weight: 500;
+  transition: border-color var(--duration-fast);
+}
+.chat-controls button:hover { border-color: var(--color-accent); }
+.chat-progress { font-size: var(--text-xs); color: var(--color-text-muted); margin-left: auto; }
+
+/* ===== DATA FLOW ANIMATION ===== */
+.flow-animation {
+  background: var(--color-surface); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg); padding: var(--space-8); margin: var(--space-6) 0;
+  overflow: hidden;
+}
+.flow-actors {
+  display: flex; justify-content: space-around; align-items: center;
+  gap: var(--space-4); margin-bottom: var(--space-8); flex-wrap: wrap;
+}
+.flow-actor {
+  display: flex; flex-direction: column; align-items: center; gap: var(--space-2);
+  padding: var(--space-4); border-radius: var(--radius-md);
+  border: 2px solid var(--color-border-light);
+  transition: all var(--duration-normal) var(--ease-out);
+  min-width: 100px; text-align: center;
+}
+.flow-actor.active {
+  box-shadow: 0 0 0 3px var(--color-accent), 0 0 20px rgba(42,123,155,0.2);
+  transform: scale(1.05);
+}
+.flow-actor-icon {
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 700; font-family: var(--font-mono);
+}
+.flow-actor span { font-size: var(--text-sm); font-weight: 500; }
+.flow-step-label {
+  text-align: center; padding: var(--space-4);
+  font-size: var(--text-base); color: var(--color-text-secondary);
+  min-height: 60px; display: flex; align-items: center; justify-content: center;
+  background: var(--color-surface-warm); border-radius: var(--radius-sm);
+  margin: var(--space-4) 0;
+}
+.flow-controls {
+  display: flex; gap: var(--space-2); align-items: center; justify-content: center;
+  margin-top: var(--space-4);
+}
+.flow-controls button {
+  padding: var(--space-2) var(--space-4);
+  border: 2px solid var(--color-border); border-radius: var(--radius-sm);
+  background: var(--color-surface); cursor: pointer;
+  font-family: var(--font-body); font-size: var(--text-sm); font-weight: 500;
+}
+.flow-controls button:hover { border-color: var(--color-accent); }
+.flow-progress { font-size: var(--text-xs); color: var(--color-text-muted); }
+
+/* ===== CALLOUT BOXES ===== */
+.callout {
+  display: flex; gap: var(--space-4); padding: var(--space-5);
+  border-radius: var(--radius-md); margin: var(--space-6) 0;
+}
+.callout-accent { background: var(--color-accent-light); border-left: 4px solid var(--color-accent); }
+.callout-info { background: var(--color-info-light); border-left: 4px solid var(--color-info); }
+.callout-warning { background: var(--color-error-light); border-left: 4px solid var(--color-error); }
+.callout-icon { font-size: 1.5rem; flex-shrink: 0; line-height: 1; }
+.callout-content { flex: 1; }
+.callout-title { font-family: var(--font-display); font-size: var(--text-base); font-weight: 600; display: block; margin-bottom: var(--space-1); }
+.callout-content p { font-size: var(--text-sm); color: var(--color-text-secondary); margin: 0; }
+
+/* ===== PATTERN / FEATURE CARDS ===== */
+.pattern-cards {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4);
+}
+.pattern-card {
+  background: var(--color-surface); border-radius: var(--radius-md);
+  padding: var(--space-6); box-shadow: var(--shadow-sm);
+  transition: transform var(--duration-normal) var(--ease-out), box-shadow var(--duration-normal);
+}
+.pattern-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+.pattern-icon {
+  width: 40px; height: 40px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.25rem; margin-bottom: var(--space-3); color: white;
+}
+.pattern-title { font-family: var(--font-display); font-weight: 600; font-size: var(--text-base); margin-bottom: var(--space-2); }
+.pattern-desc { font-size: var(--text-sm); color: var(--color-text-secondary); margin: 0; }
+
+/* ===== STEP CARDS ===== */
+.step-cards { display: flex; flex-direction: column; gap: var(--space-3); }
+.step-card {
+  display: flex; align-items: flex-start; gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-surface); border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-accent); box-shadow: var(--shadow-sm);
+}
+.step-num {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--color-accent); color: white; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); flex-shrink: 0;
+}
+.step-body strong { display: block; }
+.step-body p { margin: var(--space-1) 0 0; color: var(--color-text-secondary); font-size: var(--text-sm); }
+
+/* ===== FILE TREE ===== */
+.file-tree {
+  font-family: var(--font-mono); font-size: var(--text-sm);
+  background: var(--color-surface); padding: var(--space-6);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
+}
+.ft-folder, .ft-file {
+  padding: var(--space-2) var(--space-3);
+  border-left: 2px solid var(--color-border-light);
+  margin-left: var(--space-4);
+}
+.ft-folder.root { border-left: none; margin-left: 0; }
+.ft-folder > .ft-name { color: var(--color-accent); font-weight: 600; }
+.ft-folder > .ft-name::before { content: '\1F4C1 '; }
+.ft-file > .ft-name::before { content: '\1F4C4 '; }
+.ft-desc {
+  color: var(--color-text-secondary); font-family: var(--font-body);
+  margin-left: var(--space-2); font-size: var(--text-xs);
+}
+.ft-children { margin-left: var(--space-4); }
+
+/* ===== ICON ROWS ===== */
+.icon-rows { display: flex; flex-direction: column; gap: var(--space-4); }
+.icon-row {
+  display: flex; align-items: center; gap: var(--space-4);
+  padding: var(--space-4); background: var(--color-surface);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
+}
+.icon-row p { margin: 0; color: var(--color-text-secondary); font-size: var(--text-sm); }
+.icon-circle {
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.25rem; flex-shrink: 0; color: white;
+}
+
+/* ===== FLOW STEPS (horizontal) ===== */
+.flow-steps {
+  display: flex; align-items: center; justify-content: center;
+  gap: var(--space-2); flex-wrap: wrap; margin: var(--space-6) 0;
+}
+.flow-step-box {
+  background: var(--color-surface); padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm); box-shadow: var(--shadow-sm);
+  font-size: var(--text-sm); font-weight: 500; text-align: center;
+  border: 2px solid var(--color-border-light);
+}
+.flow-step-box.highlight { border-color: var(--color-accent); background: var(--color-accent-light); }
+.flow-arrow { color: var(--color-text-muted); font-size: var(--text-xl); font-weight: 300; }
+
+/* ===== GLOSSARY TOOLTIPS ===== */
+.term {
+  border-bottom: 1.5px dashed var(--color-accent-muted);
+  cursor: pointer; position: relative;
+}
+.term:hover, .term.active { border-bottom-color: var(--color-accent); color: var(--color-accent); }
+.term-tooltip {
+  position: fixed; background: var(--color-bg-code); color: #CDD6F4;
+  padding: var(--space-3) var(--space-4); border-radius: var(--radius-sm);
+  font-size: var(--text-sm); font-family: var(--font-body);
+  line-height: var(--leading-normal);
+  width: max(200px, min(320px, 80vw));
+  box-shadow: var(--shadow-lg); pointer-events: none;
+  opacity: 0; transition: opacity var(--duration-fast);
+  z-index: 10000;
+}
+.term-tooltip::after {
+  content: ''; position: absolute; top: 100%; left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent; border-top-color: var(--color-bg-code);
+}
+.term-tooltip.visible { opacity: 1; }
+.term-tooltip.flip::after {
+  top: auto; bottom: 100%;
+  border-top-color: transparent; border-bottom-color: var(--color-bg-code);
+}
+
+/* ===== BADGE LIST ===== */
+.badge-list { display: flex; flex-direction: column; gap: var(--space-2); }
+.badge-item {
+  display: flex; align-items: center; gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--duration-fast);
+}
+.badge-item:hover { border-color: var(--color-accent-muted); }
+.badge-code {
+  font-family: var(--font-mono); font-size: var(--text-sm);
+  background: var(--color-bg-code); color: #CBA6F7;
+  padding: var(--space-1) var(--space-3); border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+/* ===== SCENARIO BOX ===== */
+.scenario-block {
+  background: var(--color-surface-warm); border-radius: var(--radius-md);
+  padding: var(--space-5); margin-bottom: var(--space-4);
+}
+.scenario-label {
+  font-family: var(--font-mono); font-size: var(--text-xs);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--color-accent); font-weight: 600;
+  margin-bottom: var(--space-2); display: block;
+}
+
+/* ===== HERO MODULE (Module 0) ===== */
+.hero-module {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; min-height: 100dvh; min-height: 100vh;
+  padding: var(--space-16) var(--space-6);
+  background: var(--color-bg);
+}
+.hero-badge {
+  font-family: var(--font-mono); font-size: var(--text-xs);
+  text-transform: uppercase; letter-spacing: 0.15em;
+  color: var(--color-accent); background: var(--color-accent-light);
+  padding: var(--space-2) var(--space-4); border-radius: var(--radius-full);
+  margin-bottom: var(--space-6);
+}
+.hero-title {
+  font-family: var(--font-display); font-size: var(--text-5xl);
+  font-weight: 800; line-height: var(--leading-tight);
+  max-width: 700px; margin-bottom: var(--space-4);
+}
+.hero-title span { color: var(--color-accent); }
+.hero-desc {
+  font-size: var(--text-lg); color: var(--color-text-secondary);
+  max-width: 550px; margin-bottom: var(--space-10);
+}
+.hero-start {
+  padding: var(--space-4) var(--space-8);
+  background: var(--color-accent); color: white; border: none;
+  border-radius: var(--radius-full); font-family: var(--font-display);
+  font-weight: 600; font-size: var(--text-lg); cursor: pointer;
+  transition: background var(--duration-fast), transform var(--duration-fast);
+  box-shadow: var(--shadow-md);
+}
+.hero-start:hover { background: var(--color-accent-hover); transform: translateY(-2px); }
+.hero-meta {
+  margin-top: var(--space-8); display: flex; gap: var(--space-8);
+  color: var(--color-text-muted); font-size: var(--text-sm);
+}
+.hero-meta-item { display: flex; align-items: center; gap: var(--space-2); }
+
+/* ===== ARCHITECTURE DIAGRAM ===== */
+.arch-diagram {
+  background: var(--color-surface); border-radius: var(--radius-lg);
+  padding: var(--space-8); box-shadow: var(--shadow-md); margin: var(--space-6) 0;
+}
+.arch-zones { display: flex; flex-direction: column; gap: var(--space-6); }
+.arch-zone {
+  border: 2px dashed var(--color-border); border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+.arch-zone-label {
+  font-family: var(--font-mono); font-size: var(--text-xs);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--color-text-muted); margin-bottom: var(--space-3);
+}
+.arch-components {
+  display: flex; gap: var(--space-3); flex-wrap: wrap;
+}
+.arch-component {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-warm); border-radius: var(--radius-sm);
+  border: 2px solid var(--color-border-light); cursor: pointer;
+  transition: all var(--duration-fast); font-size: var(--text-sm);
+}
+.arch-component:hover {
+  border-color: var(--color-accent); box-shadow: var(--shadow-sm);
+}
+.arch-component .arch-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.arch-description {
+  margin-top: var(--space-4); padding: var(--space-4);
+  background: var(--color-surface-warm); border-radius: var(--radius-sm);
+  font-size: var(--text-sm); color: var(--color-text-secondary);
+  min-height: 60px; text-align: center;
+  transition: all var(--duration-fast);
+}
+
+/* ===== TWO-PHASE DIAGRAM ===== */
+.phase-diagram {
+  display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);
+  margin: var(--space-6) 0;
+}
+.phase-box {
+  background: var(--color-surface); border-radius: var(--radius-md);
+  padding: var(--space-6); box-shadow: var(--shadow-sm);
+}
+.phase-label {
+  font-family: var(--font-mono); font-size: var(--text-xs);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: var(--space-3); font-weight: 600;
+}
+.phase-steps { display: flex; flex-direction: column; gap: var(--space-2); }
+.phase-step {
+  font-size: var(--text-sm); padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm); background: var(--color-surface-warm);
+  border-left: 3px solid transparent;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  :root { --text-4xl: 1.875rem; --text-5xl: 2.25rem; --text-6xl: 3rem; }
+  .translation-block { grid-template-columns: 1fr; }
+  .translation-english { border-left: none; border-top: 3px solid var(--color-accent); }
+  .pattern-cards { grid-template-columns: 1fr 1fr; }
+  .phase-diagram { grid-template-columns: 1fr; }
+  .flow-actors { gap: var(--space-2); }
+  .hero-meta { flex-direction: column; gap: var(--space-3); align-items: center; }
+}
+@media (max-width: 480px) {
+  :root { --text-4xl: 1.5rem; --text-5xl: 1.875rem; --text-6xl: 2.25rem; }
+  .module { padding: var(--space-8) var(--space-4); padding-top: calc(var(--nav-height) + var(--space-8)); }
+  .pattern-cards { grid-template-columns: 1fr; }
+  .flow-steps { flex-direction: column; }
+  .flow-arrow { transform: rotate(90deg); }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== NAVIGATION ===== -->
+<nav class="nav">
+  <div class="progress-bar" id="progress-bar" role="progressbar" aria-valuenow="0"></div>
+  <div class="nav-inner">
+    <span class="nav-title">How SpecSafe Works</span>
+    <div class="nav-dots">
+      <button class="nav-dot" data-target="hero" aria-label="Intro"></button>
+      <button class="nav-dot" data-target="module-1" aria-label="Module 1"></button>
+      <button class="nav-dot" data-target="module-2" aria-label="Module 2"></button>
+      <button class="nav-dot" data-target="module-3" aria-label="Module 3"></button>
+      <button class="nav-dot" data-target="module-4" aria-label="Module 4"></button>
+      <button class="nav-dot" data-target="module-5" aria-label="Module 5"></button>
+      <button class="nav-dot" data-target="module-6" aria-label="Module 6"></button>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero-module" id="hero">
+  <div class="hero-badge animate-in">Interactive Course</div>
+  <h1 class="hero-title animate-in">How <span>SpecSafe</span> Works Under the Hood</h1>
+  <p class="hero-desc animate-in">A visual, interactive guide to understanding the codebase behind the AI-assisted development framework &mdash; no coding experience needed.</p>
+  <button class="hero-start animate-in" onclick="document.getElementById('module-1').scrollIntoView({behavior:'smooth'})">Start Learning</button>
+  <div class="hero-meta animate-in">
+    <span class="hero-meta-item">6 modules</span>
+    <span class="hero-meta-item">~25 min read</span>
+    <span class="hero-meta-item">TypeScript &bull; CLI tool</span>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- MODULE 1: WHAT IS SPECSAFE?                                  -->
+<!-- ============================================================ -->
+<section class="module" id="module-1" style="background: var(--color-bg)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">01</span>
+      <h1 class="module-title">What Is SpecSafe?</h1>
+      <p class="module-subtitle">The problem it solves and what happens when you run it for the first time</p>
+    </header>
+
+    <div class="module-body">
+      <!-- Screen 1: The Problem -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The Problem: AI Coding Without a Plan</h2>
+        <p>Imagine hiring a builder who starts pouring concrete before looking at the blueprints. That's what happens when <span class="term" data-definition="AI coding tools are software assistants (like Claude Code, Cursor, or GitHub Copilot) that write code based on your instructions in plain English.">AI coding tools</span> write code without a structured plan first.</p>
+
+        <div class="pattern-cards stagger-children">
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-error)">
+            <div class="pattern-icon" style="background: var(--color-error)">?</div>
+            <h4 class="pattern-title">Vague Requirements</h4>
+            <p class="pattern-desc">You say "add authentication" but the AI doesn't know if you mean passwords, social login, or magic links.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-4)">
+            <div class="pattern-icon" style="background: var(--color-actor-4)">!</div>
+            <h4 class="pattern-title">Skipped Tests</h4>
+            <p class="pattern-desc">Code that "looks right" but nobody verified it actually works for all the edge cases.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">&times;</div>
+            <h4 class="pattern-title">Bug Loops</h4>
+            <p class="pattern-desc">AI fixes one bug but creates two more because it doesn't understand the full picture.</p>
+          </div>
+        </div>
+
+        <p>SpecSafe solves this by enforcing a <strong>two-phase workflow</strong>: plan thoroughly <em>first</em>, then build with discipline.</p>
+      </section>
+
+      <!-- Screen 2: Two-Phase Workflow Overview -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Two Phases, One Principle: Think Before You Build</h2>
+        <p>Like an architect who draws blueprints before any bricks are laid, SpecSafe splits every feature into a planning phase and a building phase.</p>
+
+        <div class="phase-diagram stagger-children">
+          <div class="phase-box animate-in" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="phase-label" style="color: var(--color-actor-2)">Phase 1: Planning</div>
+            <div class="phase-steps">
+              <div class="phase-step" style="border-left-color: var(--color-actor-2)">Brainstorm</div>
+              <div class="phase-step" style="border-left-color: var(--color-actor-2)">Principles</div>
+              <div class="phase-step" style="border-left-color: var(--color-actor-2)">Brief</div>
+              <div class="phase-step" style="border-left-color: var(--color-actor-2)">PRD</div>
+              <div class="phase-step" style="border-left-color: var(--color-actor-2)">UX</div>
+              <div class="phase-step" style="border-left-color: var(--color-actor-2)">Architecture</div>
+              <div class="phase-step" style="border-left-color: var(--color-actor-2)">Readiness Check</div>
+            </div>
+          </div>
+          <div class="phase-box animate-in" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="phase-label" style="color: var(--color-actor-1)">Phase 2: Development</div>
+            <div class="phase-steps">
+              <div class="phase-step" style="border-left-color: var(--color-actor-1)">SPEC &mdash; Write the specification</div>
+              <div class="phase-step" style="border-left-color: var(--color-actor-1)">TEST &mdash; Generate tests first</div>
+              <div class="phase-step" style="border-left-color: var(--color-actor-1)">CODE &mdash; Write code to pass tests</div>
+              <div class="phase-step" style="border-left-color: var(--color-actor-1)">QA &mdash; Validate everything</div>
+              <div class="phase-step" style="border-left-color: var(--color-actor-1)">COMPLETE &mdash; Human approval</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 3: What It Actually Is (Tech) -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Under the Hood: A CLI Tool</h2>
+        <p>SpecSafe is a <span class="term" data-definition="CLI stands for Command Line Interface &mdash; a text-based way to tell your computer what to do by typing commands, like a text message conversation with your machine.">CLI</span> tool you install from <span class="term" data-definition="npm is the world's largest software library &mdash; think of it as an app store for code packages that developers can download and use in their projects.">npm</span>. It scaffolds your project, installs workflow &ldquo;skills&rdquo; for your AI tool, and keeps everything on track.</p>
+
+        <div class="flow-steps stagger-children">
+          <div class="flow-step-box animate-in">specsafe init</div>
+          <div class="flow-arrow animate-in">&rarr;</div>
+          <div class="flow-step-box animate-in">specsafe install</div>
+          <div class="flow-arrow animate-in">&rarr;</div>
+          <div class="flow-step-box animate-in">specsafe update</div>
+          <div class="flow-arrow animate-in">&rarr;</div>
+          <div class="flow-step-box animate-in">specsafe doctor</div>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">&#x1F4A1;</div>
+          <div class="callout-content">
+            <strong class="callout-title">Key Insight: Skills, Not Rules</strong>
+            <p>SpecSafe doesn't hardcode instructions. It installs "skills" &mdash; reusable workflow definitions that teach your AI coding tool <em>how</em> to plan and build. Different AI tools get different skill formats, but the knowledge is the same.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 4: Code Translation - CLI Entry -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Your First Look at the Code</h2>
+        <p>Here's the <span class="term" data-definition="An entry point is the first file that runs when a program starts &mdash; like the front door of a building. Everything begins here.">entry point</span> &mdash; the very first file that runs when you type <code>specsafe</code> in your terminal.</p>
+
+        <div class="translation-block">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code><span class="code-keyword">const</span> program = <span class="code-keyword">new</span> <span class="code-function">Command</span>();
+
+program
+  .<span class="code-function">name</span>(<span class="code-string">'specsafe'</span>)
+  .<span class="code-function">description</span>(<span class="code-string">'SpecSafe &mdash; Skills-first TDD framework'</span>)
+  .<span class="code-function">version</span>(pkg.version);</code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">Create a new command-line program.</p>
+              <p class="tl">Give it the name "specsafe" &mdash; that's what users type to run it.</p>
+              <p class="tl">Add a description that shows when users ask for help.</p>
+              <p class="tl">Set the version number by reading it from the project's package.json file.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 5: Quiz -->
+      <section class="screen animate-in" id="quiz-m1">
+        <h2 class="screen-heading">Check Your Understanding</h2>
+
+        <div class="quiz-container">
+          <div class="quiz-question-block" data-question="m1q1" data-correct="m1q1-b">
+            <h3 class="quiz-question">You're building an app and want to add a payment feature. With SpecSafe, what would you do first?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="m1q1-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Ask the AI to write the payment code immediately</span>
+              </button>
+              <button class="quiz-option" data-value="m1q1-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Go through the planning phase first (brainstorm, requirements, UX, architecture)</span>
+              </button>
+              <button class="quiz-option" data-value="m1q1-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Write tests, then ask the AI to make them pass</span>
+              </button>
+            </div>
+            <div class="quiz-feedback" id="m1q1-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block" data-question="m1q2" data-correct="m1q2-c">
+            <h3 class="quiz-question">Why does SpecSafe install different "skill" files for different AI tools?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="m1q2-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Each AI tool has different pricing</span>
+              </button>
+              <button class="quiz-option" data-value="m1q2-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Some AI tools are smarter than others</span>
+              </button>
+              <button class="quiz-option" data-value="m1q2-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Each AI tool reads instructions in a different format, but the workflow knowledge is the same</span>
+              </button>
+            </div>
+            <div class="quiz-feedback" id="m1q2-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-m1')">Check Answers</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-m1')">Try Again</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- MODULE 2: MEET THE CAST                                      -->
+<!-- ============================================================ -->
+<section class="module" id="module-2" style="background: var(--color-bg-warm)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">02</span>
+      <h1 class="module-title">Meet the Cast</h1>
+      <p class="module-subtitle">The six main actors inside the codebase and what each one does</p>
+    </header>
+
+    <div class="module-body">
+      <!-- Screen 1: Cast Overview -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Six Characters, One Story</h2>
+        <p>Think of SpecSafe like a film crew. Each person has one job, and they coordinate to produce the final product. Here are the main characters.</p>
+
+        <div class="icon-rows stagger-children">
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-1)">R</div>
+            <div>
+              <strong>CLI Router</strong> <span style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-text-muted)">index.ts</span>
+              <p>The receptionist &mdash; hears your command, figures out who should handle it</p>
+            </div>
+          </div>
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-2)">I</div>
+            <div>
+              <strong>Initializer</strong> <span style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-text-muted)">init.ts</span>
+              <p>The set designer &mdash; creates the folders, config files, and templates for a new project</p>
+            </div>
+          </div>
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-3)">N</div>
+            <div>
+              <strong>Installer</strong> <span style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-text-muted)">install.ts</span>
+              <p>The translator &mdash; takes the master skills and converts them for your specific AI tool</p>
+            </div>
+          </div>
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-4)">A</div>
+            <div>
+              <strong>Adapters</strong> <span style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-text-muted)">adapters/*.ts</span>
+              <p>The localization team &mdash; 8 specialists, one for each AI tool's file format</p>
+            </div>
+          </div>
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-5)">D</div>
+            <div>
+              <strong>Doctor</strong> <span style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-text-muted)">doctor.ts</span>
+              <p>The inspector &mdash; checks your project is healthy and flags anything broken</p>
+            </div>
+          </div>
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-text-muted)">U</div>
+            <div>
+              <strong>Updater</strong> <span style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-text-muted)">update.ts</span>
+              <p>The maintenance crew &mdash; refreshes all tool files when the master skills change</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 2: File Tree -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Where They Live</h2>
+        <p>Here's how the project is organized on disk. Each actor lives in a specific file.</p>
+
+        <div class="file-tree">
+          <div class="ft-folder root open">
+            <span class="ft-name">specsafe/</span>
+            <span class="ft-desc">The whole project</span>
+            <div class="ft-children">
+              <div class="ft-folder open">
+                <span class="ft-name">generators/src/</span>
+                <span class="ft-desc">Where the CLI code lives</span>
+                <div class="ft-children">
+                  <div class="ft-file"><span class="ft-name">index.ts</span> <span class="ft-desc">CLI Router &mdash; parses commands</span></div>
+                  <div class="ft-file"><span class="ft-name">init.ts</span> <span class="ft-desc">Initializer &mdash; creates new projects</span></div>
+                  <div class="ft-file"><span class="ft-name">install.ts</span> <span class="ft-desc">Installer &mdash; deploys skills to tools</span></div>
+                  <div class="ft-file"><span class="ft-name">doctor.ts</span> <span class="ft-desc">Doctor &mdash; health check</span></div>
+                  <div class="ft-file"><span class="ft-name">update.ts</span> <span class="ft-desc">Updater &mdash; regenerates files</span></div>
+                  <div class="ft-file"><span class="ft-name">registry.ts</span> <span class="ft-desc">Adapter lookup table</span></div>
+                  <div class="ft-folder">
+                    <span class="ft-name">adapters/</span>
+                    <span class="ft-desc">One file per AI tool (8 total)</span>
+                  </div>
+                </div>
+              </div>
+              <div class="ft-folder">
+                <span class="ft-name">canonical/</span>
+                <span class="ft-desc">The master copy of all skills, personas, and templates</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 3: Code Translation - How commands get dispatched -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">How the Router Dispatches Commands</h2>
+        <p>When you type <code>specsafe install cursor</code>, the Router figures out you want the <code>install</code> command and sends &ldquo;cursor&rdquo; to the Installer. Here's exactly how.</p>
+
+        <div class="translation-block">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code>program
+  .<span class="code-function">command</span>(<span class="code-string">'install'</span>)
+  .<span class="code-function">description</span>(<span class="code-string">'Install SpecSafe skills for a specific AI tool'</span>)
+  .<span class="code-function">argument</span>(<span class="code-string">'&lt;tool&gt;'</span>, <span class="code-string">'Tool name (claude-code, cursor, ...)'</span>)
+  .<span class="code-function">action</span>(<span class="code-keyword">async</span> (tool: <span class="code-type">string</span>) <span class="code-operator">=&gt;</span> {
+    <span class="code-keyword">const</span> { install } = <span class="code-keyword">await</span> <span class="code-function">import</span>(<span class="code-string">'./install.js'</span>);
+    <span class="code-keyword">await</span> <span class="code-function">install</span>(tool);
+  });</code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">Register a new command called "install".</p>
+              <p class="tl">Describe what it does (this shows in the help screen).</p>
+              <p class="tl">Say it requires one argument: the tool name. The angle brackets mean it's required.</p>
+              <p class="tl">When someone runs this command, do the following&hellip;</p>
+              <p class="tl">Load the installer module on the fly (not upfront &mdash; saves startup time).</p>
+              <p class="tl">Call the install function with whatever tool name the user typed.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">&#x1F4A1;</div>
+          <div class="callout-content">
+            <strong class="callout-title">Key Insight: Lazy Loading</strong>
+            <p>The <code>await import('./install.js')</code> pattern is called <span class="term" data-definition="Dynamic import (or lazy loading) means loading code only when you actually need it, instead of loading everything upfront. Like only opening the toolbox drawer you need, instead of dumping all drawers on the floor.">dynamic import</span>. It means the install code isn't loaded until someone actually runs the install command. This makes the CLI start faster.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 4: Quiz -->
+      <section class="screen animate-in" id="quiz-m2">
+        <h2 class="screen-heading">Check Your Understanding</h2>
+
+        <div class="quiz-container">
+          <div class="quiz-question-block" data-question="m2q1" data-correct="m2q1-b">
+            <h3 class="quiz-question">You want to add a new AI tool (say, "windsurf") to SpecSafe. Which files would you need to create or change?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="m2q1-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Only index.ts (the router)</span>
+              </button>
+              <button class="quiz-option" data-value="m2q1-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>A new adapter file in adapters/ plus register it in the registry</span>
+              </button>
+              <button class="quiz-option" data-value="m2q1-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Rewrite install.ts from scratch</span>
+              </button>
+            </div>
+            <div class="quiz-feedback" id="m2q1-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block" data-question="m2q2" data-correct="m2q2-a">
+            <h3 class="quiz-question">Why does the Router use <code>await import()</code> instead of loading everything at the top of the file?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="m2q2-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>So the CLI starts faster &mdash; it only loads the code for the command you actually run</span>
+              </button>
+              <button class="quiz-option" data-value="m2q2-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Because TypeScript doesn't support regular imports</span>
+              </button>
+              <button class="quiz-option" data-value="m2q2-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>To hide the source code from users</span>
+              </button>
+            </div>
+            <div class="quiz-feedback" id="m2q2-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-m2')">Check Answers</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-m2')">Try Again</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- MODULE 3: HOW THE PIECES TALK                                -->
+<!-- ============================================================ -->
+<section class="module" id="module-3" style="background: var(--color-bg)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">03</span>
+      <h1 class="module-title">How the Pieces Talk</h1>
+      <p class="module-subtitle">Follow the data as it flows from canonical skills to your AI tool</p>
+    </header>
+
+    <div class="module-body">
+      <!-- Screen 1: The Canonical Source -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">One Master Copy, Many Translations</h2>
+        <p>Imagine a bestselling novel. The author writes one original manuscript. Then professional translators convert it into Spanish, Japanese, French, and more. The <em>story</em> is always the same &mdash; only the language changes.</p>
+        <p>SpecSafe works the same way. The <code>canonical/</code> folder is the original manuscript. <span class="term" data-definition="An adapter is a piece of code that converts data from one format to another &mdash; like a power plug adapter that lets you use a US charger in a European outlet. Same electricity, different shape.">Adapters</span> are the translators.</p>
+
+        <div class="flow-steps stagger-children">
+          <div class="flow-step-box highlight animate-in" style="min-width:120px"><strong>canonical/</strong><br><span style="font-size:var(--text-xs);color:var(--color-text-secondary)">Master skills</span></div>
+          <div class="flow-arrow animate-in">&rarr;</div>
+          <div class="flow-step-box animate-in">Claude Code<br><span style="font-size:var(--text-xs);color:var(--color-text-secondary)">.claude/skills/</span></div>
+          <div class="flow-step-box animate-in">Cursor<br><span style="font-size:var(--text-xs);color:var(--color-text-secondary)">.cursor/skills/</span></div>
+          <div class="flow-step-box animate-in">Aider<br><span style="font-size:var(--text-xs);color:var(--color-text-secondary)">CONVENTIONS.md</span></div>
+          <div class="flow-step-box animate-in">&hellip;5 more</div>
+        </div>
+      </section>
+
+      <!-- Screen 2: What a Skill Looks Like -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Anatomy of a Skill</h2>
+        <p>Each skill is a <span class="term" data-definition="Markdown is a lightweight way to format text using simple symbols. For example, **bold** and *italic*. It's the language used in README files, GitHub comments, and most developer documentation.">Markdown</span> file with a metadata header (called <span class="term" data-definition="Frontmatter is a block of metadata at the very top of a file, wrapped in triple dashes (---). It's like the label on a shipping box &mdash; it tells you what's inside without opening it.">frontmatter</span>) at the top. The metadata describes the skill; the body contains the instructions.</p>
+
+        <div class="translation-block">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code><span class="code-comment">---</span>
+<span class="code-property">name</span>: <span class="code-string">specsafe-new</span>
+<span class="code-property">description</span>: <span class="code-string">'Create a new spec with unique ID'</span>
+<span class="code-property">disable-model-invocation</span>: <span class="code-keyword">true</span>
+<span class="code-comment">---</span>
+
+<span class="code-comment"># Create New Spec</span>
+When the user runs /specsafe-new...
+1. Generate a unique SPEC ID
+2. Copy the spec template
+3. Open it for editing</code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">Start of the metadata section (three dashes).</p>
+              <p class="tl">This skill is named "specsafe-new".</p>
+              <p class="tl">A human-readable description of what it does.</p>
+              <p class="tl">The AI can't run this on its own &mdash; the user has to trigger it explicitly.</p>
+              <p class="tl">End of metadata. Everything below is the actual instruction.</p>
+              <p class="tl">&nbsp;</p>
+              <p class="tl">The step-by-step workflow the AI follows when this skill is activated.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 3: Data Flow Animation -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The Install Flow: Step by Step</h2>
+        <p>Here's exactly what happens when you run <code>specsafe install claude-code</code>. Click "Next Step" to follow the data.</p>
+
+        <div class="flow-animation" id="install-flow">
+          <div class="flow-actors">
+            <div class="flow-actor" id="flow-cli">
+              <div class="flow-actor-icon" style="background: var(--color-actor-1)">R</div>
+              <span>CLI Router</span>
+            </div>
+            <div class="flow-actor" id="flow-installer">
+              <div class="flow-actor-icon" style="background: var(--color-actor-3)">N</div>
+              <span>Installer</span>
+            </div>
+            <div class="flow-actor" id="flow-loader">
+              <div class="flow-actor-icon" style="background: var(--color-text-muted)">L</div>
+              <span>Skill Loader</span>
+            </div>
+            <div class="flow-actor" id="flow-adapter">
+              <div class="flow-actor-icon" style="background: var(--color-actor-4)">A</div>
+              <span>Adapter</span>
+            </div>
+            <div class="flow-actor" id="flow-disk">
+              <div class="flow-actor-icon" style="background: var(--color-actor-5)">D</div>
+              <span>Disk</span>
+            </div>
+          </div>
+          <div class="flow-step-label" id="install-flow-label">Click "Next Step" to begin</div>
+          <div class="flow-controls">
+            <button onclick="installFlowNext()">Next Step</button>
+            <button onclick="installFlowReset()">Restart</button>
+            <span class="flow-progress" id="install-flow-progress">Step 0 / 7</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 4: Code Translation - Frontmatter Parser -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">How Skills Get Parsed</h2>
+        <p>The Skill Loader reads each <span class="term" data-definition="SKILL.md is the file inside each skill's folder that contains both the metadata (name, description) and the workflow instructions for the AI to follow.">SKILL.md</span> file and splits it into metadata and body. Here's the parser.</p>
+
+        <div class="translation-block">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code><span class="code-keyword">export function</span> <span class="code-function">parseFrontmatter</span>(content: <span class="code-type">string</span>) {
+  <span class="code-keyword">const</span> normalized = content.<span class="code-function">replace</span>(<span class="code-string">/\r\n/g</span>, <span class="code-string">'\n'</span>);
+  <span class="code-keyword">const</span> match = normalized.<span class="code-function">match</span>(
+    <span class="code-string">/^---\n([\s\S]*?)\n---\n([\s\S]*)$/</span>
+  );
+  <span class="code-keyword">if</span> (!match) <span class="code-keyword">return</span> { frontmatter: {}, body: content };
+  <span class="code-comment">// ... parse key: value pairs from match[1]</span>
+  <span class="code-keyword">return</span> { frontmatter, body: match[<span class="code-number">2</span>] };
+}</code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">Create a function that takes text content and splits it into parts.</p>
+              <p class="tl">First, fix any Windows-style line breaks (different computers use different line endings).</p>
+              <p class="tl">Look for the pattern: <code>---</code>, then metadata, then <code>---</code>, then the rest. This <span class="term" data-definition="A regular expression (regex) is a special pattern language for finding text. Think of it like a search filter on steroids &mdash; instead of searching for an exact word, you describe the &lsquo;shape&rsquo; of what you're looking for.">regex</span> captures both sections.</p>
+              <p class="tl">If there's no frontmatter block, just return everything as the body.</p>
+              <p class="tl">Otherwise, parse each line of metadata into key-value pairs.</p>
+              <p class="tl">Return the metadata and the body separately.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 5: Quiz -->
+      <section class="screen animate-in" id="quiz-m3">
+        <h2 class="screen-heading">Check Your Understanding</h2>
+
+        <div class="quiz-container">
+          <div class="quiz-question-block" data-question="m3q1" data-correct="m3q1-b">
+            <div class="scenario-block">
+              <span class="scenario-label">Scenario</span>
+              <p>You update a skill's workflow in the <code>canonical/</code> folder to fix a bug. But your AI tool is still using the old version. What happened?</p>
+            </div>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="m3q1-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The canonical folder is broken</span>
+              </button>
+              <button class="quiz-option" data-value="m3q1-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>You need to run <code>specsafe update</code> to regenerate the tool's files from the updated canonical</span>
+              </button>
+              <button class="quiz-option" data-value="m3q1-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>You need to reinstall the AI tool itself</span>
+              </button>
+            </div>
+            <div class="quiz-feedback" id="m3q1-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block" data-question="m3q2" data-correct="m3q2-c">
+            <h3 class="quiz-question">What does the frontmatter <code>disable-model-invocation: true</code> prevent?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="m3q2-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>It prevents the skill from being installed</span>
+              </button>
+              <button class="quiz-option" data-value="m3q2-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>It disables the AI model entirely</span>
+              </button>
+              <button class="quiz-option" data-value="m3q2-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>It stops the AI from running the skill on its own &mdash; a human has to trigger it</span>
+              </button>
+            </div>
+            <div class="quiz-feedback" id="m3q2-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-m3')">Check Answers</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-m3')">Try Again</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- MODULE 4: THE ADAPTER PATTERN                                -->
+<!-- ============================================================ -->
+<section class="module" id="module-4" style="background: var(--color-bg-warm)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">04</span>
+      <h1 class="module-title">The Adapter Pattern</h1>
+      <p class="module-subtitle">How one set of skills becomes files for 8 different AI tools</p>
+    </header>
+
+    <div class="module-body">
+      <!-- Screen 1: Metaphor -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">One Plug, Every Country</h2>
+        <p>You know those universal power adapters for international travel? Your laptop charger is the same everywhere &mdash; but you need a different plug shape for each country. The electricity (the knowledge) doesn't change. Only the connector does.</p>
+        <p>That's exactly how SpecSafe's <span class="term" data-definition="The adapter pattern is a design strategy in software where you create a 'wrapper' that converts one interface into another. It lets incompatible things work together without changing either one.">adapter pattern</span> works. One <span class="term" data-definition="An interface in TypeScript is a contract that says 'any object claiming to be this type must have these specific properties and methods.' Like a job description &mdash; it defines what's required without saying how to do it.">interface</span>, eight implementations.</p>
+
+        <div class="translation-block">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code><span class="code-keyword">export interface</span> <span class="code-type">ToolAdapter</span> {
+  <span class="code-property">name</span>: <span class="code-type">string</span>;
+  <span class="code-property">displayName</span>: <span class="code-type">string</span>;
+  <span class="code-function">detect</span>(projectRoot: <span class="code-type">string</span>): <span class="code-type">Promise</span>&lt;<span class="code-type">boolean</span>&gt;;
+  <span class="code-function">generate</span>(
+    skills: <span class="code-type">CanonicalSkill</span>[],
+    canonicalDir: <span class="code-type">string</span>,
+    projectRoot?: <span class="code-type">string</span>,
+  ): <span class="code-type">Promise</span>&lt;<span class="code-type">GeneratedFile</span>[]&gt;;
+}</code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">Define a contract that every adapter must follow:</p>
+              <p class="tl">It must have an internal name (like "claude-code").</p>
+              <p class="tl">It must have a human-friendly name (like "Claude Code").</p>
+              <p class="tl">It must be able to detect if the tool is installed in a project (returns true/false).</p>
+              <p class="tl">It must be able to take master skills and produce a list of files in the tool's format.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 2: Group Chat Animation -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Watch the Adapters Coordinate</h2>
+        <p>Here's how the Installer and Adapters talk to each other when you run <code>specsafe install claude-code</code>.</p>
+
+        <div class="chat-window" id="chat-adapters">
+          <div class="chat-header">
+            <div class="chat-header-dot" style="background: var(--color-actor-1)"></div>
+            <div class="chat-header-dot" style="background: var(--color-actor-4)"></div>
+            <div class="chat-header-dot" style="background: var(--color-actor-5)"></div>
+            <span style="margin-left: var(--space-2)">#install-channel</span>
+          </div>
+          <div class="chat-messages" id="chat-adapters-messages">
+            <div class="chat-message" data-msg="0" data-sender="installer" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-3)">N</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-3)">Installer</span>
+                <p>Hey Registry, I need the adapter for "claude-code".</p>
+              </div>
+            </div>
+            <div class="chat-message" data-msg="1" data-sender="registry" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-text-muted)">R</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-text-muted)">Registry</span>
+                <p>Found it! Here's the Claude Code adapter. <code>claudeCodeAdapter</code></p>
+              </div>
+            </div>
+            <div class="chat-message" data-msg="2" data-sender="installer" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-3)">N</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-3)">Installer</span>
+                <p>Loader, give me all the canonical skills please.</p>
+              </div>
+            </div>
+            <div class="chat-message" data-msg="3" data-sender="loader" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-2)">L</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-2)">Skill Loader</span>
+                <p>Here you go &mdash; 24 skills parsed with frontmatter + body. <code>CanonicalSkill[]</code></p>
+              </div>
+            </div>
+            <div class="chat-message" data-msg="4" data-sender="installer" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-3)">N</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-3)">Installer</span>
+                <p>Claude adapter, take these 24 skills and generate your files.</p>
+              </div>
+            </div>
+            <div class="chat-message" data-msg="5" data-sender="adapter" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-4)">A</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-4)">Claude Code Adapter</span>
+                <p>Done! Created 49 files: SKILL.md for each skill in <code>.claude/skills/</code>, plus workflow.md files and a CLAUDE.md rules file.</p>
+              </div>
+            </div>
+            <div class="chat-message" data-msg="6" data-sender="installer" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-3)">N</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-3)">Installer</span>
+                <p>Writing files to disk&hellip; path security check passed. Updating specsafe.config.json to record "claude-code" as installed. All done!</p>
+              </div>
+            </div>
+          </div>
+          <div class="chat-typing" id="chat-adapters-typing" style="display:none">
+            <div class="chat-avatar" id="chat-adapters-typing-avatar" style="background: var(--color-text-muted)">?</div>
+            <div class="chat-typing-dots">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+            </div>
+          </div>
+          <div class="chat-controls">
+            <button onclick="adapterChatNext()">Next Message</button>
+            <button onclick="adapterChatAll()">Play All</button>
+            <button onclick="adapterChatReset()">Replay</button>
+            <span class="chat-progress" id="chat-adapters-progress">0 / 7 messages</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 3: Code Translation - Claude Adapter -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Inside the Claude Code Adapter</h2>
+        <p>Here's the complete Claude Code adapter &mdash; it's one of the simplest. It takes canonical skills and outputs <code>.claude/skills/</code> files.</p>
+
+        <div class="translation-block">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code><span class="code-keyword">async</span> <span class="code-function">generate</span>(skills: <span class="code-type">CanonicalSkill</span>[], canonicalDir: <span class="code-type">string</span>) {
+  <span class="code-keyword">const</span> files: <span class="code-type">GeneratedFile</span>[] = [];
+
+  <span class="code-keyword">for</span> (<span class="code-keyword">const</span> skill <span class="code-keyword">of</span> skills) {
+    files.<span class="code-function">push</span>({
+      <span class="code-property">path</span>: <span class="code-string">`.claude/skills/${skill.directory}/SKILL.md`</span>,
+      <span class="code-property">content</span>: <span class="code-function">reconstructSkillMd</span>(skill),
+    });
+  }
+
+  <span class="code-keyword">return</span> files;
+}</code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">This function takes the master skills and the path to canonical files.</p>
+              <p class="tl">Start with an empty list of files to create.</p>
+              <p class="tl">&nbsp;</p>
+              <p class="tl">For each skill in the master list&hellip;</p>
+              <p class="tl">Add a file to the list. The path goes into <code>.claude/skills/</code> with the skill's folder name.</p>
+              <p class="tl">The content is the reconstructed SKILL.md (frontmatter + body reassembled).</p>
+              <p class="tl">&nbsp;</p>
+              <p class="tl">&nbsp;</p>
+              <p class="tl">Return the complete list of files for the Installer to write to disk.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 4: Adapter Comparison Cards -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Eight Adapters, Eight Formats</h2>
+        <p>Each adapter speaks its tool's language. Here's what they each produce.</p>
+
+        <div class="pattern-cards stagger-children">
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-actor-1)">C</div>
+            <h4 class="pattern-title">Claude Code</h4>
+            <p class="pattern-desc">Skills in <code>.claude/skills/</code> + a <code>CLAUDE.md</code> rules file.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-actor-2)">Cu</div>
+            <h4 class="pattern-title">Cursor</h4>
+            <p class="pattern-desc">Skills + a <code>.cursor/rules/specsafe.mdc</code> config file.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">G</div>
+            <h4 class="pattern-title">Gemini</h4>
+            <p class="pattern-desc">Skills + <span class="term" data-definition="TOML is a configuration file format that's designed to be easy for humans to read. It uses simple key = value pairs organized into sections.">TOML</span> command definitions.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-4)">
+            <div class="pattern-icon" style="background: var(--color-actor-4)">A</div>
+            <h4 class="pattern-title">Aider</h4>
+            <p class="pattern-desc">A <code>.aider.conf.yml</code> config + a <code>CONVENTIONS.md</code> guide.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-5)">
+            <div class="pattern-icon" style="background: var(--color-actor-5)">Z</div>
+            <h4 class="pattern-title">Zed</h4>
+            <p class="pattern-desc">A <code>.zed/settings.json</code> with embedded conventions.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-text-muted)">
+            <div class="pattern-icon" style="background: var(--color-text-muted)">Co</div>
+            <h4 class="pattern-title">Continue</h4>
+            <p class="pattern-desc">Prompt templates in <code>.continue/prompts/</code> + a <span class="term" data-definition="YAML is a data format that uses indentation to show structure, like an outline. It's popular for configuration files because it's easy to read.">YAML</span> agent config.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 5: Quiz -->
+      <section class="screen animate-in" id="quiz-m4">
+        <h2 class="screen-heading">Check Your Understanding</h2>
+
+        <div class="quiz-container">
+          <div class="quiz-question-block" data-question="m4q1" data-correct="m4q1-c">
+            <div class="scenario-block">
+              <span class="scenario-label">Scenario</span>
+              <p>You're building a new AI coding tool called "WindCode". You want it to work with SpecSafe. What contract must your adapter satisfy?</p>
+            </div>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="m4q1-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>It must generate exactly the same files as Claude Code</span>
+              </button>
+              <button class="quiz-option" data-value="m4q1-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>It must modify the canonical skills</span>
+              </button>
+              <button class="quiz-option" data-value="m4q1-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>It must implement the ToolAdapter interface: name, displayName, detect(), and generate()</span>
+              </button>
+            </div>
+            <div class="quiz-feedback" id="m4q1-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-m4')">Check Answers</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-m4')">Try Again</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- MODULE 5: SAFETY NETS                                        -->
+<!-- ============================================================ -->
+<section class="module" id="module-5" style="background: var(--color-bg)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">05</span>
+      <h1 class="module-title">Safety Nets</h1>
+      <p class="module-subtitle">How SpecSafe protects your project with security checks and health diagnostics</p>
+    </header>
+
+    <div class="module-body">
+      <!-- Screen 1: Path Security -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The Bouncer: Path Security</h2>
+        <p>Imagine a nightclub bouncer who checks IDs at the door. No valid ID, no entry. SpecSafe's Installer has a similar guard &mdash; before writing any file, it checks that the file path doesn't escape your project folder.</p>
+        <p>This prevents a malicious or buggy skill from writing files to <code>/etc/</code> or your home directory. It's called <span class="term" data-definition="Path traversal is a security attack where a file path tricks a program into accessing files outside the intended directory &mdash; like using '../../../' to climb up folder levels. SpecSafe blocks this.">path traversal</span> protection.</p>
+
+        <div class="translation-block">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code><span class="code-keyword">const</span> resolvedCwd = <span class="code-function">resolve</span>(cwd);
+<span class="code-keyword">for</span> (<span class="code-keyword">const</span> file <span class="code-keyword">of</span> files) {
+  <span class="code-keyword">const</span> fullPath = <span class="code-function">resolve</span>(cwd, file.path);
+  <span class="code-keyword">if</span> (!fullPath.<span class="code-function">startsWith</span>(<span class="code-string">`${resolvedCwd}/`</span>)) {
+    console.<span class="code-function">error</span>(
+      <span class="code-string">`Security error: path escapes project`</span>
+    );
+    <span class="code-keyword">continue</span>;
+  }
+  <span class="code-comment">// Safe to write the file</span>
+}</code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">Get the full, absolute path to the current project folder.</p>
+              <p class="tl">For each file the adapter wants to create&hellip;</p>
+              <p class="tl">Calculate where this file would actually end up on disk.</p>
+              <p class="tl">Does this path start with the project folder? If NOT&hellip;</p>
+              <p class="tl">Print a security warning and refuse to write the file.</p>
+              <p class="tl">Skip this file entirely and move to the next one.</p>
+              <p class="tl">&nbsp;</p>
+              <p class="tl">Only if the path is inside the project do we write it.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 2: The Doctor -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The Pre-Flight Checklist: Doctor</h2>
+        <p>Pilots run a checklist before every takeoff &mdash; engines, fuel, instruments. The <code>specsafe doctor</code> command does the same for your project. It checks everything and gives you a clear status report.</p>
+
+        <div class="step-cards stagger-children">
+          <div class="step-card animate-in">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <strong>Config file exists?</strong>
+              <p>Checks that <code>specsafe.config.json</code> is present and has all required keys</p>
+            </div>
+          </div>
+          <div class="step-card animate-in">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <strong>Project state exists?</strong>
+              <p>Verifies <code>PROJECT_STATE.md</code> is present (the spec tracking dashboard)</p>
+            </div>
+          </div>
+          <div class="step-card animate-in">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <strong>Directory structure intact?</strong>
+              <p>Confirms <code>specs/active/</code>, <code>specs/completed/</code>, and <code>specs/archive/</code> all exist</p>
+            </div>
+          </div>
+          <div class="step-card animate-in">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <strong>Installed tools detected?</strong>
+              <p>For each tool in your config, checks that the tool's files are actually present</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 3: Auto-Detection -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Smart Detection: Finding Your Tools</h2>
+        <p>During <code>specsafe init</code>, the Initializer scans your project for known AI tools. It looks for specific marker files &mdash; like checking for a doorbell to know if someone lives there.</p>
+
+        <div class="translation-block">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code><span class="code-keyword">const</span> <span class="code-property">TOOL_DETECT_MAP</span>: Record&lt;<span class="code-type">string</span>, <span class="code-type">string</span>&gt; = {
+  <span class="code-string">'claude-code'</span>: <span class="code-string">'.claude/'</span>,
+  <span class="code-string">'cursor'</span>:      <span class="code-string">'.cursor/'</span>,
+  <span class="code-string">'opencode'</span>:    <span class="code-string">'.opencode/'</span>,
+  <span class="code-string">'gemini'</span>:      <span class="code-string">'.gemini/'</span>,
+  <span class="code-string">'zed'</span>:         <span class="code-string">'.zed/'</span>,
+  <span class="code-string">'aider'</span>:       <span class="code-string">'.aider.conf.yml'</span>,
+};</code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">Create a lookup table that maps each tool name to its "marker" &mdash; a file or folder that proves the tool is installed.</p>
+              <p class="tl">If there's a <code>.claude/</code> folder, Claude Code is present.</p>
+              <p class="tl">If there's a <code>.cursor/</code> folder, Cursor is present.</p>
+              <p class="tl">If there's a <code>.opencode/</code> folder, OpenCode is present.</p>
+              <p class="tl">And so on for each supported tool.</p>
+              <p class="tl">&nbsp;</p>
+              <p class="tl">Aider uses a config file instead of a folder.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent">
+          <div class="callout-icon">&#x1F4A1;</div>
+          <div class="callout-content">
+            <strong class="callout-title">Key Insight: Convention Over Configuration</strong>
+            <p>Instead of asking you to manually list your tools, SpecSafe uses file-system conventions to auto-detect them. This is a common pattern in software &mdash; smart defaults that reduce the number of questions you have to answer.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 4: Quiz -->
+      <section class="screen animate-in" id="quiz-m5">
+        <h2 class="screen-heading">Check Your Understanding</h2>
+
+        <div class="quiz-container">
+          <div class="quiz-question-block" data-question="m5q1" data-correct="m5q1-b">
+            <div class="scenario-block">
+              <span class="scenario-label">Scenario</span>
+              <p>A user reports: "I ran <code>specsafe doctor</code> and got a WARNING for <code>tool: cursor</code> with the message 'Tool files not detected'." What's likely wrong?</p>
+            </div>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="m5q1-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>SpecSafe is outdated and needs an update</span>
+              </button>
+              <button class="quiz-option" data-value="m5q1-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The Cursor tool is listed in their config but the <code>.cursor/</code> folder was deleted or never created</span>
+              </button>
+              <button class="quiz-option" data-value="m5q1-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The Doctor command has a bug</span>
+              </button>
+            </div>
+            <div class="quiz-feedback" id="m5q1-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block" data-question="m5q2" data-correct="m5q2-a">
+            <h3 class="quiz-question">Why does the path security check use <code>startsWith</code> instead of checking for <code>../</code> in the path?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="m5q2-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Because <code>resolve()</code> converts <em>any</em> path to its absolute form first, catching all escape tricks &mdash; not just <code>../</code></span>
+              </button>
+              <button class="quiz-option" data-value="m5q2-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Because <code>../</code> is valid in some operating systems</span>
+              </button>
+              <button class="quiz-option" data-value="m5q2-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Because <code>startsWith</code> is faster than a regex</span>
+              </button>
+            </div>
+            <div class="quiz-feedback" id="m5q2-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-m5')">Check Answers</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-m5')">Try Again</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- MODULE 6: THE BIG PICTURE                                    -->
+<!-- ============================================================ -->
+<section class="module" id="module-6" style="background: var(--color-bg-warm)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">06</span>
+      <h1 class="module-title">The Big Picture</h1>
+      <p class="module-subtitle">See the full architecture and understand why it's built this way</p>
+    </header>
+
+    <div class="module-body">
+      <!-- Screen 1: Architecture Diagram -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The Full Map</h2>
+        <p>You've met every character. Now let's zoom out and see how they all connect. Click any component to learn more.</p>
+
+        <div class="arch-diagram" id="arch-diagram">
+          <div class="arch-zones">
+            <div class="arch-zone" style="border-color: var(--color-actor-1)">
+              <div class="arch-zone-label">CLI Layer</div>
+              <div class="arch-components">
+                <div class="arch-component" onclick="showArchDesc(this)" data-desc="The entry point. Parses your terminal command (init, install, update, doctor) and routes it to the right handler. Uses Commander.js for argument parsing.">
+                  <div class="arch-dot" style="background: var(--color-actor-1)"></div>
+                  <span>CLI Router</span>
+                </div>
+                <div class="arch-component" onclick="showArchDesc(this)" data-desc="Looks up adapters by name. A thin lookup layer that maps tool names to their adapter implementations.">
+                  <div class="arch-dot" style="background: var(--color-text-muted)"></div>
+                  <span>Registry</span>
+                </div>
+              </div>
+            </div>
+            <div class="arch-zone" style="border-color: var(--color-actor-3)">
+              <div class="arch-zone-label">Core Logic</div>
+              <div class="arch-components">
+                <div class="arch-component" onclick="showArchDesc(this)" data-desc="Creates project scaffolding: directories, config file, state file, and templates. Auto-detects installed AI tools. Supports both interactive (prompts) and non-interactive (scripted) mode.">
+                  <div class="arch-dot" style="background: var(--color-actor-2)"></div>
+                  <span>Initializer</span>
+                </div>
+                <div class="arch-component" onclick="showArchDesc(this)" data-desc="Orchestrates the install flow: validates tool name, loads skills, calls the adapter, writes files with security checks, and updates config.">
+                  <div class="arch-dot" style="background: var(--color-actor-3)"></div>
+                  <span>Installer</span>
+                </div>
+                <div class="arch-component" onclick="showArchDesc(this)" data-desc="Runs a health check across your project: config integrity, directory structure, and tool file presence. Produces a formatted report with OK/WARN/ERROR status.">
+                  <div class="arch-dot" style="background: var(--color-actor-5)"></div>
+                  <span>Doctor</span>
+                </div>
+                <div class="arch-component" onclick="showArchDesc(this)" data-desc="Reads specsafe.config.json, finds all installed tools, and re-runs the installer for each one. Lets you refresh all tool files after canonical skills change.">
+                  <div class="arch-dot" style="background: var(--color-text-muted)"></div>
+                  <span>Updater</span>
+                </div>
+              </div>
+            </div>
+            <div class="arch-zone" style="border-color: var(--color-actor-4)">
+              <div class="arch-zone-label">Adapter Layer</div>
+              <div class="arch-components">
+                <div class="arch-component" onclick="showArchDesc(this)" data-desc="Reads SKILL.md files from canonical/, parses YAML frontmatter, extracts body content, and loads optional workflow.md files. The bridge between canonical files and in-memory skill objects.">
+                  <div class="arch-dot" style="background: var(--color-actor-2)"></div>
+                  <span>Skill Loader</span>
+                </div>
+                <div class="arch-component" onclick="showArchDesc(this)" data-desc="8 adapters (Claude Code, Cursor, OpenCode, Gemini, Antigravity, Continue, Aider, Zed), each implementing the ToolAdapter interface. Each transforms canonical skills into its tool's specific file format.">
+                  <div class="arch-dot" style="background: var(--color-actor-4)"></div>
+                  <span>8 Tool Adapters</span>
+                </div>
+              </div>
+            </div>
+            <div class="arch-zone" style="border-color: var(--color-actor-5)">
+              <div class="arch-zone-label">Data Layer</div>
+              <div class="arch-components">
+                <div class="arch-component" onclick="showArchDesc(this)" data-desc="The single source of truth: 24 skill definitions (SKILL.md + workflow.md), 8 personas, tool-specific rule files, and project templates. Never modified by adapters &mdash; only read.">
+                  <div class="arch-dot" style="background: var(--color-actor-1)"></div>
+                  <span>canonical/</span>
+                </div>
+                <div class="arch-component" onclick="showArchDesc(this)" data-desc="Records your project name, installed tools, test framework, and SpecSafe version. Updated by init and install. Read by doctor and update.">
+                  <div class="arch-dot" style="background: var(--color-actor-4)"></div>
+                  <span>specsafe.config.json</span>
+                </div>
+                <div class="arch-component" onclick="showArchDesc(this)" data-desc="A Markdown dashboard tracking all active specs (with their stage), completed specs, archived specs, and project metrics like completion rate.">
+                  <div class="arch-dot" style="background: var(--color-actor-5)"></div>
+                  <span>PROJECT_STATE.md</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="arch-description" id="arch-desc">Click any component to learn what it does</div>
+        </div>
+      </section>
+
+      <!-- Screen 2: Design Principles -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Why It's Built This Way</h2>
+        <p>Every architectural decision in SpecSafe exists to solve a real problem. Here are the core <span class="term" data-definition="Design principles are the fundamental rules or values that guide how software is built. They're like a building code for software &mdash; they prevent bad patterns before they start.">design principles</span>.</p>
+
+        <div class="pattern-cards stagger-children">
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-actor-1)">1</div>
+            <h4 class="pattern-title">Single Source of Truth</h4>
+            <p class="pattern-desc"><code>canonical/</code> is authoritative. Adapters read from it but never write to it. This prevents skills from drifting apart across tools.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-actor-2)">2</div>
+            <h4 class="pattern-title">Open for Extension</h4>
+            <p class="pattern-desc">Adding a new tool means creating one adapter file. No other code needs to change &mdash; the interface and registry handle the rest.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">3</div>
+            <h4 class="pattern-title">Stage Gating</h4>
+            <p class="pattern-desc">Specs must flow SPEC &rarr; TEST &rarr; CODE &rarr; QA &rarr; COMPLETE. No skipping. This prevents the "just ship it" impulse that causes bugs.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-4)">
+            <div class="pattern-icon" style="background: var(--color-actor-4)">4</div>
+            <h4 class="pattern-title">Evidence Over Assertions</h4>
+            <p class="pattern-desc">The QA stage requires test evidence, not just "it works trust me." Every requirement must have a passing test to prove it.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 3: What You Can Do Now -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">What You Can Do Now</h2>
+        <p>After this course, you have the vocabulary and mental model to:</p>
+
+        <div class="step-cards stagger-children">
+          <div class="step-card animate-in" style="border-left-color: var(--color-success)">
+            <div class="step-num" style="background: var(--color-success)">&#x2713;</div>
+            <div class="step-body">
+              <strong>Steer AI better</strong>
+              <p>You know the two-phase workflow, so you can tell AI "we're in the SPEC stage, don't write code yet"</p>
+            </div>
+          </div>
+          <div class="step-card animate-in" style="border-left-color: var(--color-success)">
+            <div class="step-num" style="background: var(--color-success)">&#x2713;</div>
+            <div class="step-body">
+              <strong>Debug confidently</strong>
+              <p>If skills aren't updating, you know to run <code>specsafe update</code>. If files are missing, run <code>specsafe doctor</code></p>
+            </div>
+          </div>
+          <div class="step-card animate-in" style="border-left-color: var(--color-success)">
+            <div class="step-num" style="background: var(--color-success)">&#x2713;</div>
+            <div class="step-body">
+              <strong>Extend the system</strong>
+              <p>You understand the adapter pattern, so you could ask AI to "add a new adapter for WindCode that implements ToolAdapter"</p>
+            </div>
+          </div>
+          <div class="step-card animate-in" style="border-left-color: var(--color-success)">
+            <div class="step-num" style="background: var(--color-success)">&#x2713;</div>
+            <div class="step-body">
+              <strong>Speak the language</strong>
+              <p>Frontmatter, adapters, canonical source, path traversal, lazy loading &mdash; you own these terms now</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-info" style="margin-top: var(--space-8)">
+          <div class="callout-icon">&#x1F3C1;</div>
+          <div class="callout-content">
+            <strong class="callout-title">Course Complete!</strong>
+            <p>You've traced the full journey from <code>specsafe init</code> to generated skill files, met every actor, and understood the architectural decisions that make it all work. Go build something.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 4: Final Quiz -->
+      <section class="screen animate-in" id="quiz-m6">
+        <h2 class="screen-heading">Final Challenge</h2>
+
+        <div class="quiz-container">
+          <div class="quiz-question-block" data-question="m6q1" data-correct="m6q1-b">
+            <div class="scenario-block">
+              <span class="scenario-label">Scenario</span>
+              <p>Your team wants to add a new planning step called "Security Review" between Architecture and Readiness. Where would you make this change?</p>
+            </div>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="m6q1-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>In the CLI router (index.ts)</span>
+              </button>
+              <button class="quiz-option" data-value="m6q1-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>In the canonical skills (canonical/skills/) &mdash; then run <code>specsafe update</code> to push it to all tools</span>
+              </button>
+              <button class="quiz-option" data-value="m6q1-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>In each tool's adapter file individually</span>
+              </button>
+            </div>
+            <div class="quiz-feedback" id="m6q1-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block" data-question="m6q2" data-correct="m6q2-b">
+            <div class="scenario-block">
+              <span class="scenario-label">Scenario</span>
+              <p>You discover that a colleague's SpecSafe project has specs jumping straight from SPEC to CODE, skipping the TEST stage. What principle is being violated, and why does it matter?</p>
+            </div>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="m6q2-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Single Source of Truth &mdash; they should be using canonical skills</span>
+              </button>
+              <button class="quiz-option" data-value="m6q2-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Stage Gating &mdash; without tests first, there's no way to prove the code actually works correctly</span>
+              </button>
+              <button class="quiz-option" data-value="m6q2-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Open for Extension &mdash; they need a new adapter</span>
+              </button>
+            </div>
+            <div class="quiz-feedback" id="m6q2-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-m6')">Check Answers</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-m6')">Try Again</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+(function() {
+  'use strict';
+
+  // ===== SCROLL ANIMATIONS (IntersectionObserver) =====
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { rootMargin: '0px 0px -10% 0px', threshold: 0.1 });
+  document.querySelectorAll('.animate-in').forEach(el => observer.observe(el));
+
+  // Stagger children
+  document.querySelectorAll('.stagger-children').forEach(parent => {
+    Array.from(parent.children).forEach((child, i) => {
+      child.style.setProperty('--stagger-index', i);
+    });
+  });
+
+  // ===== PROGRESS BAR =====
+  const progressBar = document.getElementById('progress-bar');
+  function updateProgressBar() {
+    const scrollTop = window.scrollY;
+    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+    progressBar.style.width = progress + '%';
+  }
+  window.addEventListener('scroll', () => requestAnimationFrame(updateProgressBar), { passive: true });
+
+  // ===== NAV DOTS =====
+  const navDots = document.querySelectorAll('.nav-dot');
+  const modules = document.querySelectorAll('.module, .hero-module');
+  const visited = new Set();
+
+  navDots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      const target = document.getElementById(dot.dataset.target);
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  const moduleObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        visited.add(id);
+        navDots.forEach(dot => {
+          dot.classList.remove('current');
+          if (dot.dataset.target === id) dot.classList.add('current');
+          if (visited.has(dot.dataset.target) && dot.dataset.target !== id) {
+            dot.classList.add('visited');
+          }
+        });
+      }
+    });
+  }, { rootMargin: '-30% 0px -30% 0px', threshold: 0 });
+  modules.forEach(m => moduleObserver.observe(m));
+
+  // ===== KEYBOARD NAVIGATION =====
+  const moduleIds = Array.from(modules).map(m => m.id);
+  document.addEventListener('keydown', (e) => {
+    if (['INPUT', 'TEXTAREA', 'BUTTON'].includes(e.target.tagName)) return;
+    let currentIdx = 0;
+    const scrollY = window.scrollY + window.innerHeight / 2;
+    modules.forEach((m, i) => { if (m.offsetTop < scrollY) currentIdx = i; });
+    if ((e.key === 'ArrowDown' || e.key === 'ArrowRight') && currentIdx < modules.length - 1) {
+      modules[currentIdx + 1].scrollIntoView({ behavior: 'smooth' });
+      e.preventDefault();
+    }
+    if ((e.key === 'ArrowUp' || e.key === 'ArrowLeft') && currentIdx > 0) {
+      modules[currentIdx - 1].scrollIntoView({ behavior: 'smooth' });
+      e.preventDefault();
+    }
+  });
+
+  // ===== QUIZ SYSTEM =====
+  const quizExplanations = {
+    'm1q1-a': "Jumping straight to code is exactly what SpecSafe prevents. Without planning, you'll get vague requirements and missed edge cases.",
+    'm1q1-b': "The planning phase ensures you've thought through requirements, UX, and architecture before a single line of code exists.",
+    'm1q1-c': "Writing tests is part of Phase 2, but you still need to plan first. Tests without a spec are shots in the dark.",
+    'm1q2-a': "Pricing is about the AI provider, not the tool format. SpecSafe adapts to file formats, not billing.",
+    'm1q2-b': "SpecSafe doesn't judge tool capability &mdash; it adapts to how each tool reads instructions.",
+    'm1q2-c': "Exactly! Claude Code reads .claude/skills/ files, Cursor reads .cursor/ files, Aider reads CONVENTIONS.md. Same knowledge, different packaging.",
+    'm2q1-a': "The router doesn't need to change &mdash; it already handles 'install <tool>' generically.",
+    'm2q1-b': "The adapter pattern means new tools = new adapter file + registry entry. The rest of the system stays untouched.",
+    'm2q1-c': "install.ts is generic &mdash; it works with any adapter. You'd never need to rewrite it.",
+    'm2q2-a': "Dynamic imports (lazy loading) mean only the code for your specific command gets loaded. Faster startup.",
+    'm2q2-b': "TypeScript supports both regular and dynamic imports just fine.",
+    'm2q2-c': "Dynamic imports are about performance, not security.",
+    'm3q1-a': "If you successfully updated canonical, it's working fine. The issue is downstream.",
+    'm3q1-b': "Canonical is the source of truth, but adapters only regenerate when you explicitly run update. The tool files are snapshots.",
+    'm3q1-c': "The AI tool reads the generated files, not canonical directly. You just need to regenerate.",
+    'm3q2-a': "This flag controls invocation behavior, not installation.",
+    'm3q2-b': "It doesn't disable the AI &mdash; it just prevents autonomous activation of this specific skill.",
+    'm3q2-c': "This is a safety guardrail. Some skills (like creating specs) should only run when a human explicitly triggers them, not when the AI decides to.",
+    'm4q1-a': "Each tool generates files in its own format. Claude Code uses .claude/skills/, but WindCode would use its own format.",
+    'm4q1-b': "Adapters only read from canonical, never modify it. That's the Single Source of Truth principle.",
+    'm4q1-c': "The ToolAdapter interface is the contract. Implement those 4 things and SpecSafe can work with any tool.",
+    'm5q1-a': "The warning is specific to tool detection, not SpecSafe version.",
+    'm5q1-b': "Doctor checks if tools listed in config actually have their marker files present. Config says cursor, but .cursor/ folder is missing.",
+    'm5q1-c': "This is expected Doctor behavior &mdash; it's doing exactly what it should: flagging the mismatch.",
+    'm5q2-a': "resolve() normalizes any path tricks (symlinks, .., encoded characters) into a clean absolute path. Then startsWith catches everything.",
+    'm5q2-b': "../ is invalid on no operating systems as a path component &mdash; it's about security, not compatibility.",
+    'm5q2-c': "Performance isn't the reason. The key insight is that resolve() handles all the edge cases that string matching for ../ would miss.",
+    'm6q1-a': "The CLI router just dispatches commands. Workflow steps live in the skill definitions.",
+    'm6q1-b': "Single source of truth: change canonical once, then update pushes it everywhere. No need to touch 8 adapter files.",
+    'm6q1-c': "This would violate the Single Source of Truth principle and create drift between tools.",
+    'm6q2-a': "Single Source of Truth is about where skills are defined, not about stage ordering.",
+    'm6q2-b': "Stage gating exists for a reason: tests are the executable proof that code works. Without them, you're relying on 'it looks right' which is how bugs ship.",
+    'm6q2-c': "Open for Extension is about adding new tools, not about workflow stages.",
+  };
+
+  window.selectOption = function(btn) {
+    const block = btn.closest('.quiz-question-block');
+    block.querySelectorAll('.quiz-option').forEach(o => o.classList.remove('selected'));
+    btn.classList.add('selected');
+  };
+
+  window.checkQuiz = function(sectionId) {
+    const container = document.querySelector('#' + sectionId + ' .quiz-container');
+    const questions = container.querySelectorAll('.quiz-question-block');
+    questions.forEach(q => {
+      const selected = q.querySelector('.quiz-option.selected');
+      const feedback = q.querySelector('.quiz-feedback');
+      const correctValue = q.dataset.correct;
+      if (!selected) {
+        feedback.textContent = 'Pick an answer first!';
+        feedback.className = 'quiz-feedback show warning';
+        return;
+      }
+      const selectedValue = selected.dataset.value;
+      if (selectedValue === correctValue) {
+        selected.classList.add('correct');
+        feedback.innerHTML = '<strong>Exactly!</strong> ' + (quizExplanations[selectedValue] || '');
+        feedback.className = 'quiz-feedback show success';
+      } else {
+        selected.classList.add('incorrect');
+        q.querySelector('[data-value="' + correctValue + '"]').classList.add('correct');
+        feedback.innerHTML = '<strong>Not quite.</strong> ' + (quizExplanations[selectedValue] || '');
+        feedback.className = 'quiz-feedback show error';
+      }
+      q.querySelectorAll('.quiz-option').forEach(o => { o.disabled = true; o.style.pointerEvents = 'none'; });
+    });
+  };
+
+  window.resetQuiz = function(sectionId) {
+    const container = document.querySelector('#' + sectionId + ' .quiz-container');
+    container.querySelectorAll('.quiz-option').forEach(o => {
+      o.classList.remove('selected', 'correct', 'incorrect');
+      o.disabled = false;
+      o.style.pointerEvents = '';
+    });
+    container.querySelectorAll('.quiz-feedback').forEach(f => {
+      f.className = 'quiz-feedback';
+      f.innerHTML = '';
+    });
+  };
+
+  // ===== INSTALL FLOW ANIMATION =====
+  const installFlowSteps = [
+    { highlight: 'flow-cli', label: 'You type "specsafe install claude-code". The CLI Router receives the command and identifies "install" + "claude-code".' },
+    { highlight: 'flow-installer', label: 'Router dynamically imports install.ts and calls install("claude-code"). The Installer wakes up.' },
+    { highlight: 'flow-installer', label: 'Installer validates "claude-code" is a known tool name by checking the TOOL_NAMES list.' },
+    { highlight: 'flow-loader', label: 'Installer calls loadCanonicalSkills(). The Skill Loader reads every SKILL.md from canonical/skills/, parses frontmatter, and returns 24 skill objects.' },
+    { highlight: 'flow-adapter', label: 'Installer gets the Claude Code adapter from the Registry, then calls adapter.generate(skills). The adapter creates .claude/skills/ files for each skill.' },
+    { highlight: 'flow-disk', label: 'Installer receives the generated files. For each one, it runs the path security check, then writes the file to disk.' },
+    { highlight: 'flow-disk', label: 'Finally, Installer updates specsafe.config.json to record "claude-code" as an installed tool. Done!' },
+  ];
+  let installFlowStep = 0;
+  window.installFlowNext = function() {
+    if (installFlowStep >= installFlowSteps.length) return;
+    const step = installFlowSteps[installFlowStep];
+    document.querySelectorAll('#install-flow .flow-actor').forEach(a => a.classList.remove('active'));
+    document.getElementById(step.highlight).classList.add('active');
+    document.getElementById('install-flow-label').textContent = step.label;
+    installFlowStep++;
+    document.getElementById('install-flow-progress').textContent = 'Step ' + installFlowStep + ' / ' + installFlowSteps.length;
+  };
+  window.installFlowReset = function() {
+    installFlowStep = 0;
+    document.querySelectorAll('#install-flow .flow-actor').forEach(a => a.classList.remove('active'));
+    document.getElementById('install-flow-label').textContent = 'Click "Next Step" to begin';
+    document.getElementById('install-flow-progress').textContent = 'Step 0 / ' + installFlowSteps.length;
+  };
+
+  // ===== GROUP CHAT ANIMATION =====
+  const chatActors = {
+    'installer': { initials: 'N', color: 'var(--color-actor-3)' },
+    'registry':  { initials: 'R', color: 'var(--color-text-muted)' },
+    'loader':    { initials: 'L', color: 'var(--color-actor-2)' },
+    'adapter':   { initials: 'A', color: 'var(--color-actor-4)' },
+  };
+  let adapterChatIndex = 0;
+  const adapterChatMsgs = document.querySelectorAll('#chat-adapters-messages .chat-message');
+
+  window.adapterChatNext = function() {
+    if (adapterChatIndex >= adapterChatMsgs.length) return;
+    const msg = adapterChatMsgs[adapterChatIndex];
+    const sender = msg.dataset.sender;
+    const typing = document.getElementById('chat-adapters-typing');
+    const avatar = document.getElementById('chat-adapters-typing-avatar');
+    const actor = chatActors[sender];
+    if (actor) {
+      avatar.textContent = actor.initials;
+      avatar.style.background = actor.color;
+    }
+    typing.style.display = 'flex';
+    setTimeout(() => {
+      typing.style.display = 'none';
+      msg.style.display = 'flex';
+      msg.style.animation = 'fadeSlideUp 0.3s var(--ease-out)';
+      adapterChatIndex++;
+      document.getElementById('chat-adapters-progress').textContent = adapterChatIndex + ' / ' + adapterChatMsgs.length + ' messages';
+      // Scroll chat to bottom
+      const container = document.getElementById('chat-adapters-messages');
+      container.scrollTop = container.scrollHeight;
+    }, 800);
+  };
+
+  window.adapterChatAll = function() {
+    const interval = setInterval(() => {
+      if (adapterChatIndex >= adapterChatMsgs.length) { clearInterval(interval); return; }
+      adapterChatNext();
+    }, 1200);
+  };
+
+  window.adapterChatReset = function() {
+    adapterChatIndex = 0;
+    adapterChatMsgs.forEach(m => { m.style.display = 'none'; m.style.animation = ''; });
+    document.getElementById('chat-adapters-typing').style.display = 'none';
+    document.getElementById('chat-adapters-progress').textContent = '0 / ' + adapterChatMsgs.length + ' messages';
+  };
+
+  // ===== ARCHITECTURE DIAGRAM =====
+  window.showArchDesc = function(el) {
+    const desc = document.getElementById('arch-desc');
+    desc.textContent = el.dataset.desc;
+    desc.style.textAlign = 'left';
+    desc.style.background = 'var(--color-accent-light)';
+    // Highlight clicked component
+    document.querySelectorAll('.arch-component').forEach(c => c.style.borderColor = '');
+    el.style.borderColor = 'var(--color-accent)';
+  };
+
+  // ===== GLOSSARY TOOLTIPS =====
+  let activeTooltip = null;
+
+  function positionTooltip(term, tip) {
+    const rect = term.getBoundingClientRect();
+    const tipWidth = Math.min(320, window.innerWidth * 0.8);
+    tip.style.width = tipWidth + 'px';
+    let left = rect.left + rect.width / 2 - tipWidth / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - tipWidth - 8));
+    tip.style.left = left + 'px';
+
+    document.body.appendChild(tip);
+    const tipHeight = tip.offsetHeight;
+    if (rect.top - tipHeight - 8 < 0) {
+      tip.style.top = (rect.bottom + 8) + 'px';
+      tip.classList.add('flip');
+    } else {
+      tip.style.top = (rect.top - tipHeight - 8) + 'px';
+      tip.classList.remove('flip');
+    }
+  }
+
+  document.querySelectorAll('.term').forEach(term => {
+    const tip = document.createElement('span');
+    tip.className = 'term-tooltip';
+    tip.textContent = term.dataset.definition;
+
+    term.addEventListener('mouseenter', () => {
+      if (activeTooltip && activeTooltip !== tip) {
+        activeTooltip.classList.remove('visible');
+        if (activeTooltip.parentNode) activeTooltip.remove();
+      }
+      positionTooltip(term, tip);
+      requestAnimationFrame(() => tip.classList.add('visible'));
+      activeTooltip = tip;
+    });
+
+    term.addEventListener('mouseleave', () => {
+      tip.classList.remove('visible');
+      setTimeout(() => { if (!tip.classList.contains('visible') && tip.parentNode) tip.remove(); }, 150);
+      activeTooltip = null;
+    });
+
+    term.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (activeTooltip && activeTooltip !== tip) {
+        activeTooltip.classList.remove('visible');
+        if (activeTooltip.parentNode) activeTooltip.remove();
+      }
+      if (tip.classList.contains('visible')) {
+        tip.classList.remove('visible');
+        if (tip.parentNode) tip.remove();
+        activeTooltip = null;
+      } else {
+        positionTooltip(term, tip);
+        requestAnimationFrame(() => tip.classList.add('visible'));
+        activeTooltip = tip;
+      }
+    });
+  });
+
+  document.addEventListener('click', () => {
+    if (activeTooltip) {
+      activeTooltip.classList.remove('visible');
+      if (activeTooltip.parentNode) activeTooltip.remove();
+      activeTooltip = null;
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
