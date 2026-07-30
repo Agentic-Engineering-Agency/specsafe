@@ -18,3 +18,4 @@ coverage/
 
 # Environment files
 .env*
+/.omp/skills
