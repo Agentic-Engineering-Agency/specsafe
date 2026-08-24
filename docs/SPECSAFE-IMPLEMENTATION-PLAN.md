@@ -25,6 +25,16 @@ Depends on: All design docs in `specsafe/docs/`
 | Readiness design | `docs/SPECSAFE-READINESS-DESIGN.md` | New skill spec |
 | Party mode design | `docs/SPECSAFE-PARTY-MODE-DESIGN.md` | New skill spec |
 | Codebase audit | `docs/CODEBASE-AUDIT-2026-04-04.md` | Bug list |
+| Evidence-chain design | `docs/SPECSAFE-EVIDENCE-CHAIN-DESIGN.md` | Proposed follow-on for versioned design inputs, traceability, policy gates, evidence, and integrations; not implemented |
+
+---
+
+## Proposed follow-on roadmap
+
+The evidence-chain design is the next candidate extension after this refactor. It preserves the
+canonical two-phase workflow and adds a read-only assurance surface rather than another controller.
+Its MVP and later priorities are defined in
+`docs/SPECSAFE-EVIDENCE-CHAIN-DESIGN.md`; implementation requires a separate approved spec slice.
 
 ---
 
