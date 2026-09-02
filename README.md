@@ -3,6 +3,13 @@
 SpecSafe is a two-phase software engineering framework for AI-assisted development. It provides structured planning workflows to reduce ambiguity, then enforces test-driven implementation through small spec slices — regardless of which AI coding tool you use.
 
 For the full canonical workflow, see [docs/SPECSAFE-CANONICAL-WORKFLOW.md](./docs/SPECSAFE-CANONICAL-WORKFLOW.md).
+For the proposed cross-product assurance seam and future operating plan, see
+[SpecSafe Evidence Chain and Readiness Extension](./docs/SPECSAFE-EVIDENCE-CHAIN-DESIGN.md).
+
+Within the governed delivery architecture, SpecSafe remains repo-local
+assurance: Telar owns business intent, policy, stable identity, human authority,
+and the normalized ledger; Ultimate Harness is the sole Run Control; OMP
+Pantheon is the OMP Execution Adapter.
 
 ## Two-Phase Workflow
 

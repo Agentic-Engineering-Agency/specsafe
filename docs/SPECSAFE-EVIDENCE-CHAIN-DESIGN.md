@@ -24,6 +24,15 @@ The proposed MVP adds one read-only assessment surface and extends canonical wor
 templates. It does not add execution scheduling, deployment, model routing, or autonomous policy
 changes.
 
+### Canonical role in the delivery system
+
+SpecSafe is the **repo-local Assurance** product. Telar is the Orchestrator for
+business intent, policy, stable identity, human authority, and the normalized
+cross-project ledger. Ultimate Harness is the sole Meta Harness / Run Control.
+OMP Pantheon is the OMP Execution Adapter. An Execution Harness is the runtime
+substrate itself, such as OMP; it is not another policy owner. “Cellar” is a
+transcription error for **Telar**.
+
 ## Current truth and gaps
 
 | Area | Current capability | Gap to close |
@@ -234,9 +243,12 @@ reference, included artifact digests, excluded context classes, decisions, test 
 and provider run IDs. Ultimate Harness and at least one generic harness receipt provide two real
 adapters; vendor-specific routing remains outside SpecSafe.
 
-### Internal ledger contract
+### Repo-local evidence journal contract
 
-The kernel maintains an append-only, tamper-evident ledger of normalized events. Each event records:
+The kernel maintains an append-only, tamper-evident journal of normalized
+repo-local evidence events. This journal proves local assessment history; it is
+not Telar's normalized cross-project ledger and cannot advance portfolio or
+release state. Each event records:
 
 - human actor role or approved pseudonymous identity;
 - agent and harness identity;
@@ -248,7 +260,7 @@ The kernel maintains an append-only, tamper-evident ledger of normalized events.
 - tests, commands, result digests, and evidence references;
 - parent event, timestamp, and previous-event digest.
 
-The ledger is not a transcript store. Credentials, raw private context, hidden reasoning, and
+The journal is not a transcript store. Credentials, raw private context, hidden reasoning, and
 unredacted provider payloads are forbidden.
 
 ## TDD and code standards
@@ -274,7 +286,7 @@ invent a language-wide style guide or rewrite repository instructions.
 
 The judge is a verifier, not an implementer. It receives the minimum-context envelope and returns
 findings, trace coverage, a verdict, uncertainty, and evidence references. It cannot modify code,
-tests, policy, or ledger history.
+tests, policy, or evidence-journal history.
 
 Policy may require the judge to differ from the implementation agent, requested model, actual model,
 or harness. Any fallback that violates the independence rule makes the judge result advisory until a
@@ -342,20 +354,20 @@ flowchart TD
     GREEN --> REFACTOR[Evaluate/refactor while GREEN]
     REFACTOR -->|next test| RED
     REFACTOR --> VERIFY[Full verify and QA]
-    UH[Ultimate Harness or harness receipts] --> LEDGER[Evidence ledger]
-    TEST --> LEDGER
-    RED --> LEDGER
-    GREEN --> LEDGER
-    REFACTOR --> LEDGER
+    UH[Ultimate Harness or harness receipts] --> JOURNAL[Repo-local evidence journal]
+    TEST --> JOURNAL
+    RED --> JOURNAL
+    GREEN --> JOURNAL
+    REFACTOR --> JOURNAL
     TRACE --> VERIFY
-    LEDGER --> VERIFY
+    JOURNAL --> VERIFY
     VERIFY --> CONTEXT[Minimum-context compiler]
     CONTEXT --> JUDGE[Independent judge]
     JUDGE --> HUMAN[Human review and completion decision]
     POLICY --> HUMAN
-    HUMAN --> LEDGER
-    LEDGER --> LEARN[Evidence-backed improvement proposals]
-    LEDGER --> HOOKS[Cost, benchmark, and DORA observations]
+    HUMAN --> JOURNAL
+    JOURNAL --> LEARN[Evidence-backed improvement proposals]
+    JOURNAL --> HOOKS[Cost, benchmark, and DORA observations]
     HUMAN --> TELAR
 ```
 
@@ -374,6 +386,30 @@ flowchart TD
 | Benchmarks | Evaluation owner | Emit reproducible evidence observations. | Define datasets, scores, or leaderboards. |
 | Deployment and DORA | CI/CD and operations owners | Emit and correlate local lifecycle observations. | Deploy, roll back, declare incidents, or compute authoritative DORA metrics. |
 | Learning changes | Owner of the affected skill, test, policy, or adapter | Propose evidence-backed changes. | Apply self-modifications. |
+
+## Future operating plan
+
+The future SpecSafe slice deepens one assurance interface. It does not add an
+orchestrator, scheduler, generalized ledger, deployment plane, or financial
+subsystem.
+
+| Area | SpecSafe interface and seam | Adapter / owner relationship | Lifecycle gate and evidence | Security / deletion test |
+|---|---|---|---|---|
+| Interfaces and seams | `record`, `assess`, `export`, and `propose` at the repository-assurance seam. | Canonical workflows call the assurance kernel; callers and tests use the same interface. | Assessment binds checkpoint, subject, policy digest, design digest, candidate revision, and evidence snapshot. | If callers must inspect kernel internals, the interface is too shallow; arbitrary policy code is rejected. |
+| Design adapters | Resolve immutable repo-local and external design sources. | Two real adapters justify the seam; Telar retains package and decision authority. | Applicability, owner, version, digest, supersession, and approved non-applicability are reproducible. | Missing category, dangling reference, digest mismatch, or silent non-applicability fails readiness. |
+| Runtime receipt adapters | Normalize sealed execution receipts without routing or scheduling. | UH plus a second harness format are required before extracting a generic adapter seam; Pantheon remains an OMP producer behind UH. | Requested/actual identity and route, context classes, commands, results, attempt lineage, and producer references remain attributable. | A single pass-through adapter is deleted; forged receipt, unknown model presented as known, or raw secret/private context fails. |
+| Lifecycle gates | Evaluate readiness, TEST, CODE, VERIFY, QA, judge, waiver, and human completion at the repo seam. | Telar supplies organizational policy/authority references; UH executes requested checks; SpecSafe alone decides local assurance. | Meaningful RED, minimum change, GREEN, refactor decision, regression, trace completeness, judge independence, and current human completion. | Missing RED, stale evidence, policy weakening, candidate mismatch, expired waiver, or non-independent judge blocks or becomes inconclusive. |
+| Economics and observability | Emit typed observations; never calculate authoritative budget, invoices, benchmarks, or DORA. | UH/adapters supply usage facts; finance, evaluation, CI/CD, and operations compute their own measures; Telar correlates them. | Preserve units, source, timestamps, correlation IDs, digest, unknowns, and redaction class. | Zero must not be substituted for unknown; deleting cost/DORA computation from SpecSafe must not remove any owned assurance behavior. |
+| Identity | Preserve stable Telar agent/request identity separately from UH run/attempt and actual model/provider identity. | Telar owns stable identity; UH binds the route; adapters report actuals; SpecSafe checks receipt consistency and reviewer independence. | Every review and fallback remains traceable to the exact candidate and observed route. | Persona names, requested models, or tool labels cannot prove actual identity. |
+| Learning | Return evidence-backed proposals only. | Telar governs cross-project proposals; repo owners decide local tests/skills/policy; target owners publish approved versions. | Bounded evidence window, recurrence, hypothesis, experiment, owner, risk, expected benefit, and rollback. | Any direct edit to policy, skills, tests, memory, prompts, adapters, or active sessions is rejected. |
+| Security and privacy | Compile minimum review context and append allowlisted local evidence. | Data owners retain raw artifacts; Telar receives only normalized references needed for its ledger. | Included/excluded context classes, actor, policy, candidate digest, evidence digest, and waiver authority are recorded. | Credentials, hidden reasoning, raw private context, unredacted provider payloads, and unrelated transcripts never enter the journal or judge envelope. |
+| Evolution and deletion | Keep modules only where deletion redistributes substantial complexity. | Assurance kernel, design resolver, and minimum-context compiler remain; coordinator, story service, and internal cost/DORA systems stay rejected. | One non-production slice proves the full evidence chain before additional sinks or adapters. | Re-run the deletion table at every proposed module or adapter; delete anything whose removal mostly deletes formatting or forwarding. |
+
+The first authorized implementation slice ends at an exportable, read-only
+assessment and evidence journal for one repository. Telar and UH integrations,
+named metric sinks, cryptographic transparency, and a second receipt adapter are
+admitted only after the neutral exchange contract and negative fixtures pass.
+Production or destructive procedures require a separate approved runbook.
 
 ## Priority and delivery plan
 
