@@ -85,12 +85,14 @@ export async function doctor(opts: DoctorOptions = {}): Promise<Check[]> {
 
   if (opts.json) {
     const exitCode = errorCount > 0 ? 2 : warnCount > 0 ? 1 : 0;
-    console.log(JSON.stringify({
-      schemaVersion: 1,
-      checks,
-      summary: { errors: errorCount, warnings: warnCount },
-      exitCode,
-    }));
+    console.log(
+      JSON.stringify({
+        schemaVersion: 1,
+        checks,
+        summary: { errors: errorCount, warnings: warnCount },
+        exitCode,
+      }),
+    );
     process.exitCode = exitCode;
     return checks;
   }
