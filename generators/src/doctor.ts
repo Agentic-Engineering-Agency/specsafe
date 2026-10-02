@@ -7,6 +7,7 @@ import { getAdapter } from './registry.js';
 
 export interface DoctorOptions {
   cwd?: string;
+  json?: boolean;
 }
 
 interface Check {
@@ -79,6 +80,23 @@ export async function doctor(opts: DoctorOptions = {}): Promise<Check[]> {
     }
   }
 
+  const errorCount = checks.filter((ch) => ch.status === 'ERROR').length;
+  const warnCount = checks.filter((ch) => ch.status === 'WARNING').length;
+
+  if (opts.json) {
+    const exitCode = errorCount > 0 ? 2 : warnCount > 0 ? 1 : 0;
+    console.log(
+      JSON.stringify({
+        schemaVersion: 1,
+        checks,
+        summary: { errors: errorCount, warnings: warnCount },
+        exitCode,
+      }),
+    );
+    process.exitCode = exitCode;
+    return checks;
+  }
+
   // Print formatted report
   const table = new Table({
     head: [c.bold('Status'), c.bold('Check'), c.bold('Detail')],
@@ -102,9 +120,6 @@ export async function doctor(opts: DoctorOptions = {}): Promise<Check[]> {
   }
 
   console.log(table.toString());
-
-  const errorCount = checks.filter((ch) => ch.status === 'ERROR').length;
-  const warnCount = checks.filter((ch) => ch.status === 'WARNING').length;
 
   if (errorCount > 0) {
     console.log(

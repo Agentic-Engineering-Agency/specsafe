@@ -47,9 +47,10 @@ program
 program
   .command('doctor')
   .description('Validate SpecSafe project health')
-  .action(async () => {
+  .option('--json', 'Output JSON with exit codes: 0 healthy, 1 warnings, 2 errors')
+  .action(async (opts: { json?: boolean }) => {
     const { doctor } = await import('./doctor.js');
-    await doctor();
+    await doctor({ json: opts.json });
   });
 
 program.parse();
