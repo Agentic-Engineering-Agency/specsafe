@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { stripVTControlCharacters } from 'node:util';
 import { doctor } from '../src/doctor.js';
 import { init } from '../src/init.js';
 
@@ -32,7 +33,7 @@ describe('specsafe doctor', () => {
     const log = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     const humanChecks = await doctor({ cwd: tmpDir });
-    expect(log.mock.calls).toMatchSnapshot();
+    expect(log.mock.calls.map(args => args.map(stripVTControlCharacters))).toMatchSnapshot();
     expect(log.mock.calls[1][0]).toContain(errors
       ? '1 error(s), 1 warning(s) found. Run `specsafe init` to fix.'
       : warnings ? '1 warning(s), but project looks healthy.' : 'Project looks healthy!');
