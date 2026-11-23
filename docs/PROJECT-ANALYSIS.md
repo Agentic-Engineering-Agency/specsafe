@@ -29,7 +29,6 @@ specsafe/                          # Root of the npm package
   pnpm-workspace.yaml              # Declares "generators" as the sole workspace package
   tsconfig.json                    # Root TypeScript config
   vitest.config.ts                 # Root-level vitest config (content tests)
-  vitest.workspace.ts              # Vitest workspace: content tests + generators tests
   canonical/                       # The "source of truth" content
     skills/                        # 18 canonical skill definitions (markdown)
     personas/                      # 8 persona definitions (markdown)
@@ -335,7 +334,7 @@ All 8 adapters implement `ToolAdapter` from `generators/src/adapters/types.ts`. 
 
 ### 7.1 Test Architecture
 
-Two separate test suites configured via `vitest.workspace.ts`:
+Two separate test suites, each with its own Vitest config (`pnpm test` runs the generators suite; CI runs the content suite with `vitest run -c vitest.config.ts`):
 
 1. **Content tests** (`tests/*.test.ts`, configured in root `vitest.config.ts`): Validate canonical markdown content -- skills structure, personas sections, template content, cross-references between skills.
 
