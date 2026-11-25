@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { stripVTControlCharacters } from 'node:util';
 import { doctor } from '../src/doctor.js';
 import { init } from '../src/init.js';
 
@@ -12,10 +13,68 @@ describe('specsafe doctor', () => {
 
   beforeEach(async () => {
     tmpDir = await mkdtemp(join(tmpdir(), 'specsafe-doctor-'));
+    process.exitCode = undefined;
   });
 
   afterEach(async () => {
     await rm(tmpDir, { recursive: true, force: true });
+    process.exitCode = undefined;
+    vi.restoreAllMocks();
+  });
+
+  it.each([
+    { name: 'healthy', warnings: 0, errors: 0, exitCode: 0 },
+    { name: 'warnings', warnings: 1, errors: 0, exitCode: 1 },
+    { name: 'errors override warnings', warnings: 1, errors: 1, exitCode: 2 },
+  ])('prints only JSON for $name with exit code $exitCode', async ({ warnings, errors, exitCode }) => {
+    await init('json-project', { cwd: tmpDir, canonicalDir });
+    if (warnings) await rm(join(tmpDir, 'specs', 'archive'), { recursive: true });
+    if (errors) await rm(join(tmpDir, 'specsafe.config.json'));
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    const humanChecks = await doctor({ cwd: tmpDir });
+    expect(log.mock.calls.map(args => args.map(stripVTControlCharacters))).toMatchSnapshot();
+    expect(log.mock.calls[1][0]).toContain(errors
+      ? '1 error(s), 1 warning(s) found. Run `specsafe init` to fix.'
+      : warnings ? '1 warning(s), but project looks healthy.' : 'Project looks healthy!');
+    expect(process.exitCode).toBe(errors ? 1 : undefined);
+    log.mockClear();
+
+    const checks = await doctor({ cwd: tmpDir, json: true });
+
+    expect(checks).toEqual(humanChecks);
+    expect(log).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(log.mock.calls[0][0])).toEqual({
+      schemaVersion: 1,
+      checks: humanChecks,
+      summary: { errors, warnings },
+      exitCode,
+    });
+    expect(checks).toEqual([
+      { label: 'specsafe.config.json', status: errors ? 'ERROR' : 'OK',
+        ...(errors ? { message: 'File not found' } : {}) },
+      { label: 'PROJECT_STATE.md', status: 'OK' },
+      { label: 'specs/active', status: 'OK' },
+      { label: 'specs/completed', status: 'OK' },
+      { label: 'specs/archive', status: warnings ? 'WARNING' : 'OK',
+        ...(warnings ? { message: 'Directory missing' } : {}) },
+    ]);
+    expect(process.exitCode).toBe(exitCode);
+  });
+
+  it('reports malformed config as JSON with exit code 2', async () => {
+    await writeFile(join(tmpDir, 'specsafe.config.json'), 'not json{{{');
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    await doctor({ cwd: tmpDir, json: true });
+
+    const report = JSON.parse(log.mock.calls[0][0]);
+    expect(report.checks[0]).toEqual({
+      label: 'specsafe.config.json', status: 'ERROR', message: 'Invalid JSON',
+    });
+    expect(report.summary).toEqual({ errors: 2, warnings: 3 });
+    expect(report.exitCode).toBe(2);
+    expect(process.exitCode).toBe(2);
   });
 
   it('reports OK on a valid project', async () => {

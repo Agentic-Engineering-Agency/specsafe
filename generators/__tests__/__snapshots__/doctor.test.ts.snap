@@ -1,0 +1,73 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`specsafe doctor > prints only JSON for 'errors override warnings' with exit code 2 1`] = `
+[
+  [
+    "┌────────┬──────────────────────┬───────────────────┐
+│ Status │ Check                │ Detail            │
+├────────┼──────────────────────┼───────────────────┤
+│ ✗ ERR  │ specsafe.config.json │ File not found    │
+├────────┼──────────────────────┼───────────────────┤
+│ ✓ OK   │ PROJECT_STATE.md     │ Valid             │
+├────────┼──────────────────────┼───────────────────┤
+│ ✓ OK   │ specs/active         │ Valid             │
+├────────┼──────────────────────┼───────────────────┤
+│ ✓ OK   │ specs/completed      │ Valid             │
+├────────┼──────────────────────┼───────────────────┤
+│ ⚠ WARN │ specs/archive        │ Directory missing │
+└────────┴──────────────────────┴───────────────────┘",
+  ],
+  [
+    "
+1 error(s), 1 warning(s) found. Run \`specsafe init\` to fix.",
+  ],
+]
+`;
+
+exports[`specsafe doctor > prints only JSON for 'healthy' with exit code +0 1`] = `
+[
+  [
+    "┌────────┬──────────────────────┬────────┐
+│ Status │ Check                │ Detail │
+├────────┼──────────────────────┼────────┤
+│ ✓ OK   │ specsafe.config.json │ Valid  │
+├────────┼──────────────────────┼────────┤
+│ ✓ OK   │ PROJECT_STATE.md     │ Valid  │
+├────────┼──────────────────────┼────────┤
+│ ✓ OK   │ specs/active         │ Valid  │
+├────────┼──────────────────────┼────────┤
+│ ✓ OK   │ specs/completed      │ Valid  │
+├────────┼──────────────────────┼────────┤
+│ ✓ OK   │ specs/archive        │ Valid  │
+└────────┴──────────────────────┴────────┘",
+  ],
+  [
+    "
+Project looks healthy!",
+  ],
+]
+`;
+
+exports[`specsafe doctor > prints only JSON for 'warnings' with exit code 1 1`] = `
+[
+  [
+    "┌────────┬──────────────────────┬───────────────────┐
+│ Status │ Check                │ Detail            │
+├────────┼──────────────────────┼───────────────────┤
+│ ✓ OK   │ specsafe.config.json │ Valid             │
+├────────┼──────────────────────┼───────────────────┤
+│ ✓ OK   │ PROJECT_STATE.md     │ Valid             │
+├────────┼──────────────────────┼───────────────────┤
+│ ✓ OK   │ specs/active         │ Valid             │
+├────────┼──────────────────────┼───────────────────┤
+│ ✓ OK   │ specs/completed      │ Valid             │
+├────────┼──────────────────────┼───────────────────┤
+│ ⚠ WARN │ specs/archive        │ Directory missing │
+└────────┴──────────────────────┴───────────────────┘",
+  ],
+  [
+    "
+1 warning(s), but project looks healthy.",
+  ],
+]
+`;

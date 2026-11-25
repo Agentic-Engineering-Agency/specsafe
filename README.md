@@ -63,7 +63,16 @@ specsafe install continue       # Tier 3: prompts
 
 # Check project health
 specsafe doctor
+
+# Machine-readable health for CI and agents (0 healthy, 1 warnings, 2 errors)
+specsafe doctor --json
 ```
+
+`doctor --json` emits one object with `schemaVersion: 1`, the existing CLI
+`checks` (`label`, `status`, optional `message`), `summary` (`errors`, `warnings`),
+and `exitCode`. Errors take precedence over warnings. It checks configuration,
+`PROJECT_STATE.md`, lifecycle directories, and configured tool files.
+The human command keeps its existing output and exit behavior.
 
 ## Skills Reference
 
