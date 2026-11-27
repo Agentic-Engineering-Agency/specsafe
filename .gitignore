@@ -19,5 +19,6 @@ coverage/
 # Environment files
 .env*
 /.omp/skills
+/.agents/skills
 .jevmem/
 .cursor/hooks/state/
